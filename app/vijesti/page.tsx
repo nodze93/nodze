@@ -22,6 +22,7 @@ export default async function VijestPage() {
     slug: c.slug,
     naslov: c.naslov,
     excerpt: c.excerpt || "",
+    sadrzaj: c.sadrzaj || "",
     kategorija: c.kategorija,
     datum: new Date(c.datum_objave || c.created_at).toLocaleDateString("bs-BA", { day: "numeric", month: "short" }),
     minCitanja: c.min_citanja,
