@@ -1,0 +1,30 @@
+# ============================================================
+# BOT RASPORED preko GitHub Actions (BESPLATNO, 2x dnevno)
+# ============================================================
+# Vercel Hobby plan dozvoljava cron samo 1x dnevno — zato raspored
+# vozimo odavde: GitHub pozove /api/cron/daily-content u 08:00 i 20:00.
+# (Ako pređeš na Vercel Pro, možeš koristiti crons iz vercel.json
+#  i obrisati ovaj fajl.)
+#
+# PODEŠAVANJE (jednom):
+#   GitHub repo → Settings → Secrets and variables → Actions → New secret:
+#     SITE_URL    = https://kodnas.de   (ili Vercel URL dok domena ne proradi)
+#     CRON_SECRET = isti string kao u Vercel env varijablama
+name: Dijaspora bot (08:00 i 20:00)
+
+on:
+  schedule:
+    # UTC! 06:00 UTC ≈ 08:00 po Berlinu (ljeto), 18:00 UTC ≈ 20:00
+    - cron: "0 6 * * *"
+    - cron: "0 18 * * *"
+  workflow_dispatch: {}   # dugme "Run workflow" za ručni test
+
+jobs:
+  pokreni-bota:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pozovi cron endpoint
+        run: |
+          curl --fail --silent --show-error --max-time 290 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/cron/daily-content"

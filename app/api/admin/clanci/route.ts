@@ -1,0 +1,113 @@
+// ============================================================
+// ADMIN API — lista i kreiranje članaka (prava Supabase baza)
+// ============================================================
+// Zaštićeno middleware-om (admin_token cookie).
+import { NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase";
+import { napraviSlug } from "@/lib/bot/publisher";
+
+export const dynamic = "force-dynamic";
+
+interface DbRed {
+  id: string;
+  slug: string;
+  naslov: string;
+  excerpt: string | null;
+  kategorija: string;
+  status: string;
+  izvor: string | null;
+  min_citanja: number;
+  broj_pregleda: number;
+  faktcheck_status: string | null;
+  jezik_ocjena: string | null;
+  auto_generisan: boolean;
+  tip: string;
+  slika: string | null;
+  created_at: string;
+  datum_objave: string | null;
+}
+
+// GET — lista članaka s filterima (?status=&kategorija=&q=)
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const status = searchParams.get("status");
+  const kategorija = searchParams.get("kategorija");
+  const q = searchParams.get("q");
+
+  try {
+    const db = createServerClient();
+    let query = db
+      .from("clanci")
+      .select(
+        "id,slug,naslov,excerpt,kategorija,status,izvor,min_citanja,broj_pregleda,faktcheck_status,jezik_ocjena,auto_generisan,tip,slika,created_at,datum_objave"
+      )
+      .order("created_at", { ascending: false })
+      .limit(200);
+
+    if (status) query = query.eq("status", status);
+    if (kategorija) query = query.eq("kategorija", kategorija);
+    if (q) query = query.ilike("naslov", `%${q}%`);
+
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+
+    // Oblik koji admin UI očekuje
+    const clanci = ((data as DbRed[]) || []).map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      naslov: c.naslov,
+      excerpt: c.excerpt || "",
+      kategorija: c.kategorija,
+      status: c.status,
+      izvor: c.auto_generisan ? `🤖 ${c.izvor || "Bot"}` : c.izvor || "Ručno",
+      minCitanja: c.min_citanja,
+      procitano: c.broj_pregleda,
+      faktcheck: c.faktcheck_status,
+      jezik: c.jezik_ocjena,
+      slika: c.slika,
+      datum: new Date(c.datum_objave || c.created_at).toLocaleDateString("bs-BA"),
+    }));
+
+    return NextResponse.json({ clanci, ukupno: clanci.length });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message, clanci: [], ukupno: 0 }, { status: 500 });
+  }
+}
+
+// POST — ručno kreiranje novog članka
+export async function POST(req: Request) {
+  const body = await req.json();
+
+  if (!body.naslov || !body.sadrzaj || !body.kategorija) {
+    return NextResponse.json({ error: "Naslov, sadržaj i kategorija su obavezni." }, { status: 400 });
+  }
+
+  try {
+    const db = createServerClient();
+    const slug = body.slug || napraviSlug(body.naslov);
+    const status = body.status === "published" ? "published" : "draft";
+
+    const { data, error } = await db
+      .from("clanci")
+      .insert({
+        slug,
+        naslov: body.naslov,
+        excerpt: body.excerpt || null,
+        sadrzaj: body.sadrzaj,
+        kategorija: body.kategorija,
+        status,
+        auto_generisan: false,
+        izvor: body.izvor || "Ručno kreiran",
+        min_citanja: body.minCitanja || Math.max(2, Math.ceil(String(body.sadrzaj).split(/\s+/).length / 200)),
+        faktcheck_status: "zeleno",
+        datum_objave: status === "published" ? new Date().toISOString() : null,
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return NextResponse.json({ clanak: data, ok: true }, { status: 201 });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
+}

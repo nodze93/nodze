@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --zelena: #1D9E75;
+  --zelena-tamna: #0F6E56;
+  --zelena-svijetla: #E1F5EE;
+  --tekst: #1a1a1a;
+  --tekst-muted: #6b6b6b;
+  --tekst-light: #999;
+  --border: #e8e8e8;
+  --bg: #f7f7f5;
+  --white: #ffffff;
+  --plava-bg: #E6F1FB;
+  --plava-tekst: #0C447C;
+  --narandzasta-bg: #FAEEDA;
+  --narandzasta-tekst: #633806;
+  --crvena-bg: #FAECE7;
+  --crvena-tekst: #712B13;
+  --ljubicasta-bg: #EEEDFE;
+  --ljubicasta-tekst: #3C3489;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--tekst);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* TAG PILLS */
+.tag-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.tag-viza { background: var(--plava-bg); color: var(--plava-tekst); }
+.tag-posao { background: var(--narandzasta-bg); color: var(--narandzasta-tekst); }
+.tag-stan { background: var(--crvena-bg); color: var(--crvena-tekst); }
+.tag-zdravstvo { background: var(--zelena-svijetla); color: var(--zelena-tamna); }
+.tag-porodica { background: #FBEAF0; color: #72243E; }
+.tag-bih { background: var(--ljubicasta-bg); color: var(--ljubicasta-tekst); }
+.tag-porez { background: #FEF3C7; color: #92400E; }
+.tag-penzija { background: #F1EFE8; color: #444441; }
+.tag-dokumenti { background: #E8F4FD; color: #1a5276; }
+.tag-finansije { background: #F0FFF4; color: #1D6A3B; }
+
+/* HERO TAG ANIMATION */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.hero-tag-dot {
+  animation: pulse 2s infinite;
+}
+
+/* FAQ ANIMATION */
+.faq-arrow {
+  transition: transform 0.2s;
+}
+.faq-item.open .faq-arrow {
+  transform: rotate(180deg);
+}
+.faq-item .faq-a {
+  display: none;
+}
+.faq-item.open .faq-a {
+  display: block;
+}
+
+/* Tagovi za bot kategorije (svijet, sport, vijesti, gastarbajter) */
+.tag-svijet { background: #EFF6FF; color: #1E40AF; }
+.tag-sport { background: #DBEAFE; color: #1E3A8A; }
+.tag-vijesti { background: #F3F4F6; color: #374151; }
+.tag-gastarbajter { background: #FFF7ED; color: #9A3412; }
+
+/* ========== V19 RASPORED: horizontalne kartice, 2 po redu ========== */
+.card-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.kartica-h { background: var(--white); padding: 18px 20px; cursor: pointer; transition: background 0.15s; display: flex; gap: 16px; align-items: center; text-decoration: none; color: inherit; }
+.kartica-h:hover { background: #fafafa; }
+.kartica-h-thumb { width: 68px; height: 68px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background-color: var(--border); display: block; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.kartica-h-naslov { font-size: 14px; font-weight: 600; line-height: 1.45; margin: 6px 0 7px; color: var(--tekst); letter-spacing: -0.1px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.kartica-h-meta { font-size: 11.5px; color: var(--tekst-light); }
+/* Numerisana lista (Najpopularnije) */
+.lista { background: var(--white); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.lista-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; text-decoration: none; color: inherit; }
+.lista-item:last-child { border-bottom: none; }
+.lista-item:hover { background: #fafafa; }
+.lista-broj { font-size: 12px; font-weight: 700; color: var(--zelena); min-width: 20px; margin-top: 1px; }
+.lista-naslov { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; }
+.lista-meta { font-size: 11px; color: var(--tekst-light); }
+/* Live vijesti sekcija (iznad main-wrap) */
+.live-wrap { max-width: 1100px; margin: 0 auto; padding: 16px 24px 4px; }
+.live-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.live-box { background: var(--white); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.live-header { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid var(--border); }
+.live-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; flex: 1; }
+.live-dot { width: 7px; height: 7px; background: #ef4444; border-radius: 50%; animation: livePulse 1.5s ease-in-out infinite; flex-shrink: 0; }
+@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+.live-item { display: flex; gap: 10px; align-items: flex-start; padding: 9px 16px; cursor: pointer; transition: background 0.12s; border-bottom: 1px solid #f3f4f6; text-decoration: none; color: inherit; }
+.live-item:last-child { border-bottom: none; }
+.live-item:hover { background: var(--bg); }
+.live-izvor { font-size: 10px; font-weight: 700; color: var(--zelena-tamna); background: var(--zelena-svijetla); padding: 2px 6px; border-radius: 4px; white-space: nowrap; margin-top: 2px; flex-shrink: 0; }
+.live-izvor.de { color: #1a3a5c; background: #dbeafe; }
+.live-naslov { font-size: 13px; line-height: 1.45; color: var(--tekst); font-weight: 500; flex: 1; }
+.live-vrijeme { font-size: 11px; color: var(--tekst-light); white-space: nowrap; margin-top: 3px; flex-shrink: 0; }
+/* Dodatni tagovi iz v19 */
+.tag-drama { background: #FEE2E2; color: #991B1B; }
+.tag-biznis { background: #D1FAE5; color: #065F46; }
+@media (max-width: 768px) {
+  .card-grid-2 { grid-template-columns: 1fr; }
+  .live-grid { grid-template-columns: 1fr; }
+}
+
+/* Live vijesti — v19 detalji */
+.live-flag { font-size: 18px; line-height: 1; }
+.live-badge { font-size: 10px; font-weight: 700; color: #ef4444; background: #fef2f2; padding: 2px 7px; border-radius: 20px; border: 1px solid #fecaca; }
+.live-list { padding: 4px 0; }
+.live-vise { display: block; text-align: center; padding: 10px; font-size: 12px; color: var(--zelena); font-weight: 600; cursor: pointer; text-decoration: none; }
+.live-vise:hover { background: var(--zelena-svijetla); }
+
+/* Kategorijske sekcije — jedan članak ispod drugog (v19) */
+.card-grid-1 { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
