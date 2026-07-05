@@ -6,7 +6,7 @@ import { createServerClient } from "@/lib/supabase";
 import { pokreniPipeline } from "@/lib/bot/pipeline";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 // GET — zadnjih 20 pravih logova
 export async function GET() {

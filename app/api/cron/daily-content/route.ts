@@ -12,7 +12,7 @@ import { pokreniPipeline } from "@/lib/bot/pipeline";
 export const dynamic = "force-dynamic";
 // Vercel: na Hobby planu sa Fluid compute do 300s; klasično 60s.
 // Pipeline sprema svaki članak čim je gotov, pa i prekid ne gubi urađeno.
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
