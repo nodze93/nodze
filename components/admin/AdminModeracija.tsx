@@ -78,11 +78,18 @@ function Manager({ onClose }: { onClose: () => void }) {
   const [dirtyOrder, setDirtyOrder] = useState(false);
   const [uredjivan, setUredjivan] = useState<Clanak | null>(null);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
+  // Ako smo na /kategorija/<slug>, filtriraj automatski na tu kategoriju.
+  const [filterKat, setFilterKat] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    const m = window.location.pathname.match(/\/kategorija\/([^/?#]+)/);
+    return m ? decodeURIComponent(m[1]) : "";
+  });
 
   const ucitaj = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch("/api/admin/clanci");
+      const q = filterKat ? `?kategorija=${encodeURIComponent(filterKat)}` : "";
+      const r = await fetch(`/api/admin/clanci${q}`);
       const d = await r.json();
       setClanci(d.clanci || []);
       setDirtyOrder(false);
@@ -91,7 +98,7 @@ function Manager({ onClose }: { onClose: () => void }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filterKat]);
 
   useEffect(() => { ucitaj(); }, [ucitaj]);
 
@@ -203,6 +210,10 @@ function Manager({ onClose }: { onClose: () => void }) {
           <p style={{ fontSize: 12, color: "#9ca3af" }}>▲▼ ili prevuci za redoslijed · ★ naslovna · ✏️ uredi · 🗑️ obriši</p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <select value={filterKat} onChange={(e) => setFilterKat(e.target.value)} style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #374151", background: "#1f2937", color: "white", fontSize: 12, fontWeight: 600 }}>
+            <option value="">Sve kategorije</option>
+            {KATEGORIJE.map((k) => <option key={k} value={k}>{k}</option>)}
+          </select>
           <span style={{ background: "rgba(255,255,255,0.12)", color: "#9ca3af", fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 20 }}>{clanci.length} članaka</span>
           {dirtyOrder && (
             <button onClick={sacuvajRedoslijed} style={{ padding: "9px 16px", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: "pointer", background: "#f59e0b", color: "white" }}>💾 Sačuvaj redoslijed</button>
