@@ -1,16 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { validEmail } from "@/lib/security";
+
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  try {
-    const { email } = await req.json();
+  // Rate limit: 5 prijava / minuti po IP (protiv spama)
+  const ip = clientIp(req);
+  const rl = rateLimit(`nl:${ip}`, 5, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { greska: "Previše pokušaja. Sačekaj malo." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } }
+    );
+  }
 
-    if (!email || !email.includes("@")) {
-      return NextResponse.json({ greska: "Nevažeća email adresa" }, { status: 400 });
+  try {
+    let email: unknown;
+    try {
+      ({ email } = await req.json());
+    } catch {
+      return NextResponse.json({ greska: "Neispravan zahtjev" }, { status: 400 });
     }
 
+    if (!validEmail(email)) {
+      return NextResponse.json({ greska: "Nevažeća email adresa" }, { status: 400 });
+    }
+    const cistEmail = email.trim().toLowerCase();
+
     const db = createServerClient();
-    const { error } = await db.from("newsletter_subscribers").insert({ email });
+    const { error } = await db.from("newsletter_subscribers").insert({ email: cistEmail });
     // 23505 = već prijavljen (duplikat) — tretiramo kao uspjeh
     if (error && error.code !== "23505") throw new Error(error.message);
 

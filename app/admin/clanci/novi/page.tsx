@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ImageUpload from "@/components/admin/ImageUpload";
 import RichEditor from "@/components/admin/RichEditor";
+import { ocistiHtml } from "@/lib/sanitize";
 
 const KATEGORIJE = ["viza", "posao", "stan", "zdravstvo", "porodica", "porez", "penzija", "povratak"];
 
@@ -112,7 +113,7 @@ export default function NoviClanakPage() {
             <span style={{ display: "inline-block", padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700, background: "#1D9E7518", color: "#1D9E75", marginBottom: 12 }}>{kategorija}</span>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: "#111", lineHeight: 1.3, marginBottom: 12 }}>{naslov || "Naslov članka"}</h1>
             {excerpt && <p style={{ fontSize: 16, color: "#4b5563", lineHeight: 1.7, padding: "14px 18px", borderLeft: "3px solid #1D9E75", background: "#f0fdf4", borderRadius: "0 8px 8px 0", marginBottom: 24 }}>{excerpt}</p>}
-            <div dangerouslySetInnerHTML={{ __html: sadrzaj }} style={{ fontSize: 15, lineHeight: 1.8, color: "#374151" }} />
+            <div dangerouslySetInnerHTML={{ __html: ocistiHtml(sadrzaj) }} style={{ fontSize: 15, lineHeight: 1.8, color: "#374151" }} />
           </div>
         )}
 

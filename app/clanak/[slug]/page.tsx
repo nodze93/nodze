@@ -6,6 +6,7 @@ import { dajClanak, dajNajnovije, formatirajMeta, type DbClanak } from "@/lib/da
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { ocistiHtml } from "@/lib/sanitize";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -162,7 +163,7 @@ export default async function ClanakPage({ params }: Props) {
           {/* Sadržaj */}
           <div
             className="clanak-sadrzaj"
-            dangerouslySetInnerHTML={{ __html: clanak.sadrzaj }}
+            dangerouslySetInnerHTML={{ __html: ocistiHtml(clanak.sadrzaj) }}
           />
 
           {/* Tagovi */}

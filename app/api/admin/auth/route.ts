@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { derivedToken, safeEqual } from "@/lib/security";
 
 export async function POST(req: Request) {
-  const { lozinka } = await req.json();
+  let lozinka = "";
+  try {
+    const body = await req.json();
+    lozinka = typeof body?.lozinka === "string" ? body.lozinka : "";
+  } catch {
+    return NextResponse.json({ error: "Neispravan zahtjev" }, { status: 400 });
+  }
+
   const expectedSecret = process.env.ADMIN_SECRET;
 
   // Bez postavljenog ADMIN_SECRET niko ne može ući — nema default lozinke!
@@ -13,12 +21,15 @@ export async function POST(req: Request) {
     );
   }
 
-  if (lozinka !== expectedSecret) {
+  // Konstantno-vremensko poređenje (otporno na timing napade).
+  if (!safeEqual(lozinka, expectedSecret)) {
     return NextResponse.json({ error: "Pogrešna lozinka" }, { status: 401 });
   }
 
+  // U cookie ide IZVEDENI token (hash), NE sirova admin lozinka.
+  const token = await derivedToken(expectedSecret);
   const cookieStore = await cookies();
-  cookieStore.set("admin_token", expectedSecret, {
+  cookieStore.set("admin_token", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

@@ -8,6 +8,7 @@
 //   curl -H "Authorization: Bearer TVOJ_SECRET" https://tvoj-sajt.vercel.app/api/cron/daily-content
 import { NextRequest, NextResponse } from "next/server";
 import { pokreniPipeline } from "@/lib/bot/pipeline";
+import { safeEqual } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
 // Vercel: na Hobby planu sa Fluid compute do 300s; klasično 60s.
@@ -16,9 +17,11 @@ export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  const auth = req.headers.get("authorization");
+  const auth = req.headers.get("authorization") || "";
 
-  if (secret && auth !== `Bearer ${secret}`) {
+  // VAŽNO: ako CRON_SECRET nije postavljen — ODBIJ (ne otvaraj endpoint!).
+  // Timing-safe poređenje da se secret ne može pogoditi mjerenjem vremena.
+  if (!secret || !safeEqual(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ greska: "Neautorizovano" }, { status: 401 });
   }
 

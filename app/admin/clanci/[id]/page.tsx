@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ImageUpload from "@/components/admin/ImageUpload";
 import RichEditor from "@/components/admin/RichEditor";
+import { ocistiHtml } from "@/lib/sanitize";
 
 const KATEGORIJE = ["viza", "posao", "stan", "zdravstvo", "porodica", "porez", "penzija", "povratak"];
 
@@ -283,7 +284,7 @@ export default function UrediClanakPage({ params }: Props) {
               </p>
             )}
             <div
-              dangerouslySetInnerHTML={{ __html: sadrzaj }}
+              dangerouslySetInnerHTML={{ __html: ocistiHtml(sadrzaj) }}
               style={{ fontSize: 15, lineHeight: 1.8, color: "#374151" }}
             />
           </div>

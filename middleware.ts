@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { derivedToken, safeEqual } from "@/lib/security";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Login stranica i login API su slobodni
@@ -13,11 +14,17 @@ export function middleware(request: NextRequest) {
   const jeAdminApi = pathname.startsWith("/api/admin");
 
   if (jeAdminStranica || jeAdminApi) {
-    const adminToken = request.cookies.get("admin_token")?.value;
-    const expectedToken = process.env.ADMIN_SECRET;
+    const adminToken = request.cookies.get("admin_token")?.value || "";
+    const secret = process.env.ADMIN_SECRET;
 
     // ADMIN_SECRET MORA biti postavljen — nema default lozinke!
-    const validno = Boolean(expectedToken) && adminToken === expectedToken;
+    // Cookie sadrži IZVEDENI token (hash), ne sirovu tajnu; poređenje
+    // je konstantno-vremensko (otporno na timing napade).
+    let validno = false;
+    if (secret) {
+      const expected = await derivedToken(secret);
+      validno = safeEqual(adminToken, expected);
+    }
 
     if (!validno) {
       if (jeAdminApi) {
