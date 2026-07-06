@@ -163,7 +163,7 @@ ${zvanicniUrl ? `ZVANIČNI IZVOR (${zvanicniUrl}):\n${zvanicniTekst || "(nije do
         : vijest.tip === "sport" ? WRITER_SPORT_PROMPT
         : WRITER_DIJASPORA_PROMPT,
       user: kontekst,
-      maxTokens: 3000,
+      maxTokens: 2500,
       toolName: "sacuvaj_clanak",
       toolOpis: "Sačuvaj napisani članak u strukturiranom formatu.",
       schema: CLANAK_SCHEMA,

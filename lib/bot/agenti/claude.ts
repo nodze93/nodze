@@ -17,9 +17,9 @@ export function claude(): Anthropic {
   return _klijent;
 }
 
-// Modeli — Haiku za jeftine provjere, Sonnet za pisanje
+// Modeli — Haiku za sve (max ušteda)
 export const MODEL_BRZI = "claude-haiku-4-5";
-export const MODEL_PISAC = "claude-sonnet-4-5";
+export const MODEL_PISAC = "claude-haiku-4-5";
 
 /**
  * Pozovi Claude s forsiranim tool-useom i vrati validiran JSON objekat.
@@ -38,6 +38,9 @@ export async function pozoviSaAlatom<T>(opts: {
     name: opts.toolName,
     description: opts.toolOpis,
     input_schema: opts.schema,
+    // Keširaj definiciju alata (statična po agentu) — jeftinije kod
+    // ponovljenih poziva istog agenta u istom pokretanju.
+    cache_control: { type: "ephemeral" },
   };
 
   let zadnjaGreska: Error | null = null;
@@ -46,7 +49,11 @@ export async function pozoviSaAlatom<T>(opts: {
       const odgovor = await claude().messages.create({
         model: opts.model,
         max_tokens: opts.maxTokens,
-        system: opts.system,
+        // Sistem prompt kao keširani blok (ephemeral, ~5 min TTL).
+        // Aktivira se tek iznad min. dužine — inače je bez efekta i troška.
+        system: [
+          { type: "text", text: opts.system, cache_control: { type: "ephemeral" } },
+        ],
         tools: [tool],
         tool_choice: { type: "tool", name: opts.toolName },
         messages: [{ role: "user", content: opts.user }],

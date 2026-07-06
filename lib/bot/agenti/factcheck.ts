@@ -66,7 +66,7 @@ export async function factcheckClanak(
       model: MODEL_BRZI,
       system: FACTCHECK_PROMPT,
       user: `ČLANAK:\n${clanak.naslov}\n\n${sadrzajBezHTML.slice(0, 4000)}\n\n---\n\nIZVORNI TEKST:\n${izvorniTekst.slice(0, 4000)}`,
-      maxTokens: 2000,
+      maxTokens: 1500,
       toolName: "izvjestaj_factcheck",
       toolOpis: "Vrati fact-check izvještaj za članak.",
       schema: FACTCHECK_SCHEMA,

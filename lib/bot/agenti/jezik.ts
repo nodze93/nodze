@@ -74,7 +74,7 @@ export async function jezikCheck(clanak: {
       model: MODEL_BRZI,
       system: JEZIK_PROMPT,
       user: `Provjeri i ispravi bosanski jezik:\n\nNASLOV:\n${clanak.naslov}\n\nEXCERPT:\n${clanak.excerpt}\n\nSADRŽAJ (HTML):\n${clanak.sadrzaj}`,
-      maxTokens: 4000,
+      maxTokens: 3000,
       toolName: "lektorisan_tekst",
       toolOpis: "Vrati lektorisan tekst sa spiskom ispravki.",
       schema: JEZIK_SCHEMA,

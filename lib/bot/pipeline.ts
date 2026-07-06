@@ -14,9 +14,18 @@ import { factcheckClanak, contextCheck } from "./agenti/factcheck";
 import { jezikCheck } from "./agenti/jezik";
 import { ucitajObradjene, sacuvajDraft, logujPipeline } from "./publisher";
 import { nadjiSliku } from "./slike";
-import type { PipelineRezultat } from "./tipovi";
+import type { PipelineRezultat, FactcheckRezultat } from "./tipovi";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Default rezultat kad se fact-check preskače (sport/svijet — niži rizik).
+// Ušteda: jedan Haiku poziv manje po takvom članku.
+const FACTCHECK_PRESKOCEN: FactcheckRezultat = {
+  ukupni_status: "zeleno",
+  mozeSeObjaviti: true,
+  tvrdnje: [],
+  preporuka: "Fact-check preskočen (sport/svijet — niži rizik).",
+};
 
 export async function pokreniPipeline(): Promise<PipelineRezultat> {
   const start = Date.now();
@@ -83,9 +92,16 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
           continue;
         }
 
-        // Fact-check i Context idu paralelno (nezavisni su)
+        // Fact-check SAMO za dijaspora članke (viši rizik/preciznost).
+        // Sport i svijet preskaču fact-check radi uštede. Context ostaje.
+        const jeDijaspora = vijest.tip === "dijaspora";
+        if (!jeDijaspora) {
+          console.log("   ⏭️  Fact-check preskočen (sport/svijet)");
+        }
         const [factcheck, context] = await Promise.all([
-          factcheckClanak(clanak, izvorniTekst),
+          jeDijaspora
+            ? factcheckClanak(clanak, izvorniTekst)
+            : Promise.resolve(FACTCHECK_PRESKOCEN),
           contextCheck(clanak),
         ]);
 
