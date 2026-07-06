@@ -1,20 +1,20 @@
 # ============================================================
 # BOT RASPORED preko GitHub Actions (BESPLATNO, 2x dnevno)
 # ============================================================
-# Vercel Hobby plan dozvoljava cron samo 1x dnevno — zato raspored
-# vozimo odavde: GitHub pozove /api/cron/daily-content u 08:00 i 20:00.
-# (Ako pređeš na Vercel Pro, možeš koristiti crons iz vercel.json
-#  i obrisati ovaj fajl.)
+# Bot se pokreće DIREKTNO na GitHub Actions — nema Vercel timeout!
+# GitHub Actions može raditi do 6 sati, sasvim dovoljno.
 #
-# PODEŠAVANJE (jednom):
-#   GitHub repo → Settings → Secrets and variables → Actions → New secret:
-#     SITE_URL    = https://kodnas.de   (ili Vercel URL dok domena ne proradi)
-#     CRON_SECRET = isti string kao u Vercel env varijablama
+# POTREBNI SECRETS (GitHub repo → Settings → Secrets → Actions):
+#   ANTHROPIC_API_KEY        = sk-ant-...
+#   NEXT_PUBLIC_SUPABASE_URL = https://xxx.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY = eyJ...
+#   UNSPLASH_ACCESS_KEY       = (opcionalno, za slike)
+
 name: Dijaspora bot (08:00 i 20:00)
 
 on:
   schedule:
-    # UTC! 06:00 UTC ≈ 08:00 po Berlinu (ljeto), 18:00 UTC ≈ 20:00
+    # UTC! 06:00 UTC = 08:00 Berlin (ljeto), 18:00 UTC = 20:00 Berlin
     - cron: "0 6 * * *"
     - cron: "0 18 * * *"
   workflow_dispatch: {}   # dugme "Run workflow" za ručni test
@@ -23,8 +23,25 @@ jobs:
   pokreni-bota:
     runs-on: ubuntu-latest
     steps:
-      - name: Pozovi cron endpoint
-        run: |
-          curl --fail --silent --show-error --max-time 290 \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.SITE_URL }}/api/cron/daily-content"
+      - name: Checkout koda
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instaliraj pakete
+        run: npm ci
+
+      - name: Pokreni bota
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
+          CLANCI_DIJASPORA: "1"
+          CLANCI_SVIJET: "1"
+          CLANCI_SPORT: "0"
+        run: npx tsx scripts/run-bot.ts
