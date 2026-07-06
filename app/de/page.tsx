@@ -29,12 +29,12 @@ export default async function DePage() {
           <span className="live-badge">LIVE</span>
         </div>
         <p style={{ fontSize: 14, color: "var(--tekst-muted)", marginBottom: 24 }}>
-          Najnovije s njemačkih portala — radni zakoni, socijalne naknade, politika. Linkovi vode na originalne članke.
+          Najnovije vijesti za dijasporu u Njemačkoj — radni zakoni, socijalne naknade, politika.
         </p>
         <div className="live-box">
           <div className="live-list">
             {vijesti.map((v, i) => (
-              <a key={i} href={v.link !== "#" ? v.link : "#"} target={v.link !== "#" ? "_blank" : undefined} rel="noopener noreferrer" className="live-item">
+              <a key={i} href={v.link !== "#" ? v.link : "#"} target={v.link.startsWith("/") || v.link === "#" ? undefined : "_blank"} rel="noopener noreferrer" className="live-item">
                 <span className="live-izvor de">{v.izvor}</span>
                 <span className="live-naslov">{v.naslov}</span>
                 <span className="live-vrijeme">{v.vrijemeAgo}</span>

@@ -1,46 +1,62 @@
 # PROGRESS LOG — KODNAS.DE
 
-## STATUS: Deployed, DNS u toku
-Zadnji update: 2026-07-05
+## STATUS: LIVE i bot radi end-to-end ✅
+Zadnji update: 2026-07-06
 
 ## ✅ URAĐENO (do sad)
-- [x] Kupljena domena kodnas.de (Namecheap)
-- [x] GitHub repo kreiran (github.com/nodze93/nodze)
-- [x] Vercel projekt kreiran i spojen na GitHub
-- [x] Supabase baza kreirana, schema.sql pokrenut uspješno
-- [x] Portal deployed na nodze-delta.vercel.app
-- [x] Fix: dodan sadrzaj prop u kategorija i vijesti page
-- [x] Fix: kategorija TypeScript cast (TagTip)
-- [x] Fix: next.config.ts — ignoreBuildErrors + ignoreDuringBuilds
-- [x] Fix: clanak/[slug] — force-dynamic, prazni generateStaticParams (riješio Vercel timeout)
-- [x] Build prošao uspješno ✅
-- [x] GitHub Actions secrets postavljeni (SITE_URL, CRON_SECRET)
-- [x] DNS A record na Namecheap: @ → 216.198.79.1
-- [x] DNS CNAME na Namecheap: www → ec48c866504a9103.vercel-dns-017.com
-- [x] Vercel prepoznao domenu (plave kvačice za kodnas.de i www.kodnas.de)
+- [x] Domena kodnas.de kupljena (Namecheap) i povezana na Vercel
+      - A record: @ → 216.198.79.1
+      - CNAME: www → ec48c866504a9103.vercel-dns-017.com
+- [x] GitHub repo (github.com/nodze93/nodze), Vercel projekt, Supabase baza
+- [x] Portal deployed i LIVE na kodnas.de
+- [x] Build popravke: sadrzaj prop, TagTip cast, ignoreBuildErrors, force-dynamic
+- [x] Next.js podignut na ^15.3.0 (Vercel je blokirao staru zbog CVE)
+- [x] Oba Claude modela na Haiku (MODEL_BRZI + MODEL_PISAC) radi uštede
+- [x] BOT PREBAČEN NA GITHUB ACTIONS (ne Vercel — nema 60s timeouta)
+      - bot-cron.yml: checkout → Node 22 → npm install → npx tsx scripts/run-bot.ts
+      - Node MORA biti 22 (Supabase treba native WebSocket; Node 20 puca)
+      - npm install (NE npm ci — nema package-lock.json)
+      - GitHub secrets: ANTHROPIC_API_KEY, NEXT_PUBLIC_SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY, (UNSPLASH_ACCESS_KEY opcionalno)
+- [x] KRITIČNA GREŠKA RIJEŠENA: Supabase URL je imao pogrešan ref (19 znakova)
+      - Tačan ref ima 20 znakova: nfqhnhtktktlyqlwhcsj
+      - Tačan URL: https://nfqhnhtktktlyqlwhcsj.supabase.co
+- [x] Vercel ključevi popravljeni (bili su Invalid API key):
+      - SUPABASE_SERVICE_ROLE_KEY = sb_secret_... (novi Supabase format)
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY = sb_publishable_... (novi format)
+- [x] lib/supabase.ts: anon ključ ima fallback na service role (da bot import ne puca)
+- [x] RSS izvori očišćeni:
+      - Klix.ba popravljen: https://www.klix.ba/rss (staro /rss/naslovnica bilo 404)
+      - Izbačeni mrtvi: Klix Sport, Al Jazeera Balkans, Make it in Germany (404)
+      - Dodan Avaz Sport: https://avaz.ba/rss/sport (bosanski sport)
+- [x] POTVRĐENO END-TO-END: bot piše → sprema u bazu → admin objavi → izlazi na kodnas.de
+      - Prvi pravi članci objavljeni (Marine Le Pen, Reforma zdravstvenog osiguranja)
 
 ## 🚧 U TOKU
-- Promote to Production na Vercelu (Preview build je Ready, treba Promote)
-- DNS propagacija za kodnas.de (može trajati do 24h)
+- LIVE widget (Vijesti iz Njemačke/BiH) — mijenjamo da pokazuje NAŠE članke
+  umjesto vanjskih RSS naslova. Badge zadržava originalni izvor (N1, Spiegel...),
+  klik vodi na naš članak (/clanak/slug). Fajlovi: components/LiveVijesti.tsx, lib/live.ts
 
 ## 📋 TODO
-- [ ] Promote "Fix React Server Components CVE" build to Production na Vercelu
-- [ ] Provjeriti da bot radi 2x dnevno (GitHub Actions)
-- [ ] Testirati bot ručno: GitHub Actions → Run workflow
-- [ ] Testirati auto-publish za 🟢 zelene članke
-- [ ] Postaviti email alert za 🟡 žute članke
+- [ ] Završiti LIVE widget → naši članci + badge izvora
+- [ ] Provjeriti da bot radi automatski 2x dnevno (08:00 i 20:00 Berlin / 06:00 i 18:00 UTC)
+- [ ] (Opcionalno) Unsplash ključ za slike — sad su sive prazne kutije
 - [ ] Autor bio / O nama stranica
 - [ ] Article schema markup (SEO)
 
 ## 🐛 POZNATI PROBLEMI
-- Vercel pokazuje "No Production Deployment" — riješiti sa Promote to Production
-- kodnas.de još ne radi jer nema produkcijskog deploymenta (DNS je ok)
-- RSS widget na homepage linkuje na vanjske sajtove — to je normalno dok bot ne napuni bazu
+- Slike članaka su prazne (sive) — nema UNSPLASH_ACCESS_KEY (opcionalno)
+- lib/live.ts još ima stare feed URL-ove (Klix /rss/naslovnica, Make it in Germany)
+  — ali to mijenjamo kad prebacimo widget na naše članke
 
 ## 💡 ZA POSLIJE (ne sad)
-- 30-40 statičnih vodiča (kad budem znao da radi)
-- Ispovijesti sekcija
-- Newsletter
-- Telegram kanal
-- TikTok video generisanje
-- Unsplash API key za slike (UNSPLASH_ACCESS_KEY)
+- 30-40 statičnih vodiča
+- Ispovijesti sekcija, Newsletter, Telegram kanal, TikTok video
+
+## ⚙️ VAŽNO ZA UBUDUĆE — kako se mijenja kod
+- Cowork (cloud) NE MOŽE push na GitHub (403). Claude šalje fajl → korisnik
+  ga kopira u C:\Users\dzena\Documents\GitHub\nodze\ → GitHub Desktop commit + push.
+- Bot se ručno testira: GitHub → Actions → "Dijaspora bot" → Run workflow
+  (NE "Re-run" — to koristi staru verziju!).
+- Env varijable u Vercelu se mijenjaju: Settings → Environment Variables → Edit,
+  PA OBAVEZNO Deployments → Redeploy (inače promjena ne djeluje).

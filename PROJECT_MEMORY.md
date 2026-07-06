@@ -53,9 +53,13 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem.
 - SITE_URL = https://kodnas.de
 
 ## SUPABASE
-- Project ID: nfqhnhktktlyqlwhcsj
+- Project ID (TAČAN, 20 znakova): nfqhnhtktktlyqlwhcsj
+- URL: https://nfqhnhtktktlyqlwhcsj.supabase.co
+- NOVI format ključeva (ovaj projekt):
+  - Publishable (= anon): sb_publishable_...  → NEXT_PUBLIC_SUPABASE_ANON_KEY
+  - Secret (= service role): sb_secret_...     → SUPABASE_SERVICE_ROLE_KEY
 - Tabele: clanci, obradjeni_linkovi, pipeline_logovi, vodici, newsletter_subscribers, kontakt_poruke
-- RLS enabled, anon čita samo published, service_role za bota
+- RLS enabled, anon čita samo published, service_role (admin+bot) zaobilazi RLS
 
 ## GITHUB
 - Repo: github.com/nodze93/nodze

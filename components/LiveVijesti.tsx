@@ -7,17 +7,31 @@ import { dajLiveDE, dajLiveBIH, MOCK_DE, MOCK_BIH, type LiveStavka } from "@/lib
 // ============================================================
 
 function Stavka({ v, de }: { v: LiveStavka; de?: boolean }) {
-  const vanjski = v.link !== "#";
-  return (
-    <a
-      href={vanjski ? v.link : "#"}
-      target={vanjski ? "_blank" : undefined}
-      rel={vanjski ? "noopener noreferrer" : undefined}
-      className="live-item"
-    >
+  const sadrzaj = (
+    <>
       <span className={`live-izvor${de ? " de" : ""}`}>{v.izvor}</span>
       <span className="live-naslov">{v.naslov}</span>
       <span className="live-vrijeme">{v.vrijemeAgo}</span>
+    </>
+  );
+
+  // Naši članci (i fallback) su interni linkovi → koristi Next Link,
+  // ne otvaraj novi tab. Vanjske linkove (ako ih ikad bude) otvori vani.
+  if (v.link.startsWith("/")) {
+    return (
+      <Link href={v.link} className="live-item">
+        {sadrzaj}
+      </Link>
+    );
+  }
+  return (
+    <a
+      href={v.link !== "#" ? v.link : undefined}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="live-item"
+    >
+      {sadrzaj}
     </a>
   );
 }
