@@ -103,20 +103,18 @@ export default async function KategorijaPage({ params }: Props) {
                 className="kat-red"
                 style={{ background: "var(--white)", padding: "14px 16px", display: "flex", gap: 12, alignItems: "center", textDecoration: "none", color: "inherit", cursor: "pointer" }}
               >
-                {clanak.slika ? (
-                  <div
-                    style={{
-                      width: 60,
-                      height: 60,
-                      borderRadius: 6,
-                      flexShrink: 0,
-                      backgroundImage: `url('${clanak.slika}')`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                      backgroundColor: "var(--border)",
-                    }}
-                  />
-                ) : null}
+                <div
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 6,
+                    flexShrink: 0,
+                    backgroundColor: "var(--border)",
+                    backgroundImage: clanak.slika ? `url('${clanak.slika}')` : undefined,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <span className={`tag-pill tag-${clanak.kategorija}`}>{clanak.kategorija}</span>
                   <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, marginBottom: 6, marginTop: 4, color: "var(--tekst)" }}>

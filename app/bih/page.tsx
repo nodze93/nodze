@@ -3,7 +3,7 @@ import Ticker from "@/components/Ticker";
 import KategorijBar from "@/components/KategorijBar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
-import { dajLiveBIH, MOCK_BIH } from "@/lib/live";
+import { dajBIH } from "@/lib/live";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,8 +14,7 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function BihPage() {
-  const rss = await dajLiveBIH(24);
-  const vijesti = rss.length > 0 ? rss : MOCK_BIH;
+  const clanci = await dajBIH(30);
 
   return (
     <>
@@ -24,13 +23,11 @@ export default async function BihPage() {
       <KategorijBar aktivna="bih" />
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
-        {/* Breadcrumb */}
         <div style={{ fontSize: 12, color: "var(--tekst-muted)", marginBottom: 16 }}>
           <Link href="/" style={{ color: "var(--zelena)" }}>Početna</Link> → Vijesti iz BiH
         </div>
 
-        {/* Header */}
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.5px" }}>
             🇧🇦 Vijesti iz BiH
           </h1>
@@ -39,49 +36,45 @@ export default async function BihPage() {
           </p>
         </div>
 
-        {/* LIVE badge */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700, color: "#ef4444" }}>
-            <span className="live-dot" style={{ display: "inline-block" }} />
-            LIVE
-          </span>
-        </div>
-
-        {/* Lista */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)", border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden" }}>
-          {vijesti.map((v, i) => {
-            const interni = v.link.startsWith("/");
-            const sadrzaj = (
-              <>
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#0F6E56", background: "#E1F5EE", padding: "3px 8px", borderRadius: 4, whiteSpace: "nowrap", marginTop: 2, flexShrink: 0 }}>
-                  {v.izvor}
-                </span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.45, color: "var(--tekst)" }}>{v.naslov}</div>
+        {clanci.length === 0 ? (
+          <div style={{ textAlign: "center", padding: 60, color: "var(--tekst-muted)" }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>📄</div>
+            <p>Nema još vijesti u ovoj rubrici. Uskoro!</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
+            {clanci.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/clanak/${c.slug}`}
+                className="kat-red"
+                style={{ background: "var(--white)", padding: "14px 16px", display: "flex", gap: 12, alignItems: "center", textDecoration: "none", color: "inherit", cursor: "pointer" }}
+              >
+                <div
+                  style={{
+                    width: 60, height: 60, borderRadius: 6, flexShrink: 0,
+                    backgroundColor: "var(--border)",
+                    backgroundImage: c.slika ? `url('${c.slika}')` : undefined,
+                    backgroundSize: "cover", backgroundPosition: "center",
+                  }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span className="tag-pill" style={{ background: "#eff6ff", color: "#1e40af" }}>{c.izvor}</span>
+                  <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, marginBottom: 6, marginTop: 4, color: "var(--tekst)" }}>
+                    {c.naslov}
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--tekst-light)" }}>
+                    {c.datum} · {c.minCitanja} min čitanja
+                  </div>
                 </div>
-                <span style={{ fontSize: 11, color: "var(--tekst-light)", whiteSpace: "nowrap", marginTop: 3, flexShrink: 0 }}>{v.vrijemeAgo}</span>
-              </>
-            );
-            const stil = { display: "flex", gap: 14, alignItems: "flex-start", padding: "14px 18px", background: "white", cursor: "pointer", textDecoration: "none", color: "inherit" } as const;
-            return interni ? (
-              <Link key={i} href={v.link} className="bih-red" style={stil}>{sadrzaj}</Link>
-            ) : (
-              <a key={i} href={v.link !== "#" ? v.link : undefined} target="_blank" rel="noopener noreferrer" className="bih-red" style={stil}>{sadrzaj}</a>
-            );
-          })}
-        </div>
-
-        {/* Info box */}
-        <div style={{ marginTop: 24, padding: 16, background: "var(--zelena-svijetla)", borderRadius: 10, border: "1px solid #b7e5d4" }}>
-          <p style={{ fontSize: 13, color: "var(--zelena-tamna)", marginBottom: 6, fontWeight: 600 }}>ℹ️ O ovim vijestima</p>
-          <p style={{ fontSize: 13, color: "var(--zelena-tamna)" }}>
-            Pratimo bosanske izvore (Klix.ba, N1 BiH, Slobodna Evropa, DW) i donosimo najvažnije za dijasporu. Klik otvara naš članak.
-          </p>
-        </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       <Footer />
-      <style>{`.bih-red:hover { background: #fafafa !important; }`}</style>
+      <style>{`.kat-red:hover { background: #fafafa !important; }`}</style>
     </>
   );
 }

@@ -33,7 +33,7 @@ export default function ONamaPage() {
 
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, marginTop: 32 }}>Šta radimo?</h2>
           <p style={{ marginBottom: 16 }}>
-            Svaki dan pratimo novosti relevantne za dijasporu — promjene u viznom sistemu, nova pravila za radnike, izmjene socijalnih naknada. Naša redakcija prati njemačke i bosanske izvore i priprema sažete, razumljive vijesti na bosanskom jeziku.
+            Svaki dan pratimo novosti relevantne za dijasporu — promjene u viznom sistemu, nova pravila za radnike, izmjene socijalnih naknada. Sažimamo ih u kratke, jasne vijesti na bosanskom jeziku.
           </p>
           <p style={{ marginBottom: 16 }}>
             Pored vijesti, nudimo korak-po-korak vodiče koji te vode kroz konkretne procedure — od aplikacije za vizu do povrata poreza.
