@@ -33,7 +33,6 @@ const meniKategorije = [
 ];
 
 export default function Nav() {
-  const [searchOpen, setSearchOpen] = useState(false);
   const [meniOpen, setMeniOpen] = useState(false);
 
   return (
@@ -76,16 +75,25 @@ export default function Nav() {
           ☰
         </button>
 
-        {/* Logo */}
+        {/* Logo — fensi wordmark */}
         <Link href="/" style={{ textDecoration: "none", color: "inherit", flexShrink: 0 }}>
           <div
             style={{
-              fontSize: 20,
+              fontFamily: "Georgia, 'Playfair Display', 'Times New Roman', serif",
+              fontStyle: "italic",
+              fontSize: 25,
               fontWeight: 700,
               letterSpacing: "-0.5px",
+              lineHeight: 1,
+              display: "flex",
+              alignItems: "baseline",
+              gap: 5,
+              whiteSpace: "nowrap",
             }}
           >
-            dijaspora<span style={{ color: "var(--zelena)" }}>.ba</span>
+            <span style={{ color: "var(--tekst)" }}>Kod</span>
+            <span style={{ color: "var(--zelena)" }}>nas</span>
+            <span style={{ color: "var(--tekst-light)", fontWeight: 600 }}>u…</span>
           </div>
         </Link>
 
@@ -120,45 +128,8 @@ export default function Nav() {
           ))}
         </ul>
 
-        {/* Search (desktop) */}
-        <div
-          className="nav-search-desktop"
-          onClick={() => setSearchOpen(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            background: "var(--bg)",
-            border: "1px solid var(--border)",
-            borderRadius: 20,
-            padding: "6px 14px",
-            fontSize: 13,
-            color: "var(--tekst-light)",
-            cursor: "pointer",
-            transition: "border-color 0.15s",
-          }}
-          role="button"
-          aria-label="Pretraži portal"
-        >
-          🔍 Pretraži portal...
-        </div>
-
-        {/* Search ikona (mobitel) */}
-        <button
-          onClick={() => setSearchOpen(true)}
-          className="nav-search-mobile"
-          aria-label="Pretraži"
-          style={{
-            fontSize: 18,
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 4,
-            lineHeight: 1,
-          }}
-        >
-          🔍
-        </button>
+        {/* Prazan prostor desno (balans za mobitel hamburger) */}
+        <span className="nav-spacer" style={{ width: 30 }} aria-hidden="true" />
       </div>
 
       {/* ===== HAMBURGER DRAWER (BBC stil, lijevo) ===== */}
@@ -205,8 +176,22 @@ export default function Nav() {
             borderBottom: "1px solid var(--border)",
           }}
         >
-          <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.5px" }}>
-            dijaspora<span style={{ color: "var(--zelena)" }}>.ba</span>
+          <div
+            style={{
+              fontFamily: "Georgia, 'Playfair Display', 'Times New Roman', serif",
+              fontStyle: "italic",
+              fontSize: 23,
+              fontWeight: 700,
+              letterSpacing: "-0.5px",
+              display: "flex",
+              alignItems: "baseline",
+              gap: 5,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span style={{ color: "var(--tekst)" }}>Kod</span>
+            <span style={{ color: "var(--zelena)" }}>nas</span>
+            <span style={{ color: "var(--tekst-light)", fontWeight: 600 }}>u…</span>
           </div>
           <button
             onClick={() => setMeniOpen(false)}
@@ -249,40 +234,16 @@ export default function Nav() {
           ))}
         </div>
 
-        {/* Pretraga na dnu */}
-        <button
-          onClick={() => {
-            setMeniOpen(false);
-            setSearchOpen(true);
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "16px 20px",
-            margin: "16px",
-            background: "var(--bg)",
-            border: "1px solid var(--border)",
-            borderRadius: 10,
-            color: "var(--tekst-light)",
-            fontSize: 14,
-            cursor: "pointer",
-            textAlign: "left",
-          }}
-        >
-          🔍 Pretraži portal...
-        </button>
       </aside>
 
       {/* Scoped stilovi za responsive prebacivanje */}
       <style>{`
         .nav-hamburger { display: none; }
-        .nav-search-mobile { display: none; }
+        .nav-spacer { display: none; }
         @media (max-width: 768px) {
           .nav-hamburger { display: flex !important; align-items: center; }
           .nav-desktop-links { display: none !important; }
-          .nav-search-desktop { display: none !important; }
-          .nav-search-mobile { display: inline-flex !important; align-items: center; }
+          .nav-spacer { display: block !important; }
         }
       `}</style>
     </nav>
