@@ -10,6 +10,7 @@ export interface ClanakData {
   datum: string;
   minCitanja: number;
   procitano: number;
+  slika?: string | null;
   autoGenerisan?: boolean;
   izvor?: string;
 }

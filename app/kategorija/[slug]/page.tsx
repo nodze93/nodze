@@ -2,7 +2,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import KategorijBar from "@/components/KategorijBar";
 import Ticker from "@/components/Ticker";
-import ClanakCard from "@/components/ClanakCard";
+import Link from "next/link";
 import { getClanciByKategorija } from "@/lib/data/clanci";
 import { dajPoKategoriji } from "@/lib/data";
 import { notFound } from "next/navigation";
@@ -60,10 +60,11 @@ export default async function KategorijaPage({ params }: Props) {
     naslov: c.naslov,
     excerpt: c.excerpt || "",
     sadrzaj: c.sadrzaj || "",
-    kategorija: c.kategorija,
+    kategorija: c.kategorija as import("@/lib/types").TagTip,
     datum: new Date(c.datum_objave || c.created_at).toLocaleDateString("bs-BA", { day: "numeric", month: "short" }),
     minCitanja: c.min_citanja,
     procitano: c.broj_pregleda,
+    slika: c.slika,
   }));
   const staticni = getClanciByKategorija(slug);
   // Spoji: DB prvi, bez duplikata po slugu
@@ -94,20 +95,45 @@ export default async function KategorijaPage({ params }: Props) {
             <p>Nema još članaka u ovoj kategoriji. Uskoro!</p>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, background: "var(--border)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }} className="card-grid">
+          <div style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
             {clanci.map((clanak) => (
-              <ClanakCard key={clanak.id} clanak={clanak} varijanta="card" />
+              <Link
+                key={clanak.id}
+                href={`/clanak/${clanak.slug}`}
+                className="kat-red"
+                style={{ background: "var(--white)", padding: "14px 16px", display: "flex", gap: 12, alignItems: "center", textDecoration: "none", color: "inherit", cursor: "pointer" }}
+              >
+                {clanak.slika ? (
+                  <div
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: 6,
+                      flexShrink: 0,
+                      backgroundImage: `url('${clanak.slika}')`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      backgroundColor: "var(--border)",
+                    }}
+                  />
+                ) : null}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span className={`tag-pill tag-${clanak.kategorija}`}>{clanak.kategorija}</span>
+                  <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, marginBottom: 6, marginTop: 4, color: "var(--tekst)" }}>
+                    {clanak.naslov}
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--tekst-light)" }}>
+                    {clanak.datum} · {clanak.minCitanja} min čitanja
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
         )}
       </div>
 
       <Footer />
-      <style>{`
-        @media (max-width: 768px) {
-          .card-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+      <style>{`.kat-red:hover { background: #fafafa !important; }`}</style>
     </>
   );
 }
