@@ -33,22 +33,19 @@ export default function PipelinePage() {
     : 0;
 
   async function pokreniPipeline() {
-    if (!confirm("Pokrenuti bota odmah? Pisanje traje 1-3 minute.")) return;
+    if (!confirm("Pokrenuti bota na GitHub Actions? Članci se pišu za 2-3 minute.")) return;
     setPokrecem(true);
     setPoruka("");
     try {
       const res = await fetch("/api/admin/pipeline", { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        setPoruka(`✅ Uspjeh! Napisano ${data.napisano || "?"} novih članaka.`);
-        // Refresh logs
-        const newLogs = await fetch("/api/admin/pipeline").then(r => r.json());
-        setLogs(newLogs.logs || []);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok !== false) {
+        setPoruka(data.poruka || "✅ Bot pokrenut. Osvježi listu članaka za par minuta.");
       } else {
-        setPoruka("❌ Greška. Provjeri CRON_SECRET u .env.local");
+        setPoruka(`❌ ${data.error || "Nije moguće pokrenuti bota."}`);
       }
     } catch {
-      setPoruka("❌ Nije moguće pokrenuti pipeline.");
+      setPoruka("❌ Nije moguće pokrenuti bota.");
     } finally {
       setPokrecem(false);
     }
