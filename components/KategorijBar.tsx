@@ -5,6 +5,7 @@ import Link from "next/link";
 
 // v19 raspored — isti kao u headeru
 const kategorije = [
+  { label: "SVE", value: "sve", href: "/" },
   { label: "🇩🇪 DE", value: "de", href: "/de" },
   { label: "🇧🇦 BiH", value: "bih", href: "/bih" },
   { label: "SVIJET", value: "svijet", href: "/kategorija/svijet" },

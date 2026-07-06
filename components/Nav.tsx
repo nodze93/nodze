@@ -52,7 +52,6 @@ export default function Nav() {
           padding: "0 16px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
           height: 56,
           gap: 12,
         }}
@@ -70,13 +69,14 @@ export default function Nav() {
             padding: 4,
             lineHeight: 1,
             color: "var(--tekst)",
+            textAlign: "left",
           }}
         >
           ☰
         </button>
 
         {/* Logo — fensi wordmark */}
-        <Link href="/" style={{ textDecoration: "none", color: "inherit", flexShrink: 0 }}>
+        <Link href="/" className="nav-logo" style={{ textDecoration: "none", color: "inherit" }}>
           <div
             style={{
               fontFamily: "Georgia, 'Playfair Display', 'Times New Roman', serif",
@@ -128,8 +128,8 @@ export default function Nav() {
           ))}
         </ul>
 
-        {/* Prazan prostor desno (balans za mobitel hamburger) */}
-        <span className="nav-spacer" style={{ width: 30 }} aria-hidden="true" />
+        {/* Prazan prostor desno (balansira lijevu stranu — centrira traku) */}
+        <span className="nav-spacer" aria-hidden="true" />
       </div>
 
       {/* ===== HAMBURGER DRAWER (BBC stil, lijevo) ===== */}
@@ -238,12 +238,15 @@ export default function Nav() {
 
       {/* Scoped stilovi za responsive prebacivanje */}
       <style>{`
+        /* Tri zone: [lijevo flex:1] [traka auto — centar] [desno flex:1] */
         .nav-hamburger { display: none; }
-        .nav-spacer { display: none; }
+        .nav-logo { flex: 1 1 0; display: flex; align-items: center; justify-content: flex-start; min-width: 0; }
+        .nav-desktop-links { flex: 0 0 auto; justify-content: center; }
+        .nav-spacer { flex: 1 1 0; }
         @media (max-width: 768px) {
-          .nav-hamburger { display: flex !important; align-items: center; }
+          .nav-hamburger { display: flex !important; flex: 1 1 0; align-items: center; justify-content: flex-start; }
+          .nav-logo { justify-content: center; }
           .nav-desktop-links { display: none !important; }
-          .nav-spacer { display: block !important; }
         }
       `}</style>
     </nav>
