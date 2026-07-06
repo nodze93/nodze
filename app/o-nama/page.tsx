@@ -33,7 +33,7 @@ export default function ONamaPage() {
 
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, marginTop: 32 }}>Šta radimo?</h2>
           <p style={{ marginBottom: 16 }}>
-            Svaki dan pratimo novosti relevantne za dijasporu — promjene u viznom sistemu, nova pravila za radnike, izmjene socijalnih naknada. Naš automatski sistem čita njemacke i bosanske izvore i priprema sažete, razumljive vijesti na bosanskom jeziku.
+            Svaki dan pratimo novosti relevantne za dijasporu — promjene u viznom sistemu, nova pravila za radnike, izmjene socijalnih naknada. Naša redakcija prati njemačke i bosanske izvore i priprema sažete, razumljive vijesti na bosanskom jeziku.
           </p>
           <p style={{ marginBottom: 16 }}>
             Pored vijesti, nudimo korak-po-korak vodiče koji te vode kroz konkretne procedure — od aplikacije za vizu do povrata poreza.
@@ -41,7 +41,7 @@ export default function ONamaPage() {
 
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, marginTop: 32 }}>AI asistent</h2>
           <p style={{ marginBottom: 16 }}>
-            Portal uključuje AI asistenta koji može odgovoriti na tvoja specifična pitanja na bosanskom jeziku — 24/7, bez čekanja. Asistent je treniran na informacijama o njemackim sistemima i može objasniti kompleksne teme jednostavnim rječnikom.
+            Portal uključuje asistenta koji može odgovoriti na tvoja specifična pitanja na bosanskom jeziku — 24/7, bez čekanja. Fokusiran je na teme o njemačkim sistemima i objašnjava kompleksne stvari jednostavnim rječnikom.
           </p>
 
           <div style={{ background: "var(--zelena-svijetla)", border: "1px solid var(--zelena)", borderRadius: 12, padding: 24, marginTop: 32 }}>

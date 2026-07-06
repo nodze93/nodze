@@ -13,9 +13,10 @@ interface Props {
   kategorija: string;      // DB kategorija za filter
   limit?: number;
   fallback?: KarticaHClanak[]; // statični primjeri dok je baza prazna
+  prikaziIzvor?: boolean;  // prikaži izvor (npr. BBC World) umjesto kategorije
 }
 
-export default async function KategorijaSekcija({ naslov, podnaslov, kategorija, limit = 3, fallback = [] }: Props) {
+export default async function KategorijaSekcija({ naslov, podnaslov, kategorija, limit = 3, fallback = [], prikaziIzvor }: Props) {
   const izBaze = await dajPoKategoriji(kategorija, limit);
   const clanci: KarticaHClanak[] =
     izBaze.length > 0
@@ -25,6 +26,7 @@ export default async function KategorijaSekcija({ naslov, podnaslov, kategorija,
           kategorija: c.kategorija,
           meta: formatirajMeta(c),
           slika: c.slika,
+          izvor: c.izvor,
         }))
       : fallback;
 
@@ -47,7 +49,7 @@ export default async function KategorijaSekcija({ naslov, podnaslov, kategorija,
       </div>
       <div className="card-grid-1">
         {clanci.map((c) => (
-          <KarticaH key={c.slug} clanak={c} />
+          <KarticaH key={c.slug} clanak={c} prikaziIzvor={prikaziIzvor} />
         ))}
       </div>
     </div>

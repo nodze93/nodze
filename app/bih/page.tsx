@@ -75,7 +75,7 @@ export default async function BihPage() {
         <div style={{ marginTop: 24, padding: 16, background: "var(--zelena-svijetla)", borderRadius: 10, border: "1px solid #b7e5d4" }}>
           <p style={{ fontSize: 13, color: "var(--zelena-tamna)", marginBottom: 6, fontWeight: 600 }}>ℹ️ O ovim vijestima</p>
           <p style={{ fontSize: 13, color: "var(--zelena-tamna)" }}>
-            Naš AI bot prati bosanske izvore (Klix.ba, N1 BiH, Slobodna Evropa, DW) i piše najvažnije za dijasporu kao naše članke. Klik otvara naš članak.
+            Pratimo bosanske izvore (Klix.ba, N1 BiH, Slobodna Evropa, DW) i donosimo najvažnije za dijasporu. Klik otvara naš članak.
           </p>
         </div>
       </div>

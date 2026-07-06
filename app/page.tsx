@@ -69,9 +69,10 @@ export default function HomePage() {
           {/* Iz svijeta — sada na vrhu (forma ista kao prije) */}
           <KategorijaSekcija
             naslov="🌍 Iz svijeta"
-            podnaslov="Politika, skandali, krize i bizarni događaji — direktno i klikabilno"
+            podnaslov="Najvažnije svjetske vijesti — politika, ekonomija i krize koje utiču na nas"
             kategorija="svijet"
             fallback={FALLBACK_SVIJET}
+            prikaziIzvor
           />
           {/* Najnovije — pomjereno ispod svijeta (forma ista) */}
           <NajnovijeSection />
@@ -84,7 +85,7 @@ export default function HomePage() {
           />
           <KategorijaSekcija
             naslov="Gastarbajter"
-            podnaslov="Stvarne priče iz Facebook grupa — smijeh + korisna info"
+            podnaslov="Priče iz dijaspore — život, iskustva i korisni savjeti"
             kategorija="gastarbajter"
             fallback={FALLBACK_GASTARBAJTER}
           />

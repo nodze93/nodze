@@ -11,9 +11,17 @@ export interface KarticaHClanak {
   kategorija: string;
   meta: string;
   slika?: string | null;
+  izvor?: string | null;
 }
 
-export default function KarticaH({ clanak }: { clanak: KarticaHClanak }) {
+export default function KarticaH({
+  clanak,
+  prikaziIzvor,
+}: {
+  clanak: KarticaHClanak;
+  prikaziIzvor?: boolean;
+}) {
+  const izvor = (clanak.izvor || "").replace(/^🤖\s*/, "").trim();
   return (
     <Link href={`/clanak/${clanak.slug}`} className="kartica-h">
       {clanak.slika ? (
@@ -23,7 +31,11 @@ export default function KarticaH({ clanak }: { clanak: KarticaHClanak }) {
         <div className="kartica-h-thumb" />
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <span className={`tag-pill tag-${clanak.kategorija}`}>{clanak.kategorija}</span>
+        {prikaziIzvor && izvor ? (
+          <span className="tag-pill" style={{ background: "#eff6ff", color: "#1e40af" }}>{izvor}</span>
+        ) : (
+          <span className={`tag-pill tag-${clanak.kategorija}`}>{clanak.kategorija}</span>
+        )}
         <div className="kartica-h-naslov">{clanak.naslov}</div>
         <div className="kartica-h-meta">{clanak.meta}</div>
       </div>

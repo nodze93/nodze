@@ -75,7 +75,7 @@ export default async function DePage() {
         <div style={{ marginTop: 24, padding: 16, background: "var(--zelena-svijetla)", borderRadius: 10, border: "1px solid #b7e5d4" }}>
           <p style={{ fontSize: 13, color: "var(--zelena-tamna)", marginBottom: 6, fontWeight: 600 }}>ℹ️ O ovim vijestima</p>
           <p style={{ fontSize: 13, color: "var(--zelena-tamna)" }}>
-            Naš AI bot svaki dan prati njemačke izvore (Spiegel, Tagesschau, DW) i piše najvažnije za dijasporu kao naše članke na bosanskom. Klik otvara naš članak.
+            Pratimo njemačke izvore (Spiegel, Tagesschau, DW) i donosimo najvažnije za dijasporu na bosanskom jeziku. Klik otvara naš članak.
           </p>
         </div>
       </div>
