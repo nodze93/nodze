@@ -2,78 +2,79 @@
 
 ## KO SAM JA
 - Nisam developer, objašnjavaj mi na bosanskom
-- Budžet: MAX €15/mj Claude API
+- Budžet: MAX ~€15/mj Claude API
 - Domena: kodnas.de
 
 ## CILJ
-News portal za Bosance u Njemačkoj i Austriji. Bot piše vijesti 2x dnevno automatski.
-Cilj: pusti da radi sam sa minimalnim mojim učešćem.
+News portal za Bosance u Njemačkoj i Austriji. Bot piše vijesti automatski.
+Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 
 ## STACK
-- Next.js 15 (App Router)
-- TypeScript
-- Tailwind
-- Supabase (baza)
-- Claude API (Haiku 4.5 za sve agente da uštedim)
-- Vercel Hobby (besplatno)
-- GitHub Actions (cron za bot, besplatno)
+- Next.js 15 (App Router, ^15.3.0), TypeScript, Tailwind
+- Supabase (baza), Claude API (Haiku 4.5), Vercel Hobby, GitHub Actions (bot cron)
 
 ## MODELI
-- MODEL_BRZI: claude-haiku-4-5
-- MODEL_PISAC: claude-haiku-4-5 (promijenjeno sa Sonnet radi ušteda)
+- MODEL_BRZI = claude-haiku-4-5
+- MODEL_PISAC = claude-haiku-4-5 (bio Sonnet — promijenjeno radi ušteda)
 
-## VAŽNA PRAVILA
-1. NIKAD ne push direktno na main (osim hitnih fix-ova)
-2. UVIJEK preview branch prvo
-3. Pre push, uvijek `npm run build` lokalno
-4. Ako build ne prođe — NE PUSH
-5. Mali commiti, ne veliki
-6. Objasni mi jednostavno, korak po korak
+## ⚙️ KAKO SE MIJENJA KOD (VAŽNO — novi način!)
+- Claude piše fajlove DIREKTNO u moj folder preko mosta:
+  C:\Users\dzena\Documents\GitHub\nodze
+- Ja samo: GitHub Desktop → Commit → Push. NEMA više copy-paste.
+- IZUZETAK: `.github/workflows/*.yml` su ZAŠTIĆENI od strane GitHub-a —
+  most ih NE MOŽE pisati. Taj fajl (bot-cron.yml) Claude mi pošalje,
+  a JA ga ručno kopiram u folder.
+- Claude NE MOŽE sam push (cloud 403) i NE MOŽE lokalno build/test
+  (nema npm registry) — zato izmjene testiram na Vercel PREVIEW-u.
 
-## AUTO-PUBLISH PRAVILA
-- 🟢 ZELENI članci → auto-publish
-- 🟡 ŽUTI članci → draft (email meni)
-- 🔴 CRVENI članci → obriši
-
-## KLJUČNE DATOTEKE
-- /lib/bot/pipeline.ts — srce bota
-- /lib/bot/izvori.ts — RSS izvori (16 feedova)
-- /lib/bot/agenti/writer.ts — pisanje
-- /lib/bot/agenti/factcheck.ts — provjera
-- /lib/bot/agenti/jezik.ts — bosanski lektor
-- /app/admin/ — admin panel
-- .github/workflows/bot-cron.yml — cron 2x dnevno
-
-## ENV VARIJABLE (Vercel + GitHub Secrets)
-- NEXT_PUBLIC_SUPABASE_URL
-- NEXT_PUBLIC_SUPABASE_ANON_KEY
-- SUPABASE_SERVICE_ROLE_KEY
-- ANTHROPIC_API_KEY
-- CRON_SECRET
-- SITE_URL = https://kodnas.de
+## ⚠️ PRAVILA
+1. Radi na PREVIEW branchu, pa merge u main tek kad potvrdim
+2. Objasni mi jednostavno, korak po korak
+3. Nikad ne otkrivaj javno da "bot piše" ili "prati izvore" (neozbiljno)
 
 ## SUPABASE
-- Project ID (TAČAN, 20 znakova): nfqhnhtktktlyqlwhcsj
+- Project ID (20 znakova): nfqhnhtktktlyqlwhcsj
 - URL: https://nfqhnhtktktlyqlwhcsj.supabase.co
-- NOVI format ključeva (ovaj projekt):
-  - Publishable (= anon): sb_publishable_...  → NEXT_PUBLIC_SUPABASE_ANON_KEY
-  - Secret (= service role): sb_secret_...     → SUPABASE_SERVICE_ROLE_KEY
-- Tabele: clanci, obradjeni_linkovi, pipeline_logovi, vodici, newsletter_subscribers, kontakt_poruke
-- RLS enabled, anon čita samo published, service_role (admin+bot) zaobilazi RLS
+- Ključevi (novi format): sb_publishable_ (anon) / sb_secret_ (service role)
+- SQL šeme: supabase/schema.sql (osnovni — VEĆ pokrenut, ne dirati)
+             supabase/moderacija.sql (redoslijed, je_naslovna, zakazano_za)
 
-## GITHUB
-- Repo: github.com/nodze93/nodze
-- Branch: main (production)
-- GitHub Actions secrets: SITE_URL, CRON_SECRET postavljeni
+## ENV VARIJABLE
+### Vercel (Production + Preview):
+- NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+- ANTHROPIC_API_KEY, CRON_SECRET, ADMIN_SECRET, NEXT_PUBLIC_SITE_URL=https://kodnas.de
+- GITHUB_TOKEN (za "Pokreni odmah" dugme — repo scope)
+- (opciono) GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION, UNSPLASH_ACCESS_KEY
+### GitHub Actions Secrets (za bota):
+- ANTHROPIC_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, (UNSPLASH_ACCESS_KEY)
 
-## VERCEL
-- Projekat: nodze-delta.vercel.app
-- Domena: kodnas.de (A record: 216.198.79.1, CNAME www: ec48c866504a9103.vercel-dns-017.com)
-- Build: ignoreBuildErrors: true, ignoreDuringBuilds: true
+## BOT
+- Pokreće se preko GitHub Actions (.github/workflows/bot-cron.yml)
+- Raspored: 3x dnevno — 06:00 / 12:30 / 20:00 (Berlin). Cron UTC: "0 4", "30 10", "0 18"
+- Kvote po pokretanju (env u workflowu): CLANCI_DE=1, CLANCI_BIH=1, CLANCI_SVIJET=1
+  CLANCI_SPORT = 1 ujutro/navečer, 0 u podne (uslovno preko github.event.schedule)
+- DE i BiH ODVOJENI (filter dijeli dijaspora izvore po jeziku: de vs bs)
+- Skip fact-check za sport/svijet; dijaspora (DE+BiH) ide kroz fact-check
+- Piše DRAFTOVE — ja ih objavim u adminu ("Uredi članke" → 🚀)
+
+## KLJUČNE DATOTEKE
+- lib/bot/pipeline.ts — srce bota
+- lib/bot/izvori.ts — RSS izvori
+- lib/bot/agenti/{claude,filter,writer,factcheck,jezik}.ts
+- lib/data.ts — javni data sloj (poštuje redoslijed/zakazivanje)
+- lib/live.ts — DE/BiH/Svijet feed (dijeli po izvoru)
+- lib/data/vodici.ts — vodiči (hard-kodirani)
+- components/admin/AdminModeracija.tsx — admin traka + Article Manager
+- app/api/admin/* — admin API (auth, clanci, pipeline, me, redoslijed, naslovna...)
+- .github/workflows/bot-cron.yml — raspored bota (ZAŠTIĆEN, ručno kopirati)
+
+## MODERACIJA (kako radim)
+- Uloguj se na /admin/login → na dnu svake stranice crna admin traka
+- "Uredi članke" → reorder (▲▼/drag), ★ naslovna, 🚀 objavi, ✏️ uredi, ⏰ zakaži, 🗑️ obriši, + dodaj
+- Filter po kategoriji automatski (gdje si, to uređuješ)
+- Mockup primjeri (u kodu) se NE mogu moderirati; samo pravi članci (bot/ručno)
 
 ## KADA POČNEŠ NOVI CHAT
-1. PRVO pročitaj PROJECT_MEMORY.md
-2. PRVO pročitaj PROGRESS.md
-3. PRVO pročitaj CURRENT_TASK.md
-4. Reci mi: "Razumijem projekat. Šta radimo?"
-5. NE mijenjaj kod dok ne dogovorimo plan.
+1. Pročitaj PROJECT_MEMORY.md, PROGRESS.md, CURRENT_TASK.md
+2. Reci: "Razumijem projekat. Šta radimo?"
+3. NE mijenjaj kod dok ne dogovorimo plan.
