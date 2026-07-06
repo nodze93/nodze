@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
+import { getAllVodici } from "@/lib/data/vodici";
 
 // Bazni URL sajta (bez završne kose crte).
 const BASE = (process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de").replace(/\/+$/, "");
@@ -70,20 +71,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       /* baza pala — sitemap ostaje sa statičnim stranicama */
     }
 
-    // Vodiči
-    try {
-      const { data } = await db.from("vodici").select("slug,created_at").limit(500);
-      for (const v of data || []) {
-        stavke.push({
-          url: `${BASE}/vodic/${v.slug}`,
-          lastModified: v.created_at ? new Date(v.created_at) : sada,
-          changeFrequency: "monthly",
-          priority: 0.6,
-        });
-      }
-    } catch {
-      /* ignoriši — vodiči nisu obavezni za sitemap */
-    }
+  }
+
+  // Vodiči (hard-kodirani u lib/data/vodici.ts)
+  for (const v of getAllVodici()) {
+    stavke.push({
+      url: `${BASE}/vodic/${v.slug}`,
+      lastModified: sada,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    });
   }
 
   return stavke;
