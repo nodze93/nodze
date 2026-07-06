@@ -65,14 +65,15 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
       return rez;
     }
 
-    // ── 3. Filter Agent — kvote po kategoriji (env podesivo) ─
-    // Default: 1 dijaspora + 1 svijet + 1 sport po pokretanju.
-    // Sa 2 pokretanja dnevno (08:00 i 20:00) = 6 članaka/dan, 2 po kategoriji.
-    const kDijaspora = parseInt(process.env.CLANCI_DIJASPORA || "1", 10);
+    // ── 3. Filter Agent — kvote po grupi (env podesivo) ─
+    // Default: 1 DE + 1 BiH + 1 svijet + 1 sport po pokretanju.
+    // DE i BiH su ODVOJENI — BiH nikad ne ostane prazan.
+    const kDE = parseInt(process.env.CLANCI_DE || process.env.CLANCI_DIJASPORA || "1", 10);
+    const kBih = parseInt(process.env.CLANCI_BIH || "1", 10);
     const kSvijet = parseInt(process.env.CLANCI_SVIJET || "1", 10);
     const kSport = parseInt(process.env.CLANCI_SPORT || "1", 10);
 
-    const filtrirane = await filterVijesti(nove, trends, kDijaspora, kSvijet, kSport);
+    const filtrirane = await filterVijesti(nove, trends, kDE, kBih, kSvijet, kSport);
     rez.prosloFilter = filtrirane.length;
 
     if (filtrirane.length === 0) {

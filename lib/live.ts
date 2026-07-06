@@ -48,6 +48,7 @@ interface Red {
   naslov: string;
   izvor: string | null;
   kategorija: string;
+  tip: string | null;
   datum_objave: string | null;
   created_at: string;
 }
@@ -57,7 +58,7 @@ async function dajObjavljene(): Promise<Red[]> {
   if (!db) return [];
   const { data, error } = await db
     .from("clanci")
-    .select("slug,naslov,izvor,kategorija,datum_objave,created_at")
+    .select("slug,naslov,izvor,kategorija,tip,datum_objave,created_at")
     .eq("status", "published")
     .order("datum_objave", { ascending: false, nullsFirst: false })
     .limit(40);
@@ -76,20 +77,26 @@ function uStavku(r: Red): LiveStavka {
   };
 }
 
-/** 🇩🇪 Naši objavljeni članci — njemačka/svjetska strana */
+// Widgeti pokazuju SAMO dijaspora članke (ne svjetske ni sport).
+// Unutar dijaspore: njemački izvori → DE, bosanski izvori → BiH.
+function jeDijaspora(r: Red): boolean {
+  return (r.tip || "dijaspora") === "dijaspora";
+}
+
+/** 🇩🇪 Naši objavljeni članci — SAMO njemački izvori (Tagesschau, Spiegel...) */
 export async function dajLiveDE(limit = 6): Promise<LiveStavka[]> {
   const svi = await dajObjavljene();
   return svi
-    .filter((r) => !jeBih(ocistiIzvor(r.izvor), r.kategorija))
+    .filter((r) => jeDijaspora(r) && !jeBih(ocistiIzvor(r.izvor), r.kategorija))
     .slice(0, limit)
     .map(uStavku);
 }
 
-/** 🇧🇦 Naši objavljeni članci — BiH strana */
+/** 🇧🇦 Naši objavljeni članci — SAMO bosanski izvori (Klix, N1...) */
 export async function dajLiveBIH(limit = 6): Promise<LiveStavka[]> {
   const svi = await dajObjavljene();
   return svi
-    .filter((r) => jeBih(ocistiIzvor(r.izvor), r.kategorija))
+    .filter((r) => jeDijaspora(r) && jeBih(ocistiIzvor(r.izvor), r.kategorija))
     .slice(0, limit)
     .map(uStavku);
 }

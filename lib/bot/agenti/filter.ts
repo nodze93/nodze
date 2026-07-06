@@ -149,37 +149,45 @@ async function filterBatch(
 }
 
 /**
- * Filtrira sve vijesti: vraća top N dijaspora + top M svjetskih, sortirano po ocjeni.
+ * Filtrira sve vijesti i vraća top članke po kvotama:
+ * DE (njemački izvori) + BiH (bosanski izvori) + Svijet + Sport.
+ * DE i BiH su odvojeni pa BiH nikad ne ostane prazan.
  */
 export async function filterVijesti(
   vijesti: Vijest[],
   trends: TrendsRezultat | null,
-  maxDijaspora = 1,
+  maxDE = 1,
+  maxBih = 1,
   maxSvjetske = 1,
   maxSport = 1
 ): Promise<Vijest[]> {
   console.log(`🔍 Filter Agent: ocjenjujem ${vijesti.length} vijesti...`);
 
+  // Dijaspora izvori se dijele po jeziku: "de" = njemački, "bs" = bosanski.
   const dijaspora = vijesti.filter((v) => v.tip === "dijaspora");
+  const de = dijaspora.filter((v) => v.jezik === "de");
+  const bih = dijaspora.filter((v) => v.jezik === "bs");
   const svjetske = vijesti.filter((v) => v.tip === "svjetske");
   const sport = vijesti.filter((v) => v.tip === "sport");
-  console.log(`   📌 Dijaspora: ${dijaspora.length} | 🌍 Svijet: ${svjetske.length} | ⚽ Sport: ${sport.length}`);
+  console.log(`   🇩🇪 DE: ${de.length} | 🇧🇦 BiH: ${bih.length} | 🌍 Svijet: ${svjetske.length} | ⚽ Sport: ${sport.length}`);
 
-  const [ocDijaspora, ocSvjetske, ocSport] = await Promise.all([
-    filterBatch(dijaspora, FILTER_DIJASPORA_PROMPT, "dijaspora", trends),
+  const [ocDE, ocBih, ocSvjetske, ocSport] = await Promise.all([
+    filterBatch(de, FILTER_DIJASPORA_PROMPT, "DE", trends),
+    filterBatch(bih, FILTER_DIJASPORA_PROMPT, "BiH", trends),
     filterBatch(svjetske, FILTER_SVIJET_PROMPT, "svijet", null),
     filterBatch(sport, FILTER_SPORT_PROMPT, "sport", null),
   ]);
 
   const poOcjeni = (a: Vijest, b: Vijest) => (b.score || 0) - (a.score || 0);
-  const topDijaspora = ocDijaspora.sort(poOcjeni).slice(0, maxDijaspora);
+  const topDE = ocDE.sort(poOcjeni).slice(0, maxDE);
+  const topBih = ocBih.sort(poOcjeni).slice(0, maxBih);
   const topSvjetske = ocSvjetske.sort(poOcjeni).slice(0, maxSvjetske);
   const topSport = ocSport.sort(poOcjeni).map((v) => ({ ...v, kategorija: "sport" })).slice(0, maxSport);
-  const rezultat = [...topDijaspora, ...topSvjetske, ...topSport];
+  const rezultat = [...topDE, ...topBih, ...topSvjetske, ...topSport];
 
-  console.log(`✅ Filter: ${rezultat.length} prošlo (${topDijaspora.length} dijaspora + ${topSvjetske.length} svijet + ${topSport.length} sport)`);
+  console.log(`✅ Filter: ${rezultat.length} prošlo (${topDE.length} DE + ${topBih.length} BiH + ${topSvjetske.length} svijet + ${topSport.length} sport)`);
   rezultat.forEach((v) => {
-    const ikona = v.tip === "svjetske" ? "🌍" : v.tip === "sport" ? "⚽" : "📌";
+    const ikona = v.tip === "svjetske" ? "🌍" : v.tip === "sport" ? "⚽" : v.jezik === "de" ? "🇩🇪" : "🇧🇦";
     console.log(`   ${ikona} ${v.score}/10 [${v.kategorija}] ${v.naslov.slice(0, 55)}`);
   });
 

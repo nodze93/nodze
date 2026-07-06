@@ -66,6 +66,14 @@ export default function HomePage() {
       >
         {/* Left column — v19 redoslijed sekcija */}
         <main>
+          {/* Iz svijeta — sada na vrhu (forma ista kao prije) */}
+          <KategorijaSekcija
+            naslov="🌍 Iz svijeta"
+            podnaslov="Politika, skandali, krize i bizarni događaji — direktno i klikabilno"
+            kategorija="svijet"
+            fallback={FALLBACK_SVIJET}
+          />
+          {/* Najnovije — pomjereno ispod svijeta (forma ista) */}
           <NajnovijeSection />
           <VodiciSection />
           <KategorijaSekcija
@@ -79,12 +87,6 @@ export default function HomePage() {
             podnaslov="Stvarne priče iz Facebook grupa — smijeh + korisna info"
             kategorija="gastarbajter"
             fallback={FALLBACK_GASTARBAJTER}
-          />
-          <KategorijaSekcija
-            naslov="🌍 Iz svijeta"
-            podnaslov="Politika, skandali, krize i bizarni događaji — direktno i klikabilno"
-            kategorija="svijet"
-            fallback={FALLBACK_SVIJET}
           />
           <KategorijaSekcija
             naslov="⚽ Sport"
