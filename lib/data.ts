@@ -160,6 +160,64 @@ export async function dajNajcitanije(limit = 5): Promise<DbClanak[]> {
   return sakrijZakazane((r.data as DbClanak[]) || []).slice(0, limit);
 }
 
+// Kratki datum: "Danas" / "Jučer" / "3. jul"
+export function kratkiDatum(c: DbClanak): string {
+  const d = new Date(c.datum_objave || c.created_at);
+  const danas = new Date();
+  const r = Math.floor((danas.getTime() - d.getTime()) / 86400000);
+  if (r === 0) return "Danas";
+  if (r === 1) return "Jučer";
+  return d.toLocaleDateString("bs-BA", { day: "numeric", month: "short" });
+}
+
+const HERO_LABELI: Record<string, string> = {
+  bih: "BiH", de: "DE", svijet: "Svijet", viza: "Viza", stan: "Stan",
+  zdravstvo: "Zdravstvo", porodica: "Porodica", finansije: "Finansije",
+  sport: "Sport", gastarbajter: "Gastarbajter", posao: "Posao",
+  porez: "Porez", penzija: "Penzija", povratak: "Povratak", vijesti: "Vijesti",
+};
+
+export interface HeroKartica {
+  slug: string;
+  kategorija: string;
+  label: string;
+  naslov: string;
+  excerpt: string;
+  meta: string;
+  datum: string;
+  danasnji: boolean;
+}
+
+export function heroKartica(c: DbClanak): HeroKartica {
+  const kat = c.kategorija || "vijesti";
+  const d = new Date(c.datum_objave || c.created_at);
+  const danas = new Date();
+  const danasnji = Math.floor((danas.getTime() - d.getTime()) / 86400000) === 0;
+  return {
+    slug: c.slug,
+    kategorija: kat,
+    label: HERO_LABELI[kat] || kat.charAt(0).toUpperCase() + kat.slice(1),
+    naslov: c.naslov,
+    excerpt: c.excerpt || "",
+    meta: formatirajMeta(c),
+    datum: kratkiDatum(c),
+    danasnji,
+  };
+}
+
+/**
+ * Kartice za rotirajući Hero na naslovnoj.
+ * Najnoviji objavljeni; današnji članci idu prvi (svježe vrte).
+ */
+export async function dajHero(limit = 12): Promise<HeroKartica[]> {
+  const clanci = await dajNajnovije(limit);
+  const kartice = clanci.map(heroKartica);
+  // Današnji prvo, ostali po redu (stabilno)
+  const danas = kartice.filter((k) => k.danasnji);
+  const stari = kartice.filter((k) => !k.danasnji);
+  return [...danas, ...stari];
+}
+
 /** Meta linija: "1. jul · 4 min · 1.2k pročitano" */
 export function formatirajMeta(c: DbClanak): string {
   const dijelovi: string[] = [];
