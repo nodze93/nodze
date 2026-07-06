@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SearchModal from "@/components/SearchModal";
+import AdminModeracija from "@/components/admin/AdminModeracija";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de";
 
@@ -55,6 +56,7 @@ export default function RootLayout({
       <body>
         {children}
         <SearchModal />
+        <AdminModeracija />
       </body>
     </html>
   );

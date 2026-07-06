@@ -38,6 +38,7 @@ async function azuriraj(req: Request, { params }: Props) {
   const dozvoljena = [
     "naslov", "excerpt", "sadrzaj", "kategorija", "status",
     "min_citanja", "izvor", "slug", "slika", "slika_autor",
+    "redoslijed", "je_naslovna", "zakazano_za",
   ] as const;
   const izmjene: Record<string, unknown> = {};
   for (const k of dozvoljena) {

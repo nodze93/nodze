@@ -25,6 +25,9 @@ interface DbRed {
   slika: string | null;
   created_at: string;
   datum_objave: string | null;
+  je_naslovna: boolean | null;
+  zakazano_za: string | null;
+  redoslijed: number | null;
 }
 
 // GET — lista članaka s filterima (?status=&kategorija=&q=)
@@ -39,8 +42,10 @@ export async function GET(req: Request) {
     let query = db
       .from("clanci")
       .select(
-        "id,slug,naslov,excerpt,kategorija,status,izvor,min_citanja,broj_pregleda,faktcheck_status,jezik_ocjena,auto_generisan,tip,slika,created_at,datum_objave"
+        "id,slug,naslov,excerpt,kategorija,status,izvor,min_citanja,broj_pregleda,faktcheck_status,jezik_ocjena,auto_generisan,tip,slika,created_at,datum_objave,je_naslovna,zakazano_za,redoslijed"
       )
+      .order("je_naslovna", { ascending: false })
+      .order("redoslijed", { ascending: true })
       .order("created_at", { ascending: false })
       .limit(200);
 
@@ -65,6 +70,8 @@ export async function GET(req: Request) {
       faktcheck: c.faktcheck_status,
       jezik: c.jezik_ocjena,
       slika: c.slika,
+      jeNaslovna: c.je_naslovna || false,
+      zakazanoZa: c.zakazano_za || null,
       datum: new Date(c.datum_objave || c.created_at).toLocaleDateString("bs-BA"),
     }));
 
