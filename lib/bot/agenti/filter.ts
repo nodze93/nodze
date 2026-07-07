@@ -27,6 +27,26 @@ NISKA OCJENA (0-3):
 - Celebrity gossip bez veze s BiH
 - Suhe ekonomske analize bez konkretnih implikacija`;
 
+const FILTER_BIH_PROMPT = `Ti si urednik rubrike "Bosna i Hercegovina" na portalu za našu dijasporu u Njemačkoj i Austriji.
+
+Ova rubrika je PROZOR U DOMOVINU — čitaoci žive vani i žele znati šta se DEŠAVA U BiH dok ih nema. Ovdje se NE piše o Njemačkoj/Austriji; to ide u drugu rubriku.
+
+Ocijeni svaku vijest 0-10: koliko bi bila zanimljiva Bosancu vani koji prati šta se dešava kod kuće.
+
+VISOKA OCJENA (7-10):
+- Važni događaji u BiH: politika, izbori, odluke vlasti, novi zakoni
+- Ekonomija kod kuće: cijene, plate, penzije, struja, gorivo, inflacija u BiH
+- Društvo i svakodnevica: nesreće, vremenske nepogode, infrastruktura, zdravstvo, školstvo
+- Veze domovine i dijaspore: glasanje iz inostranstva, pasoši, nekretnine, ulaganja, povratak
+- Priče koje se prepričavaju: veliki događaji, skandali, uspjesi naših ljudi u BiH, kultura, sport u BiH
+- Bilo šta o čemu bi naš čovjek vani rekao: "jesi čuo šta je bilo u Bosni?"
+
+NISKA OCJENA (0-3):
+- Vijesti koje se TIČU Njemačke/Austrije/EU migracija (to ide u DE rubriku, ne ovdje)
+- Sitne lokalne vijesti bez šireg značaja
+- Suha PR saopštenja i najave
+- Puke statistike bez priče`;
+
 const FILTER_SVIJET_PROMPT = `Ti si urednik rubrike "Svijet" na portalu Dijaspora.ba — portala za Bosance u Njemačkoj.
 
 Publika: Bosanci 25-50 godina, prate svijet, vole klikabilne naslove ali NE lažne.
@@ -163,24 +183,28 @@ export async function filterVijesti(
 ): Promise<Vijest[]> {
   console.log(`🔍 Filter Agent: ocjenjujem ${vijesti.length} vijesti...`);
 
-  // Dijaspora izvori se dijele po jeziku: "de" = njemački, "bs" = bosanski.
+  // Dijaspora izvori se dijele po STRANI: "de" = Njemačka, "bih" = Bosna.
+  // (DW Bosanski je bosanski jezik ali piše o Njemačkoj → strana "de".)
+  // Fallback ako strana nije zadata: njemački jezik → DE, ostalo → BiH.
+  const jeBihStrana = (v: Vijest) => (v.strana ? v.strana === "bih" : v.jezik !== "de");
   const dijaspora = vijesti.filter((v) => v.tip === "dijaspora");
-  const de = dijaspora.filter((v) => v.jezik === "de");
-  const bih = dijaspora.filter((v) => v.jezik === "bs");
+  const de = dijaspora.filter((v) => !jeBihStrana(v));
+  const bih = dijaspora.filter((v) => jeBihStrana(v));
   const svjetske = vijesti.filter((v) => v.tip === "svjetske");
   const sport = vijesti.filter((v) => v.tip === "sport");
   console.log(`   🇩🇪 DE: ${de.length} | 🇧🇦 BiH: ${bih.length} | 🌍 Svijet: ${svjetske.length} | ⚽ Sport: ${sport.length}`);
 
   const [ocDE, ocBih, ocSvjetske, ocSport] = await Promise.all([
     filterBatch(de, FILTER_DIJASPORA_PROMPT, "DE", trends),
-    filterBatch(bih, FILTER_DIJASPORA_PROMPT, "BiH", trends),
+    filterBatch(bih, FILTER_BIH_PROMPT, "BiH", null),
     filterBatch(svjetske, FILTER_SVIJET_PROMPT, "svijet", null),
     filterBatch(sport, FILTER_SPORT_PROMPT, "sport", null),
   ]);
 
   const poOcjeni = (a: Vijest, b: Vijest) => (b.score || 0) - (a.score || 0);
   const topDE = ocDE.sort(poOcjeni).slice(0, maxDE);
-  const topBih = ocBih.sort(poOcjeni).slice(0, maxBih);
+  // BiH = vijesti iz domovine → uvijek kategorija "bih"
+  const topBih = ocBih.sort(poOcjeni).map((v) => ({ ...v, kategorija: "bih" })).slice(0, maxBih);
   const topSvjetske = ocSvjetske.sort(poOcjeni).slice(0, maxSvjetske);
   const topSport = ocSport.sort(poOcjeni).map((v) => ({ ...v, kategorija: "sport" })).slice(0, maxSport);
   const rezultat = [...topDE, ...topBih, ...topSvjetske, ...topSport];

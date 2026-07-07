@@ -9,6 +9,10 @@ export interface FeedIzvor {
   url: string;
   jezik: "bs" | "de" | "en";
   tip: IzvorTip;
+  // Za dijaspora izvore: na koju stranu ide sadržaj.
+  // "de" = Vijesti iz Njemačke, "bih" = Vijesti iz BiH.
+  // Npr. DW Bosanski je na bosanskom ALI piše o Njemačkoj → "de".
+  strana?: "de" | "bih";
 }
 
 // Sirova vijest iz RSS-a
@@ -20,6 +24,7 @@ export interface Vijest {
   izvor: string;
   jezik: "bs" | "de" | "en";
   tip: IzvorTip;
+  strana?: "de" | "bih";
   // popunjava Filter agent:
   score?: number;
   razlogFiltera?: string;

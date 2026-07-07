@@ -30,8 +30,9 @@ function vrijemeAgo(ts: number): string {
   return `${Math.floor(h / 24)}d`;
 }
 
-// Izvori koje smatramo "BiH stranom" (sve ostalo ide na DE/svjetsku stranu)
-const BIH_IZVORI = ["klix", "n1", "slobodna", "dw bosanski", "avaz", "sportske"];
+// Izvori koje smatramo "BiH stranom" (sve ostalo ide na DE/svjetsku stranu).
+// DW Bosanski NIJE ovdje — piše o Njemačkoj, pa ide na DE stranu.
+const BIH_IZVORI = ["klix", "n1", "slobodna", "avaz", "sportsport"];
 
 function ocistiIzvor(izvor: string | null): string {
   return (izvor || "Dijaspora.ba").replace(/^🤖\s*/, "").trim();

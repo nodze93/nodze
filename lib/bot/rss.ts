@@ -29,6 +29,7 @@ async function fetchJedanFeed(izvor: FeedIzvor): Promise<Vijest[]> {
         izvor: izvor.ime,
         jezik: izvor.jezik,
         tip: izvor.tip,
+        strana: izvor.strana,
       }));
   } catch (err) {
     console.warn(`⚠️  Feed "${izvor.ime}" preskočen: ${(err as Error).message}`);
