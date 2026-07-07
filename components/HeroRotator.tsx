@@ -11,6 +11,7 @@ export interface HeroClanak {
   excerpt: string;
   meta: string;
   datum: string;
+  slika?: string;
   danasnji?: boolean;
 }
 
@@ -171,21 +172,34 @@ export default function HeroRotator({ glavniInitial, glavniFallback, bocni }: Pr
               key={`${item.slug}-${i}`}
               href={`/clanak/${item.slug}`}
               style={{
-                padding: "18px 20px",
+                padding: "14px 18px",
                 borderBottom: i < bocni.length - 1 ? "1px solid var(--border)" : "none",
                 cursor: "pointer",
                 transition: "background 0.15s",
                 flex: 1,
                 display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
+                gap: 12,
+                alignItems: "center",
               }}
               className="hover:bg-[#fafafa]"
             >
-              <div>
+              {/* Thumbnail (siva kutija ako nema slike) */}
+              <div
+                style={{
+                  width: 74,
+                  height: 74,
+                  borderRadius: 8,
+                  flexShrink: 0,
+                  backgroundColor: "var(--border)",
+                  backgroundImage: item.slika ? `url('${item.slika}')` : undefined,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <span
                   className={`tag-pill tag-${item.kategorija}`}
-                  style={{ marginBottom: 6, display: "inline-block" }}
+                  style={{ marginBottom: 5, display: "inline-block" }}
                 >
                   {item.label}
                 </span>
@@ -193,15 +207,15 @@ export default function HeroRotator({ glavniInitial, glavniFallback, bocni }: Pr
                   style={{
                     fontSize: 14,
                     fontWeight: 600,
-                    lineHeight: 1.4,
-                    marginBottom: 8,
+                    lineHeight: 1.35,
+                    marginBottom: 5,
                     color: "var(--tekst)",
                   }}
                 >
                   {item.naslov}
                 </div>
+                <div style={{ fontSize: 11, color: "var(--tekst-light)" }}>{item.meta}</div>
               </div>
-              <div style={{ fontSize: 11, color: "var(--tekst-light)" }}>{item.meta}</div>
             </Link>
           ))}
         </div>

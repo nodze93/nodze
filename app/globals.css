@@ -119,7 +119,7 @@ a {
 .live-item { display: flex; gap: 10px; align-items: flex-start; padding: 9px 16px; cursor: pointer; transition: background 0.12s; border-bottom: 1px solid #f3f4f6; text-decoration: none; color: inherit; }
 .live-item:last-child { border-bottom: none; }
 .live-item:hover { background: var(--bg); }
-.live-izvor { font-size: 10px; font-weight: 700; color: var(--zelena-tamna); background: var(--zelena-svijetla); padding: 2px 6px; border-radius: 4px; white-space: nowrap; margin-top: 2px; flex-shrink: 0; }
+.live-izvor { font-size: 10px; font-weight: 700; color: var(--zelena-tamna); background: var(--zelena-svijetla); padding: 2px 4px; border-radius: 4px; white-space: nowrap; margin-top: 2px; flex-shrink: 0; width: 96px; box-sizing: border-box; text-align: center; overflow: hidden; text-overflow: ellipsis; }
 .live-izvor.de { color: #1a3a5c; background: #dbeafe; }
 .live-naslov { font-size: 13px; line-height: 1.45; color: var(--tekst); font-weight: 500; flex: 1; }
 .live-vrijeme { font-size: 11px; color: var(--tekst-light); white-space: nowrap; margin-top: 3px; flex-shrink: 0; }

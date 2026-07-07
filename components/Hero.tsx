@@ -16,6 +16,7 @@ const FALLBACK_GLAVNI: HeroClanak[] = [
 ];
 
 // TRI BOČNE KARTICE — fiksne, ručno se postavljaju ovdje (ne rotiraju)
+// slika: URL naslovne fotografije (može se zamijeniti pravom slikom kasnije)
 const BOCNI_FIKSNI: HeroClanak[] = [
   {
     slug: "elterngeld-2026",
@@ -25,6 +26,7 @@ const BOCNI_FIKSNI: HeroClanak[] = [
     excerpt: "",
     meta: "Jučer · 6 min",
     datum: "Jučer",
+    slika: "https://loremflickr.com/200/200/baby,family?lock=31",
   },
   {
     slug: "stan-minhen-bez-schufe",
@@ -34,6 +36,7 @@ const BOCNI_FIKSNI: HeroClanak[] = [
     excerpt: "",
     meta: "2 dana · 5 min",
     datum: "2 dana",
+    slika: "https://loremflickr.com/200/200/apartment,munich?lock=32",
   },
   {
     slug: "sedmicni-pregled-bih",
@@ -43,6 +46,7 @@ const BOCNI_FIKSNI: HeroClanak[] = [
     excerpt: "",
     meta: "Jučer · 3 min",
     datum: "Jučer",
+    slika: "https://loremflickr.com/200/200/sarajevo,bosnia?lock=33",
   },
 ];
 
