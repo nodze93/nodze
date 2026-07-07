@@ -1,26 +1,35 @@
 # ============================================================
-# BOT RASPORED preko GitHub Actions (3x dnevno)
+# BOT (GitHub Actions) — raspored kontroliše ADMIN
 # ============================================================
-# Bot se pokreće DIREKTNO na GitHub Actions — nema Vercel timeout!
+# Vremena i kvote se NE podešavaju više ovdje, nego u adminu
+# (Pipeline → Raspored bota). Pouzdan vanjski servis (cron-job.org)
+# svakih ~15 min poziva /api/cron/tick, koji onda pokrene ovaj
+# workflow u zadato vrijeme s odabranim kvotama.
 #
-# Raspored (Berlin, ljeto): 06:00, 12:30, 20:00
-# Kvote po pokretanju: 1 DE + 1 BiH + 1 svijet (+ sport ujutro i navečer)
+# GitHub-ov vlastiti "schedule" je UKLONJEN jer je bio nepouzdan
+# (kasnio/preskakao). Ostaje ručno pokretanje + preko tick-a.
 #
-# POTREBNI SECRETS (GitHub repo → Settings → Secrets → Actions):
-#   ANTHROPIC_API_KEY        = sk-ant-...
-#   NEXT_PUBLIC_SUPABASE_URL = https://xxx.supabase.co
-#   SUPABASE_SERVICE_ROLE_KEY = eyJ...
-#   UNSPLASH_ACCESS_KEY       = (opcionalno, za slike)
+# POTREBNI SECRETS (repo -> Settings -> Secrets -> Actions):
+#   ANTHROPIC_API_KEY, NEXT_PUBLIC_SUPABASE_URL,
+#   SUPABASE_SERVICE_ROLE_KEY, UNSPLASH_ACCESS_KEY (opciono)
 
-name: Dijaspora bot (06:00 / 12:30 / 20:00)
+name: Dijaspora bot
 
 on:
-  schedule:
-    # UTC! (ljeto: Berlin = UTC+2)
-    - cron: "0 4 * * *"    # 06:00 Berlin
-    - cron: "30 10 * * *"  # 12:30 Berlin (bez sporta)
-    - cron: "0 18 * * *"   # 20:00 Berlin
-  workflow_dispatch: {}    # dugme "Run workflow" za ručni test
+  workflow_dispatch:
+    inputs:
+      de:
+        description: "Broj DE clanaka"
+        default: "1"
+      bih:
+        description: "Broj BiH clanaka"
+        default: "1"
+      svijet:
+        description: "Broj svjetskih clanaka"
+        default: "1"
+      sport:
+        description: "Broj sport clanaka"
+        default: "1"
 
 jobs:
   pokreni-bota:
@@ -43,10 +52,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
-          CLANCI_DE: "1"
-          CLANCI_BIH: "1"
-          CLANCI_SVIJET: "1"
-          # Sport samo ujutro (06:00) i navečer (20:00) — ne u podnevnom (12:30) skeniranju.
-          # Ručno pokretanje (workflow_dispatch) uključuje sport.
-          CLANCI_SPORT: ${{ github.event.schedule == '30 10 * * *' && '0' || '1' }}
+          CLANCI_DE: ${{ github.event.inputs.de || '1' }}
+          CLANCI_BIH: ${{ github.event.inputs.bih || '1' }}
+          CLANCI_SVIJET: ${{ github.event.inputs.svijet || '1' }}
+          CLANCI_SPORT: ${{ github.event.inputs.sport || '1' }}
         run: npx tsx scripts/run-bot.ts

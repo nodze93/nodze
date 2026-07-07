@@ -5,6 +5,8 @@
 // pokreće GitHub Actions workflow (bez limita) preko GitHub API-ja.
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
+import { dispatchBot } from "@/lib/github-dispatch";
+import { dajBotConfig } from "@/lib/bot-config";
 
 export const dynamic = "force-dynamic";
 
@@ -35,54 +37,26 @@ export async function GET() {
   }
 }
 
-// POST — pokreni bota preko GitHub Actions (bez Vercel timeouta)
+// POST — pokreni bota ODMAH preko GitHub Actions (koristi kvote iz admina)
 export async function POST() {
-  const token = process.env.GITHUB_TOKEN;
-  const repo = process.env.GITHUB_REPO || "nodze93/nodze";
-  const workflow = process.env.GITHUB_WORKFLOW || "bot-cron.yml";
-  const ref = process.env.GITHUB_REF || "main";
+  const cfg = await dajBotConfig();
+  const rez = await dispatchBot({
+    de: String(cfg.kvota_de),
+    bih: String(cfg.kvota_bih),
+    svijet: String(cfg.kvota_svijet),
+    sport: String(cfg.kvota_sport),
+  });
 
-  if (!token) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error:
-          "GITHUB_TOKEN nije postavljen u Vercel env varijablama. Dok ga ne dodaš, bota pokreni ručno: GitHub → Actions → Run workflow.",
-      },
-      { status: 400 }
-    );
+  if (rez.ok) {
+    return NextResponse.json({
+      ok: true,
+      poruka:
+        "✅ Bot je pokrenut na GitHub Actions. Članci se pišu 2–3 minute — pa osvježi listu članaka.",
+    });
   }
 
-  try {
-    const res = await fetch(
-      `https://api.github.com/repos/${repo}/actions/workflows/${workflow}/dispatches`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ref }),
-      }
-    );
-
-    // GitHub vraća 204 No Content na uspjeh
-    if (res.status === 204) {
-      return NextResponse.json({
-        ok: true,
-        poruka:
-          "✅ Bot je pokrenut na GitHub Actions. Članci se pišu 2–3 minute — pa osvježi listu članaka.",
-      });
-    }
-
-    const detalj = await res.text();
-    return NextResponse.json(
-      { ok: false, error: `GitHub API greška ${res.status}: ${detalj.slice(0, 200)}` },
-      { status: 500 }
-    );
-  } catch (err) {
-    return NextResponse.json({ ok: false, error: (err as Error).message }, { status: 500 });
-  }
+  return NextResponse.json(
+    { ok: false, error: rez.error || "Nije moguće pokrenuti bota." },
+    { status: rez.status || 500 }
+  );
 }
