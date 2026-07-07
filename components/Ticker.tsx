@@ -1,13 +1,59 @@
-const tickerItems = [
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+// Rezerva dok baza nema objavljenih članaka (i dok se učitava)
+const FALLBACK = [
   "Nova pravila za Aufenthaltstitel od 2026",
   "Minimalna plaća u Njemačkoj raste na 13.50€",
   "Kindergeld povećan na 255€",
   "Rok za Steuerklasse promjenu do 30.11.",
 ];
 
+// Kratak, udaran naslov: uzmi dio prije crtice (—/–/-), pa skrati ako treba
+function kratak(naslov: string): string {
+  let s = String(naslov || "").split(/\s[—–-]\s/)[0].trim();
+  if (s.length > 58) {
+    s = s.slice(0, 55);
+    const zadnjiRazmak = s.lastIndexOf(" ");
+    if (zadnjiRazmak > 24) s = s.slice(0, zadnjiRazmak);
+    s = s.replace(/[\s.,;:]+$/, "") + "…";
+  }
+  return s;
+}
+
+interface Stavka {
+  tekst: string;
+  link?: string;
+}
+
 export default function Ticker() {
-  // Spoji stavke sa separatorom; dupliramo za neprekidno (seamless) vrtenje
-  const traka = tickerItems.join("　·　") + "　·　";
+  const [stavke, setStavke] = useState<Stavka[]>(FALLBACK.map((t) => ({ tekst: t })));
+
+  useEffect(() => {
+    let ziv = true;
+    fetch("/api/hero", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => {
+        const clanci = j?.clanci || [];
+        if (ziv && clanci.length > 0) {
+          setStavke(clanci.map((c: { naslov: string; slug: string }) => ({
+            tekst: kratak(c.naslov),
+            link: `/clanak/${c.slug}`,
+          })));
+        }
+      })
+      .catch(() => {
+        /* ostavi fallback */
+      });
+    return () => {
+      ziv = false;
+    };
+  }, []);
+
+  // Dupliraj za neprekidno (seamless) vrtenje
+  const dvostruko = [...stavke, ...stavke];
 
   return (
     <div
@@ -50,8 +96,18 @@ export default function Ticker() {
         }}
       >
         <div className="ticker-track">
-          <span className="ticker-seg">{traka}</span>
-          <span className="ticker-seg" aria-hidden="true">{traka}</span>
+          {dvostruko.map((s, i) => (
+            <span className="ticker-cell" key={i}>
+              {s.link ? (
+                <Link href={s.link} className="ticker-link">
+                  {s.tekst}
+                </Link>
+              ) : (
+                <span className="ticker-link">{s.tekst}</span>
+              )}
+              <span className="ticker-sep">·</span>
+            </span>
+          ))}
         </div>
       </div>
 
@@ -60,15 +116,13 @@ export default function Ticker() {
           display: inline-flex;
           white-space: nowrap;
           will-change: transform;
-          animation: ticker-scroll 28s linear infinite;
+          animation: ticker-scroll 50s linear infinite;
         }
-        .ticker-track:hover {
-          animation-play-state: paused;
-        }
-        .ticker-seg {
-          opacity: 0.95;
-          padding-right: 8px;
-        }
+        .ticker-track:hover { animation-play-state: paused; }
+        .ticker-cell { display: inline-flex; align-items: center; }
+        .ticker-link { color: white; text-decoration: none; opacity: 0.97; }
+        .ticker-link:hover { text-decoration: underline; }
+        .ticker-sep { margin: 0 14px; opacity: 0.55; }
         @keyframes ticker-scroll {
           from { transform: translateX(0); }
           to   { transform: translateX(-50%); }
