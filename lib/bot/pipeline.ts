@@ -123,6 +123,7 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
             naslov: (jezik.ispravljen_naslov || clanak.naslov).slice(0, 70),
             status: factcheck.ukupni_status,
             slug,
+            kategorija: clanak.kategorija,
           });
         } else {
           rez.greske++;
@@ -162,12 +163,19 @@ async function zavrsi(
   greska: string | null
 ): Promise<void> {
   rez.trajanjeSekundi = Math.round((Date.now() - start) / 1000);
+
+  // "Tema" pokretanja = kategorije stvarno napisanih članaka (npr. "viza, bih, sport").
+  // Korisnije od nekadašnje "trending" riječi koja je uvijek bila ista.
+  const napisaneTeme = Array.from(
+    new Set(rez.clanciZaPregled.map((c) => c.kategorija).filter(Boolean) as string[])
+  ).join(", ");
+
   try {
     await logujPipeline({
       status,
       clanci_napisano: rez.napisano,
       rss_vijesti: rez.procitanoRss,
-      trending_tema: rez.trendingTema,
+      trending_tema: napisaneTeme || null,
       greska,
       trajanje_sekundi: rez.trajanjeSekundi,
       detalji: { clanci: rez.clanciZaPregled, prosloFilter: rez.prosloFilter },

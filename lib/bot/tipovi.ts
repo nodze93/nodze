@@ -78,5 +78,5 @@ export interface PipelineRezultat {
   greske: number;
   trajanjeSekundi: number;
   trendingTema: string | null;
-  clanciZaPregled: { naslov: string; status: string; slug: string }[];
+  clanciZaPregled: { naslov: string; status: string; slug: string; kategorija?: string }[];
 }

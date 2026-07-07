@@ -39,9 +39,13 @@ export async function fetchTrends(): Promise<TrendsRezultat> {
   }
 
   // 2. Fallback: Google Autocomplete za seed pojmove (uvijek radi)
+  // Rotiramo koje pojmove gledamo (po satu) da ne bude UVIJEK isti
+  // ("Steuererklärung") — tako kontekst za filter varira kroz dan.
   try {
+    const start = new Date().getHours() % SEED_POJMOVI.length;
+    const rotirani = [...SEED_POJMOVI.slice(start), ...SEED_POJMOVI.slice(0, start)];
     const sugestije: string[] = [];
-    for (const pojam of SEED_POJMOVI.slice(0, 4)) {
+    for (const pojam of rotirani.slice(0, 4)) {
       const res = await fetch(
         `https://suggestqueries.google.com/complete/search?client=firefox&hl=de&q=${encodeURIComponent(pojam)}`,
         { headers: { "User-Agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(5000) }
