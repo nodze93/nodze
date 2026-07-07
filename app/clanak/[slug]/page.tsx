@@ -12,6 +12,13 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// Ikona po kategoriji — za uredan baner kad članak nema fotografiju
+const KAT_IKONA: Record<string, string> = {
+  viza: "🛂", posao: "💼", stan: "🏠", zdravstvo: "🏥", porodica: "📋",
+  porez: "🧾", penzija: "📄", finansije: "💶", sport: "⚽", svijet: "🌍",
+  bih: "🇧🇦", vijesti: "📰", povratak: "✈️", gastarbajter: "🧳",
+};
+
 // Novi slugovi iz baze se renderuju na zahtjev, keš 5 min
 export const dynamicParams = true;
 export const revalidate = 300;
@@ -138,8 +145,8 @@ export default async function ClanakPage({ params }: Props) {
             <span>👁 {clanak.procitano.toLocaleString()} pročitano</span>
           </div>
 
-          {/* Naslovna slika (Unsplash URL) */}
-          {clanak.slika && (
+          {/* Naslovna slika — prava fotka ako postoji, inače uredan baner */}
+          {clanak.slika ? (
             <figure style={{ margin: "0 0 24px" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -153,6 +160,37 @@ export default async function ClanakPage({ params }: Props) {
                 </figcaption>
               )}
             </figure>
+          ) : (
+            <div
+              style={{
+                width: "100%",
+                height: 240,
+                borderRadius: 10,
+                marginBottom: 24,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                background: "linear-gradient(135deg, #eef6f1 0%, #e4eef8 100%)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <span style={{ fontSize: 60, opacity: 0.5 }}>
+                {KAT_IKONA[clanak.kategorija] || "📰"}
+              </span>
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "1.5px",
+                  textTransform: "uppercase",
+                  color: "var(--tekst-light)",
+                }}
+              >
+                {clanak.kategorija}
+              </span>
+            </div>
           )}
 
           {/* Excerpt */}
