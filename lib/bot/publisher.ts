@@ -64,12 +64,27 @@ export async function sacuvajDraft(args: {
   const finalSadrzaj = jezik.ispravljen_sadrzaj || clanak.sadrzaj;
   const slug = napraviSlug(finalNaslov);
 
+  // Kategorija po PRAVILU (izvor/strana pobjeđuju pisca — da isti članak ne
+  // upadne u dvije rubrike, npr. i "Vijesti iz Njemačke" i "Iz svijeta"):
+  //  - svjetski izvori  → "svijet"
+  //  - sport            → "sport"
+  //  - bosanska strana  → "bih"
+  //  - njemačka strana  → piščeva tema, ALI "svijet" nije dozvoljen (→ "vijesti")
+  const piscevaKat = clanak.kategorija || vijest.kategorija || "vijesti";
+  const bihStrana = vijest.strana ? vijest.strana === "bih" : vijest.jezik !== "de";
+  const finalKategorija =
+    vijest.tip === "svjetske" ? "svijet"
+    : vijest.tip === "sport" ? "sport"
+    : bihStrana ? "bih"
+    : piscevaKat === "svijet" ? "vijesti"
+    : piscevaKat;
+
   const { error } = await db.from("clanci").insert({
     slug,
     naslov: finalNaslov,
     excerpt: finalExcerpt,
     sadrzaj: finalSadrzaj,
-    kategorija: clanak.kategorija || vijest.kategorija || "vijesti",
+    kategorija: finalKategorija,
     status: "draft",
     auto_generisan: true,
     izvor: vijest.izvor,
