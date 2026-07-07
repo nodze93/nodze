@@ -103,7 +103,8 @@ const CLANAK_SCHEMA = {
     izvori: { type: "array", items: { type: "string" }, description: "URL-ovi korištenih izvora" },
     slika_pojmovi: {
       type: "string",
-      description: "2-4 ENGLESKE riječi za pretragu naslovne fotografije (npr. 'german passport documents', 'football stadium night'). Konkretno i vizuelno.",
+      description:
+        "2-4 ENGLESKE riječi za naslovnu fotografiju. Slika mora biti OZBILJNA i institucionalna/dokumentarna — zgrade, uredi, dokumenti, službeni šalteri, novac/euro, gradovi, saobraćaj. IZBJEGAVAJ emotivne/'stock' motive (bebe, nasmijane porodice, djeca, srca) ČAK I kad je tema porodica/djeca — tada biraj npr. 'government office documents', 'euro banknotes calculator', 'family allowance form'. Primjeri: 'german passport documents', 'berlin government building', 'apartment keys contract', 'football stadium night'.",
     },
   },
   required: ["naslov", "excerpt", "kategorija", "sadrzaj", "min_citanja", "izvori", "slika_pojmovi"],

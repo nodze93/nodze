@@ -14,10 +14,13 @@ interface Props {
   limit?: number;
   fallback?: KarticaHClanak[]; // statični primjeri dok je baza prazna
   prikaziIzvor?: boolean;  // prikaži izvor (npr. BBC World) umjesto kategorije
+  samoTip?: string;        // prikaži SAMO članke ovog tipa (npr. "svjetske" za Iz svijeta)
 }
 
-export default async function KategorijaSekcija({ naslov, podnaslov, kategorija, limit = 3, fallback = [], prikaziIzvor }: Props) {
-  const izBaze = await dajPoKategoriji(kategorija, limit);
+export default async function KategorijaSekcija({ naslov, podnaslov, kategorija, limit = 3, fallback = [], prikaziIzvor, samoTip }: Props) {
+  // Ako tražimo samo određeni tip, povuci više pa filtriraj (da ne završimo prazni)
+  const sviIzBaze = await dajPoKategoriji(kategorija, samoTip ? limit + 12 : limit);
+  const izBaze = (samoTip ? sviIzBaze.filter((c) => c.tip === samoTip) : sviIzBaze).slice(0, limit);
   const clanci: KarticaHClanak[] =
     izBaze.length > 0
       ? izBaze.map((c) => ({

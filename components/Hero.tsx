@@ -26,7 +26,7 @@ const BOCNI_FIKSNI: HeroClanak[] = [
     excerpt: "",
     meta: "Jučer · 6 min",
     datum: "Jučer",
-    slika: "https://loremflickr.com/200/200/baby,family?lock=31",
+    slika: "https://loremflickr.com/200/200/office,documents?lock=41",
   },
   {
     slug: "stan-minhen-bez-schufe",
@@ -36,7 +36,7 @@ const BOCNI_FIKSNI: HeroClanak[] = [
     excerpt: "",
     meta: "2 dana · 5 min",
     datum: "2 dana",
-    slika: "https://loremflickr.com/200/200/apartment,munich?lock=32",
+    slika: "https://loremflickr.com/200/200/apartment,building?lock=42",
   },
   {
     slug: "sedmicni-pregled-bih",
@@ -46,7 +46,7 @@ const BOCNI_FIKSNI: HeroClanak[] = [
     excerpt: "",
     meta: "Jučer · 3 min",
     datum: "Jučer",
-    slika: "https://loremflickr.com/200/200/sarajevo,bosnia?lock=33",
+    slika: "https://loremflickr.com/200/200/sarajevo,city?lock=43",
   },
 ];
 

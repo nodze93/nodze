@@ -73,6 +73,7 @@ export default function HomePage() {
             kategorija="svijet"
             fallback={FALLBACK_SVIJET}
             prikaziIzvor
+            samoTip="svjetske"
           />
           {/* Najnovije — pomjereno ispod svijeta (forma ista) */}
           <NajnovijeSection />
