@@ -3,6 +3,7 @@
 // ============================================================
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
+import { osvjeziSajt } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +63,9 @@ async function azuriraj(req: Request, { params }: Props) {
       .single();
     if (error) throw new Error(error.message);
 
+    // Osvježi sajt odmah da izmjena/objava odmah pređe na naslovnu/kategorije
+    osvjeziSajt();
+
     return NextResponse.json({
       ok: true,
       clanak: data,
@@ -87,6 +91,7 @@ export async function DELETE(_req: Request, { params }: Props) {
     const db = createServerClient();
     const { error } = await db.from("clanci").delete().eq("id", id);
     if (error) throw new Error(error.message);
+    osvjeziSajt();
     return NextResponse.json({ ok: true, poruka: "Članak je obrisan." });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

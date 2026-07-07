@@ -4,6 +4,7 @@
 // Prima { ids: [...] } — poziciju u nizu upisuje kao redoslijed.
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
+import { osvjeziSajt } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export async function POST(req: Request) {
       await db.from("clanci").update({ redoslijed: i }).eq("id", id);
       i++;
     }
+    osvjeziSajt();
     return NextResponse.json({ ok: true, azurirano: i });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

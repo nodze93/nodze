@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { napraviSlug } from "@/lib/bot/publisher";
+import { osvjeziSajt } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 
@@ -113,6 +114,7 @@ export async function POST(req: Request) {
       .single();
 
     if (error) throw new Error(error.message);
+    osvjeziSajt();
     return NextResponse.json({ clanak: data, ok: true }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
