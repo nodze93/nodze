@@ -186,6 +186,7 @@ export interface HeroKartica {
   meta: string;
   datum: string;
   danasnji: boolean;
+  slika: string | null;
 }
 
 export function heroKartica(c: DbClanak): HeroKartica {
@@ -202,6 +203,7 @@ export function heroKartica(c: DbClanak): HeroKartica {
     meta: formatirajMeta(c),
     datum: kratkiDatum(c),
     danasnji,
+    slika: c.slika || null,
   };
 }
 

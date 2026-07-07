@@ -13,12 +13,12 @@ export interface UnsplashSlika {
   autorLink: string;
 }
 
-export async function nadjiSliku(pojmovi: string): Promise<UnsplashSlika | null> {
+export async function nadjiSliku(pojmovi: string, seed = 0): Promise<UnsplashSlika | null> {
   const kljuc = process.env.UNSPLASH_ACCESS_KEY;
   if (!kljuc || !pojmovi) return null;
 
   try {
-    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(pojmovi)}&per_page=5&orientation=landscape&content_filter=high`;
+    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(pojmovi)}&per_page=8&orientation=landscape&content_filter=high`;
     const res = await fetch(url, {
       headers: { Authorization: `Client-ID ${kljuc}` },
       signal: AbortSignal.timeout(8000),
@@ -30,8 +30,10 @@ export async function nadjiSliku(pojmovi: string): Promise<UnsplashSlika | null>
     const data = (await res.json()) as {
       results?: { urls?: { regular?: string }; user?: { name?: string; links?: { html?: string } } }[];
     };
-    const foto = (data.results || []).find((f) => f.urls?.regular);
-    if (!foto) return null;
+    // seed bira različitu fotku (da članci iste kategorije ne budu identični)
+    const validne = (data.results || []).filter((f) => f.urls?.regular);
+    if (validne.length === 0) return null;
+    const foto = validne[((seed % validne.length) + validne.length) % validne.length];
 
     console.log(`   🖼  Slika nađena za "${pojmovi}"`);
     return {

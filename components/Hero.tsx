@@ -12,6 +12,7 @@ const FALLBACK_GLAVNI: HeroClanak[] = [
       "Fachkräfteeinwanderungsgesetz je promijenio sve. Koje dokumente trebaš, koji je rok čekanja, i kako aplicirati korak po korak iz BiH.",
     meta: "Danas · 8 min · 2.4k pročitano",
     datum: "Danas",
+    slika: "https://loremflickr.com/900/600/passport,documents?lock=51",
   },
 ];
 

@@ -34,6 +34,10 @@ export default function PipelinePage() {
   const [cfgPoruka, setCfgPoruka] = useState("");
   const [tickUrl, setTickUrl] = useState("");
 
+  // Dodavanje slika starim člancima
+  const [slikeRadi, setSlikeRadi] = useState(false);
+  const [slikePoruka, setSlikePoruka] = useState("");
+
   useEffect(() => {
     fetch("/api/admin/pipeline")
       .then((r) => r.json())
@@ -115,6 +119,27 @@ export default function PipelinePage() {
       setCfgPoruka("❌ Nije moguće snimiti.");
     } finally {
       setSnimam(false);
+    }
+  }
+
+  async function dodajSlike() {
+    setSlikeRadi(true);
+    setSlikePoruka("");
+    try {
+      const res = await fetch("/api/admin/slike-backfill", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setSlikePoruka(
+          `✅ Dodano ${data.azurirano} slika. Još bez slike: ${data.preostalo}.` +
+            (data.preostalo > 0 ? " Klikni opet za nastavak." : " Gotovo! 🎉")
+        );
+      } else {
+        setSlikePoruka(`❌ ${data.error || "Greška."}`);
+      }
+    } catch {
+      setSlikePoruka("❌ Greška.");
+    } finally {
+      setSlikeRadi(false);
     }
   }
 
@@ -241,6 +266,40 @@ export default function PipelinePage() {
               </div>
             </div>
           </>
+        )}
+      </div>
+
+      {/* Slike starim člancima */}
+      <div style={{ background: "white", borderRadius: 12, border: "1px solid #e5e7eb", padding: 24, marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: "#111", marginBottom: 4 }}>🖼️ Slike starim člancima</div>
+            <div style={{ fontSize: 12.5, color: "#6b7280", lineHeight: 1.5 }}>
+              Doda Unsplash fotografije člancima koji nemaju sliku (u serijama po 6). Klikni više puta dok "još bez slike" ne padne na 0. Treba <code>UNSPLASH_ACCESS_KEY</code> u Vercelu.
+            </div>
+          </div>
+          <button
+            onClick={dodajSlike}
+            disabled={slikeRadi}
+            style={{
+              padding: "10px 18px",
+              background: slikeRadi ? "#d1fae5" : "#1D9E75",
+              color: "white",
+              border: "none",
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: slikeRadi ? "not-allowed" : "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {slikeRadi ? "Dodajem..." : "🖼️ Dodaj slike"}
+          </button>
+        </div>
+        {slikePoruka && (
+          <div style={{ marginTop: 14, fontSize: 13, fontWeight: 600, color: slikePoruka.startsWith("✅") ? "#065f46" : "#991b1b" }}>
+            {slikePoruka}
+          </div>
         )}
       </div>
 

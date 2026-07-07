@@ -83,85 +83,91 @@ export default function HeroRotator({ glavniInitial, glavniFallback, bocni }: Pr
           minHeight: 320,
         }}
       >
-        {/* Glavni članak — ROTIRA se */}
+        {/* Glavni članak — ROTIRA se; slika sa naslovom preko (Klix stil) */}
         <Link
           key={idx}
           href={`/clanak/${glavni.slug}`}
-          className="hover:bg-[#fafafa] hero-fade"
+          className="hero-fade hero-glavni"
           style={{
-            padding: "32px 32px 32px 24px",
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-end",
             borderRight: "1px solid var(--border)",
             cursor: "pointer",
-            transition: "background 0.15s",
-            display: "block",
+            minHeight: 320,
+            overflow: "hidden",
+            // Slika kao pozadina; ako nema slike — blagi gradient
+            backgroundColor: "var(--border)",
+            backgroundImage: glavni.slika
+              ? `url('${glavni.slika}')`
+              : "linear-gradient(135deg, #1f4d3a 0%, #2a6b4f 100%)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         >
+          {/* Tamni preljev radi čitljivosti teksta */}
           <div
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "var(--zelena-svijetla)",
-              color: "var(--zelena-tamna)",
-              fontSize: 11,
-              fontWeight: 600,
-              padding: "3px 10px",
-              borderRadius: 20,
-              marginBottom: 14,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.45) 42%, rgba(0,0,0,0.12) 100%)",
             }}
-          >
-            <span
+          />
+
+          {/* Sadržaj preko slike */}
+          <div style={{ position: "relative", padding: "28px 28px 26px 24px" }}>
+            <div
               style={{
-                width: 6,
-                height: 6,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
                 background: "var(--zelena)",
-                borderRadius: "50%",
-                display: "inline-block",
-              }}
-            />
-            {glavni.label} · Novo
-          </div>
-
-          <h1
-            style={{
-              fontSize: 26,
-              fontWeight: 700,
-              lineHeight: 1.3,
-              letterSpacing: "-0.5px",
-              marginBottom: 12,
-              maxWidth: 520,
-              color: "var(--tekst)",
-            }}
-          >
-            {glavni.naslov}
-          </h1>
-
-          {glavni.excerpt && (
-            <p
-              style={{
-                fontSize: 15,
-                color: "var(--tekst-muted)",
-                lineHeight: 1.6,
-                marginBottom: 20,
-                maxWidth: 480,
+                color: "white",
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "4px 11px",
+                borderRadius: 20,
+                marginBottom: 14,
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
               }}
             >
-              {glavni.excerpt}
-            </p>
-          )}
+              {glavni.label} · Novo
+            </div>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              fontSize: 12,
-              color: "var(--tekst-light)",
-            }}
-          >
-            <span>{glavni.meta}</span>
+            <h1
+              style={{
+                fontSize: 27,
+                fontWeight: 800,
+                lineHeight: 1.25,
+                letterSpacing: "-0.5px",
+                marginBottom: 10,
+                maxWidth: 560,
+                color: "#fff",
+                textShadow: "0 1px 12px rgba(0,0,0,0.4)",
+              }}
+            >
+              {glavni.naslov}
+            </h1>
+
+            {glavni.excerpt && (
+              <p
+                style={{
+                  fontSize: 14.5,
+                  color: "rgba(255,255,255,0.9)",
+                  lineHeight: 1.55,
+                  marginBottom: 14,
+                  maxWidth: 500,
+                  textShadow: "0 1px 8px rgba(0,0,0,0.4)",
+                }}
+              >
+                {glavni.excerpt}
+              </p>
+            )}
+
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{glavni.meta}</div>
           </div>
         </Link>
 
