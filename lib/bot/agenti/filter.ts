@@ -76,16 +76,18 @@ Ocijeni svaku vijest 0-10: da li bi naš čitalac kliknuo?
 VISOKA OCJENA (7-10):
 - Bosanski sportisti u inostranstvu (transferi, golovi, povrede, izjave)
 - Reprezentacija BiH (sve: nogomet, košarka, rukomet...)
+- AKTUELNI veliki svjetski događaji o kojima svi pričaju — čak i BEZ BiH veze:
+  Svjetsko prvenstvo (ko je prošao, rezultati nokaut faze), Liga prvaka,
+  EURO, veliki finali i derbiji (npr. Španija–Portugal, El Clásico, Real–Barca)
 - Bundesliga — velike utakmice, dramatični rezultati, skandali
-- Liga prvaka / EURO / SP — velike priče
-- Transferi koji tresu region ili Bundesligu
+- Transferi koji tresu svijet, region ili Bundesligu (Mbappé, Haaland i sl.)
 - Emotivne sportske priče (povratak nakon povrede, uspjeh naših ljudi)
 
 NISKA OCJENA (0-3):
-- Niželigaški sport bez naših igrača
-- Sportovi koje naša publika ne prati, bez BiH veze
-- Suhe statistike bez priče
-- Lokalni sport trećih zemalja`;
+- Niželigaški sport bez naših igrača i bez svjetskog značaja
+- Sportovi koje naša publika ne prati (npr. kriket, bejzbol) bez velike priče
+- Suhe statistike i najave bez rezultata/priče
+- Sitni lokalni sport trećih zemalja`;
 
 const FILTER_SCHEMA = {
   type: "object" as const,

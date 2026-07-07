@@ -79,7 +79,9 @@ NASLOV (formule koje rade):
 STIL:
 - Bosanski jezik, ijekavica
 - Emocija i ritam: kratke rečenice, kao komentator
-- Gdje je igrač/klub vezan za BiH — to je SRCE priče, istakni odmah
+- Ako je igrač/klub vezan za BiH — to je SRCE priče, istakni odmah
+- Ako je u pitanju veliki svjetski događaj (SP, Liga prvaka, veliki derbi) BEZ BiH veze —
+  piši ga kao veliku vijest koja se prepričava: rezultat, ključni momenti, ko je prošao dalje
 - Struktura: šta se desilo → ključni momenti → šta slijedi
 - Na kraju: kad je sljedeća utakmica/šta pratiti dalje (ako je u izvoru)`;
 
