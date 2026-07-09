@@ -26,8 +26,16 @@ KROATIZMI → BOSANSKI (obavezno ispravi):
 GRAMATIKA (ovo su najčešće greške — traži ih posebno):
 - Padeži uz brojeve: 2/3/4 + genitiv JEDNINE (2 mjeseca, 3 eura, 4 godine);
   5 i više + genitiv MNOŽINE (5 mjeseci, 10 eura, 20 godina).
-- Slaganje roda i broja subjekta s glagolom/pridjevom
-  ("nova pravila stupaju" NE "novi pravila stupa"; "vlada je odlučila" NE "vlada su odlučili").
+- SLAGANJE PRIDJEVA I IMENICE U RODU (NAJČEŠĆA GREŠKA — provjeri SVAKI pridjev uz imenicu):
+  • SREDNJI rod (imenice na -e/-o: glasanje, pravilo, pitanje, rješenje, tijelo, pravo) → pridjev na -O:
+    "presudnO glasanje", "novO pravilo", "važnO pitanje", "konačnO rješenje".
+    POGREŠNO: "presudAN glasanje", "novI pravilo" → ISPRAVI u srednji rod.
+  • ŽENSKI rod (reforma, odluka, plata, viza, dozvola) → pridjev na -A:
+    "novA reforma", "važnA odluka", "minimalnA plata".
+  • MUŠKI rod (zakon, rok, ugovor, doprinos) → pridjev na -I/-∅:
+    "novI zakon", "presudAN rok", "važAN ugovor".
+  • MNOŽINA: "novA pravilA stupajU na snagu" (ne "novi pravila stupa").
+- Slaganje subjekta i glagola u broju: "vlada je odlučila" (NE "vlada su odlučili").
 - Ispravni padeži uz prijedloge (s + instrumental, od + genitiv, prema + dativ).
 - Ijekavica dosljedno: dijete, vrijeme, prije, poslije (ne "dete, vreme").
 - Glagolska vremena dosljedna; futur "dobićeš", "stupiće na snagu".

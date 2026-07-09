@@ -93,8 +93,10 @@ const ZAJEDNICKA_PRAVILA = `
 JEZIK (bosanski standard, ijekavica):
 - Padeži uz brojeve: 2/3/4 + genitiv JEDNINE (2 mjeseca, 3 eura, 4 godine);
   5 i više + genitiv MNOŽINE (5 mjeseci, 10 eura, 20 godina).
-- Slaganje roda/broja subjekta i glagola/pridjeva:
-  "nova pravila stupaju na snagu" (NE "novi pravila stupa").
+- SLAGANJE PRIDJEVA I IMENICE U RODU (najčešća greška — provjeri svaki pridjev):
+  srednji rod na -e/-o → pridjev -O: "presudnO glasanje", "novO pravilo", "važnO pitanje"
+  (NE "presudAN glasanje"); ženski → -A: "novA reforma", "važnA odluka";
+  muški → -I: "novI zakon", "presudAN rok". Množina: "novA pravilA stupajU".
 - Ijekavica dosljedno: dijete, vrijeme, prije, poslije, mlijeko.
 - Bosanski oblici, NE hrvatski: šta (ne "što" kao upitno), uopšte, doktor,
   dobija, zavisi, utiče, finansije, sedmica, hiljada, prevoz, sprat.
