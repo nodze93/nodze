@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { osvjeziSajt } from "@/lib/revalidate";
+import { objaviNaFacebook } from "@/lib/bot/facebook";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,21 @@ async function azuriraj(req: Request, { params }: Props) {
 
     // Osvježi sajt odmah da izmjena/objava odmah pređe na naslovnu/kategorije
     osvjeziSajt();
+
+    // AUTO-OBJAVA NA FACEBOOK — samo kad se članak PRVI PUT objavi.
+    // Dedupe preko kolone fb_post_id (ako je već postavljena, preskoči).
+    if (izmjene.status === "published" && data && !data.fb_post_id) {
+      try {
+        const fb = await objaviNaFacebook({
+          naslov: data.naslov, slug: data.slug, slika: data.slika, excerpt: data.excerpt,
+        });
+        if (fb.ok && fb.postId) {
+          await db.from("clanci").update({ fb_post_id: fb.postId }).eq("id", id);
+        }
+      } catch {
+        /* FB objava ne smije srušiti objavu članka */
+      }
+    }
 
     return NextResponse.json({
       ok: true,

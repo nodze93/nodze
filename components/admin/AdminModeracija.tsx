@@ -167,6 +167,21 @@ function Manager({ onClose }: { onClose: () => void }) {
     }
   }
 
+  async function podijeliNaFb(c: Clanak) {
+    setPoruka("Objavljujem na Facebook...");
+    try {
+      const r = await fetch("/api/admin/fb-share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: c.id }),
+      });
+      const d = await r.json();
+      setPoruka(r.ok ? "✅ Objavljeno na Facebook!" : `❌ ${d.error || "FB greška."}`);
+    } catch {
+      setPoruka("❌ Greška pri objavi na Facebook.");
+    }
+  }
+
   async function promijeniStatus(c: Clanak) {
     const novi = c.status === "published" ? "draft" : "published";
     try {
@@ -315,6 +330,12 @@ function Manager({ onClose }: { onClose: () => void }) {
                   {c.status === "published" ? "👁 Skini s objave" : "🚀 Objavi članak"}
                 </button>
 
+                {/* Podijeli na Facebook */}
+                <button
+                  onClick={() => podijeliNaFb(c)}
+                  style={{ width: "100%", padding: "11px", marginBottom: 8, border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", color: "white", background: "#1877F2" }}
+                >🔵 Podijeli na Facebook</button>
+
                 {/* Sekundarne akcije */}
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => setUredjivan(c)} style={mobBtn}>✏️ Uredi</button>
@@ -362,6 +383,7 @@ function Manager({ onClose }: { onClose: () => void }) {
                 <div style={{ display: "flex", gap: 5, alignItems: "center", flexShrink: 0 }}>
                   <button onClick={() => postaviNaslovnu(c.id, c.jeNaslovna)} title="Naslovna" style={{ ...akcija, color: c.jeNaslovna ? "#d97706" : "#9ca3af" }}>★</button>
                   <button onClick={() => promijeniStatus(c)} title={c.status === "published" ? "Skini s objave" : "Objavi"} style={akcija}>{c.status === "published" ? "👁" : "🚀"}</button>
+                  <button onClick={() => podijeliNaFb(c)} title="Podijeli na Facebook" style={{ ...akcija, color: "#1877F2" }}>🔵</button>
                   <button onClick={() => setUredjivan(c)} title="Uredi" style={akcija}>✏️</button>
                   <button onClick={() => obrisi(c)} title="Obriši" style={{ ...akcija, color: "#ef4444" }}>🗑️</button>
                 </div>
