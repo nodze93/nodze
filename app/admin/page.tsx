@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useIsMobile } from "@/lib/useIsMobile";
 
 interface Stats {
   ukupnoClanci: number;
@@ -79,6 +80,7 @@ function PipelineStatus({ status }: { status: string }) {
 }
 
 export default function AdminDashboard() {
+  const isMobile = useIsMobile();
   const [stats, setStats] = useState<Stats | null>(null);
   const [pokretamPipeline, setPokretamPipeline] = useState(false);
   const [pipelineMsg, setPipelineMsg] = useState("");
@@ -145,7 +147,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Stat kartice */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 10 : 16, marginBottom: isMobile ? 20 : 32 }}>
         <StatCard
           label="Objavljeni članci"
           value={stats?.objavljeno ?? "—"}
@@ -178,7 +180,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Donji red */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 340px", gap: isMobile ? 16 : 20 }}>
 
         {/* Pipeline log */}
         <div style={{ background: "white", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
@@ -214,7 +216,8 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 520 }}>
             <thead>
               <tr style={{ background: "#f9fafb" }}>
                 <th style={{ padding: "10px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>Datum i vrijeme</th>
@@ -245,6 +248,7 @@ export default function AdminDashboard() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Desna kolona */}

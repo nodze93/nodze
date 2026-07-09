@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useIsMobile } from "@/lib/useIsMobile";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: "📊", exact: true },
@@ -13,8 +14,12 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [loggingOut, setLoggingOut] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Zatvori meni pri promjeni stranice (na telefonu)
+  useEffect(() => { setSidebarOpen(false); }, [pathname]);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -24,8 +29,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (pathname === "/admin/login") return <>{children}</>;
 
+  // Sidebar je vidljiv: na desktopu uvijek, na telefonu samo kad je otvoren.
+  const sidebarVidljiv = !isMobile || sidebarOpen;
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'Inter', -apple-system, sans-serif", background: "#f8f9fa" }}>
+      {/* Zatamnjenje iza menija (samo telefon, kad je otvoren) */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 99 }}
+        />
+      )}
+
       {/* Sidebar */}
       <aside style={{
         width: 240,
@@ -34,10 +50,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         flexDirection: "column",
         position: "fixed",
         top: 0,
-        left: sidebarOpen ? 0 : undefined,
+        left: 0,
         height: "100vh",
         zIndex: 100,
         flexShrink: 0,
+        transform: sidebarVidljiv ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 0.25s ease",
+        boxShadow: isMobile && sidebarOpen ? "4px 0 24px rgba(0,0,0,0.3)" : "none",
       }}>
         {/* Logo */}
         <div style={{ padding: "24px 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -77,17 +96,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setSidebarOpen(false)}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 10,
-                  padding: "10px 12px",
+                  padding: isMobile ? "14px 12px" : "10px 12px",
                   borderRadius: 8,
                   textDecoration: "none",
                   marginBottom: 2,
                   background: active ? "rgba(29,158,117,0.15)" : "transparent",
                   color: active ? "#1D9E75" : "#9ca3af",
-                  fontSize: 14,
+                  fontSize: isMobile ? 16 : 14,
                   fontWeight: active ? 600 : 400,
                   transition: "all 0.15s",
                 }}
@@ -141,12 +161,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main */}
-      <div style={{ marginLeft: 240, flex: 1, minWidth: 0 }}>
+      <div style={{ marginLeft: isMobile ? 0 : 240, flex: 1, minWidth: 0, width: "100%" }}>
         {/* Top bar */}
         <header style={{
           background: "white",
           borderBottom: "1px solid #e5e7eb",
-          padding: "0 32px",
+          padding: isMobile ? "0 16px" : "0 32px",
           height: 60,
           display: "flex",
           alignItems: "center",
@@ -154,33 +174,52 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           position: "sticky",
           top: 0,
           zIndex: 50,
+          gap: 12,
         }}>
-          <div style={{ fontSize: 13, color: "#9ca3af" }}>
-            {new Date().toLocaleDateString("bs-BA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+            {/* Hamburger — samo telefon */}
+            {isMobile && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Otvori meni"
+                style={{
+                  width: 42, height: 42, flexShrink: 0,
+                  border: "1px solid #e5e7eb", borderRadius: 10, background: "white",
+                  fontSize: 20, cursor: "pointer", display: "flex",
+                  alignItems: "center", justifyContent: "center", lineHeight: 1,
+                }}
+              >☰</button>
+            )}
+            <div style={{ fontSize: 13, color: "#9ca3af", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {new Date().toLocaleDateString("bs-BA", isMobile
+                ? { day: "2-digit", month: "2-digit", year: "numeric" }
+                : { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
             <Link
               href="/admin/clanci/novi"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
-                padding: "7px 16px",
+                padding: isMobile ? "9px 14px" : "7px 16px",
                 background: "#1D9E75",
                 color: "white",
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 600,
                 textDecoration: "none",
+                whiteSpace: "nowrap",
               }}
             >
-              + Novi članak
+              {isMobile ? "+ Novi" : "+ Novi članak"}
             </Link>
           </div>
         </header>
 
         {/* Content */}
-        <main style={{ padding: "32px" }}>
+        <main style={{ padding: isMobile ? "16px" : "32px" }}>
           {children}
         </main>
       </div>

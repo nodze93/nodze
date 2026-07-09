@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense } from "react";
+import { useIsMobile } from "@/lib/useIsMobile";
 
 const KATEGORIJE = ["sve", "viza", "posao", "stan", "zdravstvo", "porodica", "porez", "penzija", "finansije", "vijesti", "bih", "sport", "svijet", "povratak"];
 
@@ -26,6 +27,7 @@ const TAG_BOJE: Record<string, string> = {
 const FAKTCHECK_IKONA: Record<string, string> = { zeleno: "🟢", zuto: "🟡", crveno: "🔴" };
 
 function ClanciContent() {
+  const isMobile = useIsMobile();
   const searchParams = useSearchParams();
   const router = useRouter();
   const statusFilter = searchParams.get("status") || "sve";
@@ -74,7 +76,7 @@ function ClanciContent() {
   return (
     <div>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111", marginBottom: 4 }}>Članci</h1>
           <p style={{ fontSize: 13, color: "#6b7280" }}>{ukupno} {ukupno === 1 ? "članak" : "članaka"}</p>
@@ -113,7 +115,7 @@ function ClanciContent() {
       </div>
 
       {/* Filteri */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, marginBottom: 20 }}>
         <input
           type="text"
           placeholder="🔍 Pretraži po naslovu..."
@@ -121,10 +123,10 @@ function ClanciContent() {
           onChange={e => setPretrage(e.target.value)}
           style={{
             flex: 1,
-            padding: "10px 14px",
+            padding: "11px 14px",
             border: "1.5px solid #e5e7eb",
             borderRadius: 8,
-            fontSize: 14,
+            fontSize: isMobile ? 16 : 14,
             outline: "none",
           }}
         />
@@ -132,10 +134,10 @@ function ClanciContent() {
           value={kategorija}
           onChange={e => setKategorija(e.target.value)}
           style={{
-            padding: "10px 14px",
+            padding: "11px 14px",
             border: "1.5px solid #e5e7eb",
             borderRadius: 8,
-            fontSize: 14,
+            fontSize: isMobile ? 16 : 14,
             background: "white",
             cursor: "pointer",
           }}
@@ -146,9 +148,12 @@ function ClanciContent() {
         </select>
       </div>
 
-      {/* Tabela */}
-      <div style={{ background: "white", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      {/* Tabela (desktop) / kartice (telefon) */}
+      {isMobile ? (
+        <MobileClanci clanci={clanci} loading={loading} akcija={akcija} objavi={objavi} obrisi={obrisi} />
+      ) : (
+      <div style={{ background: "white", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden", overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
           <thead>
             <tr style={{ background: "#f9fafb" }}>
               <th style={{ padding: "12px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>Naslov</th>
@@ -271,6 +276,50 @@ function ClanciContent() {
           </tbody>
         </table>
       </div>
+      )}
+    </div>
+  );
+}
+
+// ── Mobilna lista članaka (kartice s velikim dugmadima) ──────────
+function MobileClanci({ clanci, loading, akcija, objavi, obrisi }: {
+  clanci: any[];
+  loading: boolean;
+  akcija: { id: number; tip: string } | null;
+  objavi: (id: number) => void;
+  obrisi: (id: number, naslov: string) => void;
+}) {
+  if (loading) return <div style={{ padding: 40, textAlign: "center", color: "#9ca3af", fontSize: 14 }}>Učitavanje...</div>;
+  if (clanci.length === 0) return <div style={{ padding: 40, textAlign: "center", color: "#9ca3af", fontSize: 14 }}>Nema članaka za ove filtere.</div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {clanci.map((c) => {
+        const jeAktivan = akcija?.id === c.id;
+        return (
+          <div key={c.id} style={{ background: "white", border: "1.5px solid #e5e7eb", borderRadius: 12, padding: 14 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
+              <span style={{ display: "inline-block", padding: "3px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700, background: `${TAG_BOJE[c.kategorija] || "#999"}18`, color: TAG_BOJE[c.kategorija] || "#999" }}>{c.kategorija}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 9px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: c.status === "published" ? "#d1fae5" : "#fef3c7", color: c.status === "published" ? "#065f46" : "#92400e" }}>
+                <span style={{ fontSize: 8 }}>●</span>{c.status === "published" ? "Objavljeno" : "Na čekanju"}
+              </span>
+              {c.faktcheck && <span title={`Fact-check: ${c.faktcheck}`}>{FAKTCHECK_IKONA[c.faktcheck] || ""}</span>}
+            </div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#111", lineHeight: 1.4, marginBottom: 4 }}>{c.naslov}</div>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 12 }}>{c.izvor || "Ručno"} · {c.minCitanja} min · 👁 {c.procitano?.toLocaleString("bs-BA") || "0"}</div>
+
+            {c.status === "draft" && (
+              <button onClick={() => objavi(c.id)} disabled={jeAktivan} style={{ width: "100%", padding: 13, marginBottom: 8, background: "#1D9E75", color: "white", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 800, cursor: jeAktivan ? "not-allowed" : "pointer" }}>
+                {jeAktivan && akcija?.tip === "objava" ? "Objavljujem..." : "🚀 Objavi članak"}
+              </button>
+            )}
+            <div style={{ display: "flex", gap: 8 }}>
+              <Link href={`/admin/clanci/${c.id}`} style={{ flex: 1, padding: "12px 8px", background: "white", color: "#374151", border: "1.5px solid #e5e7eb", borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: "none", textAlign: "center" }}>✏️ Uredi</Link>
+              <button onClick={() => obrisi(c.id, c.naslov)} disabled={jeAktivan} style={{ width: 52, padding: "12px 8px", background: "#fff1f2", color: "#be123c", border: "1.5px solid #fecdd3", borderRadius: 10, fontSize: 15, cursor: jeAktivan ? "not-allowed" : "pointer" }}>🗑️</button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
