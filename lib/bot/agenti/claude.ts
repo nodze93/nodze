@@ -58,6 +58,11 @@ export async function pozoviSaAlatom<T>(opts: {
         tool_choice: { type: "tool", name: opts.toolName },
         messages: [{ role: "user", content: opts.user }],
       });
+      // Ako je model udario u max_tokens, JSON (i sadržaj članka) može biti
+      // odsječen — upozori u logu da to primijetimo.
+      if (odgovor.stop_reason === "max_tokens") {
+        console.warn(`   ⚠️ ${opts.toolName}: odgovor dostigao max_tokens (${opts.maxTokens}) — moguć odsječen tekst.`);
+      }
       const blok = odgovor.content.find(
         (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
       );

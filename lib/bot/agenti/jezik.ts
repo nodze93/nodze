@@ -23,10 +23,16 @@ KROATIZMI → BOSANSKI (obavezno ispravi):
 - "tjedan" → "sedmica", "tisuća" → "hiljada"
 - "kat" → "sprat", "kruh" → "hljeb"
 
-GRAMATIKA:
-- Slaganje subjekta i predikata, padeži
-- Zarez ispred "koji/koja/što/da" gdje treba
-- HTML tagovi moraju ostati netaknuti i pravilno zatvoreni
+GRAMATIKA (ovo su najčešće greške — traži ih posebno):
+- Padeži uz brojeve: 2/3/4 + genitiv JEDNINE (2 mjeseca, 3 eura, 4 godine);
+  5 i više + genitiv MNOŽINE (5 mjeseci, 10 eura, 20 godina).
+- Slaganje roda i broja subjekta s glagolom/pridjevom
+  ("nova pravila stupaju" NE "novi pravila stupa"; "vlada je odlučila" NE "vlada su odlučili").
+- Ispravni padeži uz prijedloge (s + instrumental, od + genitiv, prema + dativ).
+- Ijekavica dosljedno: dijete, vrijeme, prije, poslije (ne "dete, vreme").
+- Glagolska vremena dosljedna; futur "dobićeš", "stupiće na snagu".
+- Zarez ispred "koji/koja/što/da" gdje treba.
+- HTML tagovi moraju ostati netaknuti i pravilno zatvoreni.
 
 STIL:
 - Informativno, direktno, bez patetike
@@ -74,7 +80,9 @@ export async function jezikCheck(clanak: {
       model: MODEL_BRZI,
       system: JEZIK_PROMPT,
       user: `Provjeri i ispravi bosanski jezik:\n\nNASLOV:\n${clanak.naslov}\n\nEXCERPT:\n${clanak.excerpt}\n\nSADRŽAJ (HTML):\n${clanak.sadrzaj}`,
-      maxTokens: 3000,
+      // 4500 (bilo 3000): lektor vraća CIJELI članak nazad, a članci su sad
+      // duži (writer do 3800) — inače bi se ispravljeni tekst odsjekao.
+      maxTokens: 4500,
       toolName: "lektorisan_tekst",
       toolOpis: "Vrati lektorisan tekst sa spiskom ispravki.",
       schema: JEZIK_SCHEMA,

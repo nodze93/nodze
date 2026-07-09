@@ -1,20 +1,20 @@
 // ============================================================
 // PIPELINE ORCHESTRATOR — srce bota
 // ============================================================
-// RSS + Trends → Filter (1) → Writer (2) → Fact-check (3)
-//              → Context (4) → Jezik (5) → Supabase DRAFT
+// RSS + Trends → Filter (1) → Writer (2) → Fact-check (3, samo dijaspora)
+//              → Jezik/lektor (4) → Supabase DRAFT
 //
-// Svaki članak prolazi svih 5 kontrola. Ti na kraju u adminu
-// vidiš 🟢🟡🔴 i odobriš jednim klikom.
+// Context provjera je isključena radi uštede (nije se koristila u adminu).
+// Ti na kraju u adminu vidiš 🟢🟡🔴 i odobriš jednim klikom.
 import { fetchSveVijesti } from "./rss";
 import { fetchTrends } from "./trends";
 import { filterVijesti } from "./agenti/filter";
 import { writeClanak } from "./agenti/writer";
-import { factcheckClanak, contextCheck } from "./agenti/factcheck";
+import { factcheckClanak } from "./agenti/factcheck";
 import { jezikCheck } from "./agenti/jezik";
-import { ucitajObradjene, sacuvajDraft, logujPipeline } from "./publisher";
+import { ucitajObradjene, oznaciObradjeneBatch, sacuvajDraft, logujPipeline } from "./publisher";
 import { nadjiSliku } from "./slike";
-import type { PipelineRezultat, FactcheckRezultat } from "./tipovi";
+import type { PipelineRezultat, FactcheckRezultat, ContextRezultat } from "./tipovi";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -25,6 +25,18 @@ const FACTCHECK_PRESKOCEN: FactcheckRezultat = {
   mozeSeObjaviti: true,
   tvrdnje: [],
   preporuka: "Fact-check preskočen (sport/svijet — niži rizik).",
+};
+
+// Context provjera je ISKLJUČENA (ušteda: jedan Claude poziv po svakom članku).
+// Vraćala je samo true/false kućice koje se u adminu ne koriste. Zadržavamo
+// default objekat da baza (context_report kolona) ostane ista.
+const CONTEXT_DEFAULT: ContextRezultat = {
+  ton_ok: true,
+  dijaspora_kontekst: true,
+  ima_linkove: true,
+  naslov_ok: true,
+  excerpt_ok: true,
+  sugestije: [],
 };
 
 export async function pokreniPipeline(): Promise<PipelineRezultat> {
@@ -76,6 +88,11 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
     const filtrirane = await filterVijesti(nove, trends, kDE, kBih, kSvijet, kSport);
     rez.prosloFilter = filtrirane.length;
 
+    // ⚡ UŠTEDA: zapamti SVE vijesti koje su prošle kroz filter kao "viđene".
+    // Bez ovoga filter (Claude) ponovo ocjenjuje istih ~140 vijesti svakih
+    // 15 min. Ovako sljedeći run gleda samo stvarno nove vijesti.
+    await oznaciObradjeneBatch(nove.map((v) => v.link));
+
     if (filtrirane.length === 0) {
       console.log("❌ Nijedna vijest nije prošla filter (prag 6/10).");
       await zavrsi(rez, start, "uspjeh", null);
@@ -94,17 +111,16 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
         }
 
         // Fact-check SAMO za dijaspora članke (viši rizik/preciznost).
-        // Sport i svijet preskaču fact-check radi uštede. Context ostaje.
+        // Sport i svijet ga preskaču radi uštede. Context provjera isključena
+        // (ušteda jednog Claude poziva po članku) — koristimo default.
         const jeDijaspora = vijest.tip === "dijaspora";
         if (!jeDijaspora) {
           console.log("   ⏭️  Fact-check preskočen (sport/svijet)");
         }
-        const [factcheck, context] = await Promise.all([
-          jeDijaspora
-            ? factcheckClanak(clanak, izvorniTekst)
-            : Promise.resolve(FACTCHECK_PRESKOCEN),
-          contextCheck(clanak),
-        ]);
+        const factcheck = jeDijaspora
+          ? await factcheckClanak(clanak, izvorniTekst)
+          : FACTCHECK_PRESKOCEN;
+        const context = CONTEXT_DEFAULT;
 
         // Jezik (lektor) — zadnja stanica
         const jezik = await jezikCheck({

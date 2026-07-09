@@ -85,6 +85,31 @@ STIL:
 - Struktura: šta se desilo → ključni momenti → šta slijedi
 - Na kraju: kad je sljedeća utakmica/šta pratiti dalje (ako je u izvoru)`;
 
+// Zajednička pravila — dodaju se SVAKOM writer promptu. Rješavaju dva
+// česta problema: (1) slaba bosanska gramatika, (2) članak "obeća pa ne
+// isporuči" ili se odsiječe prije poente.
+const ZAJEDNICKA_PRAVILA = `
+
+═══ OBAVEZNA JEZIČKA I SADRŽAJNA PRAVILA (provjeri PRIJE nego vratiš tekst) ═══
+
+JEZIK (bosanski standard, ijekavica):
+- Padeži uz brojeve: 2/3/4 + genitiv JEDNINE (2 mjeseca, 3 eura, 4 godine);
+  5 i više + genitiv MNOŽINE (5 mjeseci, 10 eura, 20 godina).
+- Slaganje roda/broja subjekta i glagola/pridjeva:
+  "nova pravila stupaju na snagu" (NE "novi pravila stupa").
+- Ijekavica dosljedno: dijete, vrijeme, prije, poslije, mlijeko.
+- Bosanski oblici, NE hrvatski: šta (ne "što" kao upitno), uopšte, doktor,
+  dobija, zavisi, utiče, finansije, sedmica, hiljada, prevoz, sprat.
+- Kratke, jasne rečenice, prirodan red riječi.
+
+SADRŽAJ — nikad ne ostavljaj čitaoca bez odgovora:
+- Ako naslov ili uvod nešto OBEĆA ("evo šta to znači", "evo koliko",
+  "evo ko ima pravo") — tekst to MORA konkretno razriješiti. Ne najavljuj
+  odgovor koji poslije ne daš.
+- Prenesi SVE ključne detalje iz izvora (iznosi, datumi, rokovi, uslovi).
+  Ako je detalj bitan za priču a stoji u izvoru — mora biti u članku.
+- Završi članak zaokruženo (zaključak ili "šta dalje"), ne u pola misli.`;
+
 const CLANAK_SCHEMA = {
   type: "object" as const,
   properties: {
@@ -111,7 +136,7 @@ const CLANAK_SCHEMA = {
 };
 
 /**
- * Fetchuje URL i vraća čisti tekst (iz <p> tagova, max 5000 znakova).
+ * Fetchuje URL i vraća čisti tekst (pasusi + liste + podnaslovi, max 6000 znakova).
  */
 export async function fetchIzvor(url: string): Promise<string | null> {
   try {
@@ -126,12 +151,26 @@ export async function fetchIzvor(url: string): Promise<string | null> {
     if (!res.ok) return null;
     const html = await res.text();
 
-    const paragrafi = [...html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
-      .map((m) => m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())
-      .filter((p) => p.length > 60)
-      .slice(0, 30);
+    // Skini skripte/stilove da ne zagade tekst
+    const cist = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ");
 
-    const tekst = paragrafi.join("\n\n").slice(0, 5000);
+    // Primarno: pasusi + STAVKE LISTE + podnaslovi. Ranije se hvatao samo <p>,
+    // pa su ključni detalji (često u <li> — iznosi, uslovi, rokovi) promicali.
+    const blokovi = [...cist.matchAll(/<(?:p|li|h2|h3)[^>]*>([\s\S]*?)<\/(?:p|li|h2|h3)>/gi)]
+      .map((m) => m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())
+      .filter((t) => t.length > 40)
+      .slice(0, 40);
+
+    let tekst = blokovi.join("\n\n").slice(0, 6000);
+
+    // Rezerva: ako je izvučeno premalo (sajt drži tekst netipično),
+    // uzmi ogoljeni tekst cijele stranice.
+    if (tekst.length < 300) {
+      tekst = cist.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 6000);
+    }
+
     return tekst.length > 150 ? tekst : null;
   } catch {
     return null;
@@ -180,13 +219,14 @@ ${zvanicniUrl ? `ZVANIČNI IZVOR (${zvanicniUrl}):\n${zvanicniTekst || "(nije do
     const clanak = await pozoviSaAlatom<GeneriraniClanak>({
       model: MODEL_PISAC,
       system:
-        vijest.tip === "svjetske" ? WRITER_SVIJET_PROMPT
+        (vijest.tip === "svjetske" ? WRITER_SVIJET_PROMPT
         : vijest.tip === "sport" ? WRITER_SPORT_PROMPT
         : vijest.strana === "bih" || vijest.kategorija === "bih"
           ? WRITER_BIH_PROMPT
-        : WRITER_DIJASPORA_PROMPT,
+        : WRITER_DIJASPORA_PROMPT) + ZAJEDNICKA_PRAVILA,
       user: kontekst,
-      maxTokens: 2500,
+      // 3800 (bilo 2500): sprječava da se članak odsiječe prije poente.
+      maxTokens: 3800,
       toolName: "sacuvaj_clanak",
       toolOpis: "Sačuvaj napisani članak u strukturiranom formatu.",
       schema: CLANAK_SCHEMA,

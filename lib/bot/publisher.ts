@@ -45,6 +45,24 @@ export async function oznaciObradjen(link: string): Promise<void> {
 }
 
 /**
+ * Zapamti VIŠE linkova odjednom kao "viđene" (dedupe).
+ * VAŽNO za trošak: bez ovoga filter (Claude) ponovo ocjenjuje iste
+ * ~140 vijesti svakih 15 min. Ovako svaki sljedeći run gleda samo
+ * stvarno nove vijesti → drastično manje Claude poziva.
+ */
+export async function oznaciObradjeneBatch(linkovi: string[]): Promise<void> {
+  if (linkovi.length === 0) return;
+  const db = createServerClient();
+  const jedinstveni = Array.from(new Set(linkovi.filter(Boolean)));
+  const redovi = jedinstveni.map((link) => ({ link }));
+  const { error } = await db
+    .from("obradjeni_linkovi")
+    .upsert(redovi, { onConflict: "link", ignoreDuplicates: true });
+  if (error) console.warn(`⚠️  Batch dedupe upis: ${error.message}`);
+  else console.log(`   🔖 Zapamćeno ${jedinstveni.length} vijesti (neće se opet filtrirati)`);
+}
+
+/**
  * Upiši gotov, provjeren i lektorisan članak kao DRAFT.
  */
 export async function sacuvajDraft(args: {
