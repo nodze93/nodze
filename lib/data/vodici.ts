@@ -93,7 +93,7 @@ export const vodici: VodicData[] = [
       {
         broj: 1,
         naslov: "Odaberi između javnog i privatnog",
-        opis: "Do 66.600€ godišnje bruto — moraš biti u javnoj blagajni (gesetzliche KV). Iznad toga možeš birati. Privatno je jeftinije za mlade ali skuplje za starije i porodice.",
+        opis: "Do 77.400€ godišnje bruto (2026. = 6.450€/mj) moraš biti u javnoj blagajni (gesetzliche KV). Tek iznad toga možeš birati privatno. Privatno je jeftinije za mlade samce, ali skuplje za starije i porodice.",
         savjet: "Za porodice s djecom javno je gotovo uvijek bolje — djeca su besplatno osigurana.",
       },
       {
@@ -114,7 +114,8 @@ export const vodici: VodicData[] = [
       {
         broj: 5,
         naslov: "Prijavi članove porodice",
-        opis: "Suprug/a i djeca bez vlastitih prihoda (do 505€/mj.) mogu biti besplatno suosigurani (Familienversicherung). Donesi rodni list i vjenčani list.",
+        opis: "Suprug/a i djeca bez većih prihoda mogu biti BESPLATNO suosigurani (Familienversicherung). Granica prihoda u 2026: do 565€/mj, ili do 603€/mj ako je riječ o mini-jobu. Donesi rodni list i vjenčani list.",
+        savjet: "Hack: ako partner mora nešto zaraditi, neka to bude mini-job (do 603€) — tako ostaje besplatno suosiguran. Isti iznos preko 'običnog' posla bi prekinuo besplatno osiguranje.",
       },
     ],
   },
@@ -142,12 +143,13 @@ export const vodici: VodicData[] = [
       {
         broj: 3,
         naslov: "Prijavi se za Elterngeld odmah",
-        opis: "Aplicirati za Elterngeld u Elterngeldstelle tvog grada. Retroaktivno se odobrava samo za 3 mj. — ne čekaj! Iznos: 67-100% neto plaće, min 300€, maks 1.800€/mj.",
+        opis: "Aplicirati za Elterngeld u Elterngeldstelle tvog grada. Retroaktivno se odobrava samo za 3 mj. — ne čekaj! Iznos: 65-100% neto plaće, min 300€, maks 1.800€/mj. Pažnja: od aprila 2025. nema Elterngeld-a ako je oporezivi prihod (par ili samac) preko 175.000€ godišnje.",
+        savjet: "Hack: granica se gleda po oporezivom prihodu godine PRIJE poroda — uplate u penziono (Rürup/Riester) i priznati troškovi mogu te spustiti ispod 175.000€ i sačuvati pravo.",
       },
       {
         broj: 4,
         naslov: "Prijavi dijete za Kindergeld",
-        opis: "U roku od 6 mj. od poroda prijavi se u Familienkasse. Iznos 2026: 255€/mj. Dijete ne mora živjeti u Njemačkoj ako je u BiH (bilateralni sporazum).",
+        opis: "U roku od 6 mj. od poroda prijavi se u Familienkasse. Iznos od januara 2026: 259€/mj po djetetu. Ako dijete živi s tobom u Njemačkoj — dobijaš pun iznos. Za dijete koje živi u BiH pravila su posebna: puni njemački Kindergeld se NE isplaćuje, već po sporazumu samo mali iznos i samo ako si zaposlen s obaveznim osiguranjem — obavezno provjeri sa Familienkasse.",
       },
       {
         broj: 5,
@@ -207,7 +209,8 @@ export const vodici: VodicData[] = [
       {
         broj: 6,
         naslov: "Plati Kaution i potpiši ugovor",
-        opis: "Maksimalni depozit je 3 neto najamnine. Prenesi na poseban bankovni račun (zatraži potvrdu). Stanodavac ne smije koristiti ovaj novac.",
+        opis: "Maksimalni depozit je 3 neto najamnine (hladna kirija, bez režija). Prenesi na poseban bankovni račun (zatraži potvrdu). Stanodavac ne smije koristiti ovaj novac.",
+        savjet: "Hack: po zakonu imaš pravo platiti kauciju u 3 mjesečne rate — ne treba ti dozvola stanodavca. Ako nemaš keš, postoji i Mietkautionsbürgschaft (jemstvo) pa ne zamrzavaš pare, ali ima godišnju naknadu.",
       },
     ],
   },
@@ -240,7 +243,8 @@ export const vodici: VodicData[] = [
       {
         broj: 4,
         naslov: "Što možeš odbiti",
-        opis: "Werbungskosten (troškovi zaposlenja): prijevoz do posla, radna odjeća, školovanje. Sonderausgaben: doprinosi, osiguranja. Außergewöhnliche Belastungen: medicinski troškovi. Homeoffice paušal (6€/dan, maks 210 dana).",
+        opis: "Werbungskosten (troškovi zaposlenja): prijevoz do posla, radna odjeća, školovanje. Sonderausgaben: doprinosi, osiguranja. Außergewöhnliche Belastungen: medicinski troškovi. Homeoffice paušal (6€/dan, maks 210 dana = 1.260€).",
+        savjet: "Hack: prvih 1.230€ troškova rada (Arbeitnehmer-Pauschbetrag) priznaje ti se AUTOMATSKI — sabiraj stvarne troškove samo ako prelaze taj iznos. I od 2023. za isti dan smiješ prijaviti i homeoffice paušal i kilometražu do posla (Pendlerpauschale).",
       },
     ],
   },
@@ -257,7 +261,8 @@ export const vodici: VodicData[] = [
       {
         broj: 1,
         naslov: "Provjeri status boravišne dozvole",
-        opis: "Niederlassungserlaubnis (trajni boravak) dozvoljava odsutnost do 6 mj. bez gubitka. Za dulje odsutnosti traži Beibehaltungsgenehmigung — može se dobiti za do 2 godine.",
+        opis: "Niederlassungserlaubnis (trajni boravak) po pravilu istekne nakon 6 mjeseci provedenih u inostranstvu. Za dužu odsutnost PRIJE odlaska u Ausländerbehörde zatraži produženi rok za povratak (nema fiksnih 2 godine — odlučuje služba). Izuzetak: ako si zakonito živio u Njemačkoj 15+ godina uz sigurna primanja, boravak ti ne istekne ni uz dužu odsutnost.",
+        savjet: "Hack: prije dužeg puta uzmi pisanu potvrdu 'Bescheinigung über das Nichterlöschen des Aufenthaltstitels' ili produženi rok — jeftino osiguranje da ne izgubiš status. (Beibehaltungsgenehmigung je nešto drugo — to je za zadržavanje njemačkog DRŽAVLJANSTVA.)",
       },
       {
         broj: 2,
@@ -315,7 +320,8 @@ export const vodici: VodicData[] = [
       {
         broj: 2,
         naslov: "Zakažite termin ili dođite bez termina",
-        opis: "Većina gradova zahtijeva termin (online zakazivanje). Neki gradovi (manji) primaju bez termina. Berlin ima izrazito duga čekanja — zakažite odmah po dolasku.",
+        opis: "Većina gradova zahtijeva termin (online zakazivanje). Neki manji gradovi primaju bez termina. Berlin ima izrazito duga čekanja — zakažite odmah po dolasku.",
+        savjet: "Hack: termini se oslobađaju rano ujutro i kad neko otkaže — osvježavaj portal u 7-8h i tokom dana. U velikim gradovima probaj i Bürgeramt u susjednoj četvrti/mjestu; nadležan je bilo koji ured u gradu, ne samo onaj najbliži.",
       },
       {
         broj: 3,
@@ -353,8 +359,8 @@ export const vodici: VodicData[] = [
       {
         broj: 2,
         naslov: "Integrationskurs — subvencionirani tečaj",
-        opis: "Ako tek dođeš u Njemačku, imaš pravo na Integrationskurs (A1-B1) po cijeni od 1.95€/satu. BAMF plaća ostatak. Prijavi se odmah u BAMF ili direktno u jezičnu školu.",
-        savjet: "Integrationskurs ti je besplatan ili skoro besplatan — nema razloga ga ne koristiti.",
+        opis: "Ako tek dođeš u Njemačku, imaš pravo na Integrationskurs (A1-B1) po cijeni od 2.29€ po nastavnom satu. BAMF plaća ostatak. Prijavi se odmah u BAMF ili direktno u jezičnu školu.",
+        savjet: "Hack: ako primaš Bürgergeld ili imaš niska primanja, možeš tražiti oslobađanje od plaćanja (Kostenbefreiung) — kurs ti je onda potpuno besplatan. A ako završiš kurs u roku od 2 godine, vraća ti se 50% onoga što si platio.",
       },
       {
         broj: 3,
@@ -375,7 +381,8 @@ export const vodici: VodicData[] = [
       {
         broj: 6,
         naslov: "Položi Goethe Zertifikat",
-        opis: "Ispit na goethe.de. Goethe B2 je zlatni standard za posao. Koštа 170-220€ ali je investicija koja se višestruko isplati.",
+        opis: "Ispit je zlatni standard za posao. Goethe B2 danas košta oko 289€. Isti priznati B2 nivo je jeftiniji preko telc-a ili Volkshochschule (VHS) — obično 150-200€, a vrijedi jednako za boravak i državljanstvo.",
+        savjet: "Hack: ako padneš samo jedan dio (modul), ne moraš ponovo cijeli ispit — prijavi i plati samo taj jedan modul.",
       },
     ],
   },
@@ -398,7 +405,7 @@ export const vodici: VodicData[] = [
       {
         broj: 2,
         naslov: "Izračunaj svoje bodove (treba 6+)",
-        opis: "Bodovi (2026): kvalifikacija djelimično priznata u Njemačkoj = 4 · deficitarno zanimanje (IT, zdravstvo, tehnika) = 1 · iskustvo 2 god (u zadnjih 5) = 2, ili 5 god (u zadnjih 7) = 3 · njemački A2 = 1, B1 = 2, B2+ = 3 · engleski C1+ = 1 (bonus) · godine ispod 35 = 2, od 35 do 40 = 1 · ranije boravio u Njemačkoj 6+ mj (ne turistički) = 1 · partner/ica ispunjava uslove = 1.",
+        opis: "Bodovi (2026): kvalifikacija djelimično priznata u Njemačkoj = 4 · deficitarno zanimanje (IT, zdravstvo, tehnika) = 1 · iskustvo 2 god (u zadnjih 5) = 2, ili 3 god (u zadnjih 7) = 3 · njemački A2 = 1, B1 = 2, B2+ = 3 · engleski C1+ = 1 (bonus) · godine ispod 35 = 2, od 35 do 40 = 1 · ranije boravio u Njemačkoj 6+ mj (ne turistički) = 1 · partner/ica ispunjava uslove = 1.",
         savjet: "Primjer: diploma (4) + njemački B1 (2) + ispod 35 (2) = 8 bodova → prolaziš.",
       },
       {
@@ -483,7 +490,7 @@ export const vodici: VodicData[] = [
         broj: 1,
         naslov: "Šta je Westbalkan regulacija",
         opis: "Poseban propis za državljane BiH (i Srbije, Kosova, Crne Gore, Sj. Makedonije, Albanije). NE treba ti fakultet ni priznata kvalifikacija — dovoljna je konkretna ponuda posla u BILO KOJEM zanimanju. Od 2023. je trajna, a kvota je od 2024. podignuta na 50.000 viza godišnje.",
-        savjet: "Ovo je najpristupačniji put za većinu Bosanaca — građevina, ugostiteljstvo, transport, njega, proizvodnja...",
+        savjet: "Ovo je najpristupačniji put za većinu Bosanaca — građevina, ugostiteljstvo, transport, njega, proizvodnja... Hack: godišnja kvota (50.000) se brzo popuni, a najavljeno je i moguće smanjenje — apliciraj što ranije u godini, čim imaš ponudu posla.",
       },
       {
         broj: 2,
@@ -550,6 +557,268 @@ export const vodici: VodicData[] = [
         naslov: "Dolazak i boravak",
         opis: "Po dolasku član porodice radi Anmeldung i traži boravišnu dozvolu u Ausländerbehörde. Bračni partner obično dobija i pravo na rad.",
         savjet: "Uslovi se razlikuju po statusu osobe u Njemačkoj — uvijek provjeri konkretno na stranici Ambasade prije zakazivanja.",
+      },
+    ],
+  },
+  {
+    id: "15",
+    slug: "zamjena-vozacke-njemacka",
+    naziv: "Zamjena bosanske vozačke za njemačku",
+    opis: "Za auto i motor NEMA ispita — samo papiri. Rok je 6 mjeseci od prijave prebivališta. Evo koraka.",
+    ikona: "🚗",
+    kategorija: "gastarbajter",
+    minCitanja: 8,
+    tagovi: ["vozačka", "Führerschein", "Umschreibung"],
+    koraci: [
+      {
+        broj: 1,
+        naslov: "Rok od 6 mjeseci je za VOŽNJU (ne za samu zamjenu)",
+        opis: "Bitno da se razumije: sa bosanskom vozačkom smiješ voziti u Njemačkoj najviše 6 mjeseci od prijave prebivališta (Anmeldung). Poslije toga NE smiješ voziti dok je ne zamijeniš — vožnja bez važeće dozvole je prekršaj s visokom kaznom. Samu zamjenu (Umschreibung) možeš pokrenuti i kasnije, ali dok je ne završiš ne smiješ za volan.",
+        savjet: "Hack: predaj zahtjev za zamjenu još unutar prvih 6 mjeseci (uz prijevod i Meldebescheinigung) — tako nikad ne ostaneš bez prava na vožnju dok se obrađuje. Pazi samo da ti bosanska vozačka ne istekne prije zamjene: mora biti važeća kad predaješ zahtjev.",
+      },
+      {
+        broj: 2,
+        naslov: "Dobra vijest: za auto i motor NEMA ispita",
+        opis: "BiH je na posebnoj listi (Anlage 11), pa za kategorije B (auto), A i A1 (motor) po pravilu NE moraš polagati ni teoriju ni vožnju — samo predaš papire. Za kamione i autobuse (C, D) potrebni su ispiti i ljekarski nalazi.",
+        savjet: "Ovo je velika prednost bosanske vozačke u odnosu na mnoge druge zemlje — samo je iskoristi na vrijeme.",
+      },
+      {
+        broj: 3,
+        naslov: "Ovjereni prijevod vozačke",
+        opis: "Treba ti zvanični prijevod i klasifikacija tvoje vozačke. Najjednostavnije preko ADAC-a ili sudskog tumača (otprilike 40–60€). Do same zamjene, ovaj prijevod MORAŠ nositi uz vozačku da bi ona uopšte važila u Njemačkoj.",
+      },
+      {
+        broj: 4,
+        naslov: "Test vida (Sehtest)",
+        opis: "Kratak pregled vida u bilo kojoj optici (Optiker) ili kod okuliste. Traje par minuta i košta ispod 10€. Dobiješ potvrdu koju prilažeš uz zahtjev.",
+      },
+      {
+        broj: 5,
+        naslov: "Kurs prve pomoći (Erste-Hilfe-Kurs)",
+        opis: "Jednodnevni kurs prve pomoći (9 nastavnih sati), otprilike 40–70€. Nude ga Johanniter, DRK, Malteser, ASB i mnoge auto-škole. Isti je kao kad se prvi put vadi vozačka.",
+        savjet: "Kurseve ima i vikendom, ponekad i na više jezika — potraži termin blizu kuće da ne gubiš dan.",
+      },
+      {
+        broj: 6,
+        naslov: "Prikupi ostale dokumente",
+        opis: "Treba ti još: važeća bosanska vozačka (original), pasoš ili lična karta, prijava prebivališta (Anmeldebestätigung) i jedna biometrijska slika (~10€).",
+      },
+      {
+        broj: 7,
+        naslov: "Zakaži termin i predaj zahtjev",
+        opis: "Zahtjev se predaje u Führerscheinstelle (Fahrerlaubnisbehörde), a u nekim gradovima preko Bürgeramt-a. Zakaži termin online, ponesi sve papire i plati taksu (otprilike 35–45€). Služba zatim provjeri tvoju dozvolu kod izdavaoca u BiH.",
+      },
+      {
+        broj: 8,
+        naslov: "Čekanje i preuzimanje",
+        opis: "Obrada obično traje 2–6 sedmica (u većim gradovima poput Berlina zna i 2–4 mjeseca). Kad je gotovo, dobiješ njemačku vozačku, a bosanski original zadržava služba (vraća se izdavaocu u BiH).",
+        savjet: "Dok čekaš, i dalje smiješ voziti sa starom vozačkom uz prijevod — ako rok od 6 mjeseci nije istekao.",
+      },
+    ],
+  },
+  {
+    id: "16",
+    slug: "priznavanje-diplome-anerkennung",
+    naziv: "Priznavanje diplome (Anerkennung)",
+    opis: "Kako da tvoja bosanska diploma vrijedi u Njemačkoj — kad je obavezno, gdje se traži i koliko košta.",
+    ikona: "🎓",
+    kategorija: "posao",
+    minCitanja: 11,
+    tagovi: ["posao", "Anerkennung", "diploma", "anabin"],
+    koraci: [
+      {
+        broj: 1,
+        naslov: "Prvo provjeri da li ti uopšte treba",
+        opis: "Zanimanja se dijele na regulisana i neregulisana. Za REGULISANA (ljekar, medicinska sestra/tehničar, apotekar, učitelj, pravnik, dio inženjera) priznavanje je OBAVEZNO — bez njega ne smiješ raditi u struci. Za NEREGULISANA (većina IT-a, ekonomija, marketing, mnogi zanati) možeš raditi i bez priznavanja, ali ono pomaže kod plate i ugleda.",
+        savjet: "Ako radiš preko Westbalkan regulacije u zanimanju koje ne traži diplomu — priznavanje ti najčešće ne treba.",
+      },
+      {
+        broj: 2,
+        naslov: "Provjeri fakultet na anabin",
+        opis: "Za fakultetske diplome idi na anabin.kmk.org i upiši svoj univerzitet i studij. Ako je ocijenjen sa 'H+', diploma se u načelu priznaje. Baza je besplatna i pokazuje kako Njemačka gleda na tvoju ustanovu.",
+      },
+      {
+        broj: 3,
+        naslov: "Nađi nadležnu službu (Anerkennungsfinder)",
+        opis: "Na zvaničnom portalu anerkennung-in-deutschland.de imaš alat 'Anerkennungsfinder' — upišeš zanimanje i grad, i on ti kaže tačno koja ustanova rješava tvoj slučaj. Različita zanimanja idu na različite adrese.",
+      },
+      {
+        broj: 4,
+        naslov: "Univerzitetska diploma bez regulisanog zanimanja → Zeugnisbewertung",
+        opis: "Ako samo želiš da tvoja fakultetska diploma bude 'prevedena' u njemački sistem (za poslodavca), zatraži Zeugnisbewertung kod ZAB-a (Zentralstelle für ausländisches Bildungswesen). Košta oko 200€ i dobiješ zvaničnu potvrdu vrijednosti diplome.",
+      },
+      {
+        broj: 5,
+        naslov: "Zanat ili stručno zvanje → IHK FOSA / komora",
+        opis: "Za zanatska i stručna zvanja (npr. kuhar, električar, automehaničar, komercijalista) nadležne su komore: IHK FOSA za trgovačko-industrijska zanimanja, Handwerkskammer (HWK) za zanate. Oni upoređuju tvoje obrazovanje s njemačkim i izdaju rješenje.",
+      },
+      {
+        broj: 6,
+        naslov: "Pripremi dokumente i prijevode",
+        opis: "Obično treba: diploma i dodatak diplomi, svjedočanstva, dokaz o radnom iskustvu, pasoš i ovjereni prijevodi na njemački (sudski tumač). Trošak samog postupka je najčešće 100–600€, plus prijevodi. Odluka stiže obično za 3–4 mjeseca od kompletnih papira.",
+        savjet: "Ako rješenje bude 'djelimično priznavanje', dobiješ i spisak šta ti fali — pa to dopuniš kroz kurs (Anpassungslehrgang) ili ispit.",
+      },
+      {
+        broj: 7,
+        naslov: "Iskoristi BESPLATNO savjetovanje i podršku za troškove",
+        opis: "Mreža IQ (Förderprogramm IQ) nudi besplatno savjetovanje na više jezika — vode te kroz cijeli postupak. Ako imaš niska primanja, možeš dobiti 'Anerkennungszuschuss' — državnu pomoć koja pokriva dio troškova (prijevodi, takse).",
+        savjet: "Prvo idi na besplatno IQ savjetovanje prije nego išta platiš — uštedjet ćeš i vrijeme i novac.",
+      },
+      {
+        broj: 8,
+        naslov: "Novo: priznavanje PARALELNO s radom (Anerkennungspartnerschaft)",
+        opis: "Od reforme zakona o useljavanju stručnjaka, možeš doći i početi raditi, a priznavanje diplome završiti tek u Njemačkoj (Anerkennungspartnerschaft — dogovor između tebe i poslodavca). Ne moraš više sve završiti prije dolaska.",
+      },
+    ],
+  },
+  {
+    id: "17",
+    slug: "njemacko-drzavljanstvo-einburgerung",
+    naziv: "Njemačko državljanstvo (Einbürgerung)",
+    opis: "Novi zakon: dvojno državljanstvo dozvoljeno, standard 5 godina. Uslovi, test i koraci.",
+    ikona: "📜",
+    kategorija: "viza",
+    minCitanja: 10,
+    tagovi: ["državljanstvo", "Einbürgerung", "pasoš"],
+    koraci: [
+      {
+        broj: 1,
+        naslov: "Najveća promjena: NE moraš se odreći bosanskog",
+        opis: "Od reforme 2024. Njemačka dozvoljava dvojno državljanstvo. To znači da uz njemački pasoš možeš zadržati i bosanski — ne moraš birati. Ovo je ogromna promjena za našu dijasporu.",
+        savjet: "Provjeri i bosanska pravila — BiH takođe dozvoljava zadržavanje državljanstva, pa u praksi ostaješ i Bosanac i Nijemac.",
+      },
+      {
+        broj: 2,
+        naslov: "Koliko godina boravka treba",
+        opis: "Standard je 5 godina zakonitog boravka u Njemačkoj (ranije 8). VAŽNO: ubrzano državljanstvo za 3 godine (za izuzetnu integraciju) je UKINUTO 2025. — te opcije više nema. Za većinu ljudi cilj je, dakle, 5 godina.",
+      },
+      {
+        broj: 3,
+        naslov: "Provjeri ostale uslove",
+        opis: "Treba ti: siguran boravišni status, njemački na nivou B1, položen test 'Leben in Deutschland', da se sam izdržavaš (bez oslanjanja na socijalu, uz izuzetke), čist kazneni dosje i priznavanje slobodarskog demokratskog ustavnog poretka.",
+        savjet: "Ako duže primaš Bürgergeld ili socijalu bez svoje krivice — provjeri svoj slučaj, jer izdržavanje je jedan od ključnih uslova.",
+      },
+      {
+        broj: 4,
+        naslov: "Položi Einbürgerungstest",
+        opis: "Test 'Leben in Deutschland' ima 33 pitanja o njemačkom društvu, pravima i historiji; treba tačno odgovoriti najmanje 17. Pitanja su javna — možeš vježbati unaprijed online. Test košta oko 25€.",
+        savjet: "Postoji baza svih mogućih pitanja — prođi je nekoliko puta i test je lagan.",
+      },
+      {
+        broj: 5,
+        naslov: "Djeca rođena u Njemačkoj",
+        opis: "Dijete rođeno u Njemačkoj automatski dobija njemačko državljanstvo ako je bar jedan roditelj zakonito živio u Njemačkoj 5 godina i ima trajni boravak. I ta djeca sada mogu zadržati oba državljanstva.",
+      },
+      {
+        broj: 6,
+        naslov: "Predaj zahtjev i dokumente",
+        opis: "Zahtjev se predaje u nadležnoj Einbürgerungsbehörde (u tvom gradu/okrugu). Treba: pasoš, boravišna dozvola, dokaz o prihodima i zaposlenju, B1 certifikat, potvrda o testu, rodni/vjenčani listovi. Taksa je oko 255€ po osobi (za djecu manje).",
+      },
+      {
+        broj: 7,
+        naslov: "Čekanje i zakletva",
+        opis: "Obrada zna trajati dugo — od nekoliko mjeseci do preko godinu, zavisno od grada. Na kraju potpisuješ izjavu o vjernosti ustavu i dobijaš Einbürgerungsurkunde (potvrdu), pa možeš vaditi njemački pasoš.",
+        savjet: "Prikupi papire uredno i kompletno — najveći zastoji su zbog dokumenata koji fale.",
+      },
+    ],
+  },
+  {
+    id: "18",
+    slug: "kindergeld-poreske-klase",
+    naziv: "Kindergeld i poreske klase — više para u džepu",
+    opis: "Dječiji doplatak (259€ od 2026) i kako bračni parovi biraju poreske klase da im ostane više neto.",
+    ikona: "💶",
+    kategorija: "finansije",
+    minCitanja: 9,
+    tagovi: ["finansije", "Kindergeld", "Steuerklasse", "porodica"],
+    koraci: [
+      {
+        broj: 1,
+        naslov: "Kindergeld 2026: 259€ po djetetu",
+        opis: "Od januara 2026. Kindergeld iznosi 259€ mjesečno po svakom djetetu (povećan sa 255€). Isplaćuje se do 18. godine, a ako dijete studira ili je na Ausbildungu — do 25. godine.",
+      },
+      {
+        broj: 2,
+        naslov: "Ko ima pravo",
+        opis: "Pravo imaš ako živiš i radiš u Njemačkoj i imaš odgovarajući boravišni status, a dijete po pravilu živi s tobom u Njemačkoj (ili u EU/EEA). Za djecu koja žive u BiH pravila su ograničena i posebna — to obavezno provjeri direktno s Familienkasse.",
+        savjet: "Ne oslanjaj se na priče iz druge ruke o 'Kindergeldu za djecu u Bosni' — svaki slučaj Familienkasse gleda posebno.",
+      },
+      {
+        broj: 3,
+        naslov: "Kako aplicirati za Kindergeld",
+        opis: "Zahtjev se podnosi Familienkasse (pri Bundesagentur für Arbeit), može online. Trebaš porezni broj (Steuer-ID) i svoj i djetetov, te rodni list djeteta. Isplata ide na tvoj račun mjesečno.",
+        savjet: "Prijavi se što prije — Kindergeld se unazad isplaćuje samo za ograničen period.",
+      },
+      {
+        broj: 4,
+        naslov: "Poreske klase — osnove",
+        opis: "Njemačka ima 6 poreskih klasa (Steuerklassen). One određuju koliko ti se poreza skida s plaće svaki mjesec. Samci su obično u klasi I, samohrani roditelji u II, a bračni parovi biraju kombinaciju.",
+      },
+      {
+        broj: 5,
+        naslov: "Bračni parovi: III/V ili IV/IV ili IV s faktorom",
+        opis: "Ako jedan partner zarađuje ZNATNO više — kombinacija III (veći zarađivač) i V (manji) daje najviše neto svaki mjesec. Ako su plate slične — IV/IV je pravednije. 'IV s faktorom' (Faktorverfahren) najtačnije rasporedi porez tokom godine.",
+        savjet: "Kod III/V veći zarađivač uzima III, manji V. Ali pazi na sljedeći korak.",
+      },
+      {
+        broj: 6,
+        naslov: "Pažnja kod III/V: obavezna godišnja prijava",
+        opis: "Kombinacija III/V daje više novca mjesečno, ALI na kraju godine morate podnijeti poresku prijavu (Steuererklärung) i može se desiti da nešto morate doplatiti. IV/IV s faktorom to uglavnom izbjegava. Promjenu klase tražite u Finanzamt-u.",
+      },
+      {
+        broj: 7,
+        naslov: "Napomena: reforma poreskih klasa",
+        opis: "Planirano je da se klase III i V vremenom ukinu i svi pređu na sistem IV s faktorom. Za sada (2026.) III/V i dalje postoje i mogu se koristiti — ali računaj da će se pravila jednom promijeniti.",
+      },
+    ],
+  },
+  {
+    id: "19",
+    slug: "ausbildung-njega-medicina",
+    naziv: "Ausbildung i posao u njezi/medicini",
+    opis: "Plaćeno dualno školovanje (724€ u 2026) i kako priznati medicinsku/njegovateljsku diplomu — struka koju Njemačka očajnički traži.",
+    ikona: "🩺",
+    kategorija: "posao",
+    minCitanja: 11,
+    tagovi: ["posao", "Ausbildung", "Pflege", "njega", "medicina"],
+    koraci: [
+      {
+        broj: 1,
+        naslov: "Šta je Ausbildung (i zašto je dobar)",
+        opis: "Duale Ausbildung je njemačko stručno školovanje: dio vremena si u firmi (praksa), dio u školi (teorija), i za to VRIJEME PRIMAŠ PLATU. Traje 2–3,5 godine i na kraju imaš priznato zvanje i skoro siguran posao.",
+      },
+      {
+        broj: 2,
+        naslov: "Koliko se plaća",
+        opis: "Postoji zakonski minimum (Mindestausbildungsvergütung): u 2026. godini 724€ mjesečno u prvoj godini, a raste svake naredne godine školovanja. Mnoge firme, pogotovo u njezi, plaćaju znatno više po tarifnom ugovoru.",
+      },
+      {
+        broj: 3,
+        naslov: "Kako doći na Ausbildung kao Bosanac",
+        opis: "Trebaš mjesto (ugovor) kod poslodavca i boravišnu dozvolu za stručno školovanje. Jezik je obično B1–B2. Mjesta se traže na berzama komora (IHK/HWK Lehrstellenbörse), portalima za posao i direktno kod firmi.",
+        savjet: "Za mlade bez fakulteta Ausbildung je jedan od najsigurnijih puteva u Njemačku — uči, zarađuje i ima papir na kraju.",
+      },
+      {
+        broj: 4,
+        naslov: "Njega (Pflege) — najtraženija struka",
+        opis: "Školovanje za 'Pflegefachfrau/-mann' traje 3 godine, plaćeno je (često 1.300€+ već u prvoj godini) i potražnja je ogromna. Mnogi poslodavci u njezi sami sponzorišu dolazak i papire, jer im hitno trebaju ljudi.",
+        savjet: "Ako već imaš iskustvo u njezi iz BiH — to ti je velika prednost pri traženju mjesta.",
+      },
+      {
+        broj: 5,
+        naslov: "Priznavanje strane njegovateljske/medicinske diplome",
+        opis: "Ako si već medicinska sestra/tehničar iz BiH, tražiš priznavanje (Anerkennung als Pflegefachkraft) kod nadležne službe u saveznoj zemlji. Obično treba njemački B2 i, ako fali dio znanja, prilagodbeni kurs (Anpassungslehrgang) ili ispit znanja (Kenntnisprüfung).",
+      },
+      {
+        broj: 6,
+        naslov: "Ljekari — Approbation",
+        opis: "Za rad ljekara treba Approbation (dozvola za rad). Uslovi: njemački B2 opšti + stručni jezički ispit (Fachsprachprüfung, nivo C1 u medicini), a često i ispit znanja (Kenntnisprüfung). Dok to ne završiš, možeš raditi s privremenom dozvolom (Berufserlaubnis).",
+        savjet: "Bolnice koje traže ljekare često pomognu oko papira i pripreme za jezički ispit — pitaj poslodavca.",
+      },
+      {
+        broj: 7,
+        naslov: "Gdje tražiti mjesto",
+        opis: "Berze mjesta komora (IHK i HWK Lehrstellenbörse), portali Indeed.de i Stepstone.de, stranice bolnica i domova za njegu, te agencije specijalizovane za dovođenje osoblja iz Balkana. Za njegu i medicinu — javljaj se direktno ustanovama.",
       },
     ],
   },
