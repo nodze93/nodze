@@ -36,8 +36,6 @@ export default function ClanakCard({ clanak, varijanta = "card" }: Props) {
             <span>{clanak.datum}</span>
             <span>·</span>
             <span>{clanak.minCitanja} min čitanja</span>
-            <span>·</span>
-            <span>{clanak.procitano.toLocaleString()} pročitano</span>
           </div>
         </div>
       </Link>
@@ -63,7 +61,7 @@ export default function ClanakCard({ clanak, varijanta = "card" }: Props) {
         {clanak.naslov}
       </div>
       <div style={{ fontSize: 11, color: "var(--tekst-light)" }}>
-        {clanak.datum} · {clanak.minCitanja} min · {clanak.procitano.toLocaleString()} pročitano
+        {clanak.datum} · {clanak.minCitanja} min
       </div>
     </Link>
   );

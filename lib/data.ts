@@ -220,7 +220,7 @@ export async function dajHero(limit = 12): Promise<HeroKartica[]> {
   return [...danas, ...stari];
 }
 
-/** Meta linija: "1. jul · 4 min · 1.2k pročitano" */
+/** Meta linija: "1. jul · 4 min" (broj čitanja se NE prikazuje javno) */
 export function formatirajMeta(c: DbClanak): string {
   const dijelovi: string[] = [];
   const datum = c.datum_objave || c.created_at;
@@ -233,9 +233,5 @@ export function formatirajMeta(c: DbClanak): string {
     else dijelovi.push(d.toLocaleDateString("bs-BA", { day: "numeric", month: "short" }));
   }
   dijelovi.push(`${c.min_citanja} min`);
-  if (c.broj_pregleda > 0) {
-    const p = c.broj_pregleda >= 1000 ? `${(c.broj_pregleda / 1000).toFixed(1)}k` : `${c.broj_pregleda}`;
-    dijelovi.push(`${p} pročitano`);
-  }
   return dijelovi.join(" · ");
 }

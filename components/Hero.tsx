@@ -10,7 +10,7 @@ const FALLBACK_GLAVNI: HeroClanak[] = [
     naslov: "Nova pravila za radnu vizu u Njemačkoj — što se mijenja za Bosance od 2026. godine",
     excerpt:
       "Fachkräfteeinwanderungsgesetz je promijenio sve. Koje dokumente trebaš, koji je rok čekanja, i kako aplicirati korak po korak iz BiH.",
-    meta: "Danas · 8 min · 2.4k pročitano",
+    meta: "Danas · 8 min",
     datum: "Danas",
     slika: "https://loremflickr.com/900/600/passport,documents?lock=51",
   },

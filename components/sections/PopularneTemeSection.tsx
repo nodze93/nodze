@@ -4,31 +4,31 @@ const popularneStavke = [
   {
     broj: 1,
     naslov: "Ausländerbehörde — kako zakazati termin i što ponijeti",
-    meta: "Viza · 5 min · 4.8k pročitano",
+    meta: "Viza · 5 min",
     href: "/clanak/auslander-termin",
   },
   {
     broj: 2,
     naslov: "Vozačka dozvola BiH → Führerschein — kako zamijeniti bez ispita",
-    meta: "Dokumenti · 6 min · 3.9k pročitano",
+    meta: "Dokumenti · 6 min",
     href: "/clanak/vozacka-fuhrerschein",
   },
   {
     broj: 3,
     naslov: "Elterngeld 2026 — koliko para i kako aplicirati",
-    meta: "Porodica · 8 min · 3.2k pročitano",
+    meta: "Porodica · 8 min",
     href: "/clanak/elterngeld-2026",
   },
   {
     broj: 4,
     naslov: "Penzija u Njemačkoj za Bosance — BiH-DE sporazum objašnjen",
-    meta: "Penzija · 10 min · 2.7k pročitano",
+    meta: "Penzija · 10 min",
     href: "/clanak/penzija-bih-njemacka",
   },
   {
     broj: 5,
     naslov: "Wise vs. Western Union — ko šalje jeftinije novac u BiH",
-    meta: "Finansije · 4 min · 2.1k pročitano",
+    meta: "Finansije · 4 min",
     href: "/clanak/wise-vs-western-union",
   },
 ];
