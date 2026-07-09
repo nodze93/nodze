@@ -6,8 +6,24 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Korak-po-korak vodiči — Dijaspora.ba",
+  title: "Korak-po-korak vodiči — kodnas.de",
   description: "Praktični vodiči za Bosance u Njemačkoj i Austriji: viza, stan, zdravstvo, porez i penzija.",
+  alternates: { canonical: "/vodici" },
+  openGraph: {
+    title: "Korak-po-korak vodiči — kodnas.de",
+    description: "Praktični vodiči za Bosance u Njemačkoj i Austriji.",
+    url: "/vodici",
+    siteName: "kodnas.de",
+    locale: "bs_BA",
+    type: "website",
+    images: [{ url: "/og-default.jpg", width: 1200, height: 630, alt: "kodnas.de vodiči" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Korak-po-korak vodiči — kodnas.de",
+    description: "Praktični vodiči za Bosance u Njemačkoj i Austriji.",
+    images: ["/og-default.jpg"],
+  },
 };
 
 export default function VodiciPage() {

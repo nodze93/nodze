@@ -13,12 +13,32 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const vodic = getVodic(slug);
-  if (!vodic) return { title: "Vodič — Dijaspora.ba" };
+  if (!vodic) return { title: "Vodič — kodnas.de" };
+  const url = `/vodic/${vodic.slug}`;
   return {
-    title: `${vodic.naziv} — Dijaspora.ba`,
+    title: `${vodic.naziv} — kodnas.de`,
     description: vodic.opis,
+    alternates: { canonical: url },
+    openGraph: {
+      title: vodic.naziv,
+      description: vodic.opis,
+      url,
+      siteName: "kodnas.de",
+      locale: "bs_BA",
+      type: "article",
+      images: [{ url: "/og-default.jpg", width: 1200, height: 630, alt: vodic.naziv }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: vodic.naziv,
+      description: vodic.opis,
+      images: ["/og-default.jpg"],
+    },
   };
 }
+
+// Novi vodiči se prikazuju i ako nisu bili u zadnjem buildu (renderuju se na zahtjev)
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   return vodici.map((v) => ({ slug: v.slug }));

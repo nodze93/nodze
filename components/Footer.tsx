@@ -169,7 +169,7 @@ export default function Footer() {
           color: "var(--tekst-light)",
         }}
       >
-        <span>© 2026 Dijaspora.ba — Sva prava zadržana</span>
+        <span>© 2026 kodnas.de — Sva prava zadržana</span>
         <span>Napravljeno za Bosance vani</span>
       </div>
 

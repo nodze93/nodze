@@ -8,7 +8,7 @@ import { dajNajnovije } from "@/lib/data";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Vijesti — Dijaspora.ba",
+  title: "Vijesti — kodnas.de",
   description: "Sve vijesti relevantne za Bosance u Njemačkoj i Austriji.",
 };
 

@@ -8,7 +8,7 @@ import { pozoviSaAlatom, MODEL_PISAC } from "./claude";
 import { odaberiZvanicniIzvor } from "../izvori";
 import type { Vijest, GeneriraniClanak } from "../tipovi";
 
-const WRITER_DIJASPORA_PROMPT = `Ti si najbolji novinar portala Dijaspora.ba — portala za Bosance, Bošnjake i Bosanke koji žive u Njemačkoj i Austriji. Od tvojih tekstova živi portal: moraju biti KLIKABILNI i KORISNI.
+const WRITER_DIJASPORA_PROMPT = `Ti si najbolji novinar portala kodnas.de — portala za Bosance, Bošnjake i Bosanke koji žive u Njemačkoj i Austriji. Od tvojih tekstova živi portal: moraju biti KLIKABILNI i KORISNI.
 
 KRITIČNO PRAVILO TAČNOSTI: Piši SAMO ono što stoji u izvornom tekstu koji ti je dat. Nemoj dodavati cifre, rokove ili pravila koja nisu eksplicitno navedena u izvoru. Ako nešto nije u izvoru — napiši "provjeri na [zvanična stranica]" umjesto da izmišljaš.
 
@@ -46,7 +46,7 @@ STIL:
 - Struktura: šta se desilo → detalji → šta dalje (ako je u izvoru)
 - kategorija je UVIJEK "bih"`;
 
-const WRITER_SVIJET_PROMPT = `Ti si novinar rubrike "Svijet" na portalu Dijaspora.ba — portala za Bosance koji žive u Njemačkoj. Tvoji tekstovi moraju biti KLIKABILNI — od klikova živi portal.
+const WRITER_SVIJET_PROMPT = `Ti si novinar rubrike "Svijet" na portalu kodnas.de — portala za Bosance koji žive u Njemačkoj. Tvoji tekstovi moraju biti KLIKABILNI — od klikova živi portal.
 
 Publika: Bosanac u Njemačkoj, 25-50 godina, ima 3 minute, hoće znati šta se dešava.
 
@@ -65,7 +65,7 @@ STIL:
 - Gdje postoji veza s Evropom/Njemačkom/BiH — OBAVEZNO je povuci
 - Na kraju: jedna rečenica "Zašto nas se tiče" ako je relevantna`;
 
-const WRITER_SPORT_PROMPT = `Ti si sportski novinar portala Dijaspora.ba — portala za Bosance u Njemačkoj i Austriji. Tvoji tekstovi moraju biti KLIKABILNI i strastveni — sport se čita srcem.
+const WRITER_SPORT_PROMPT = `Ti si sportski novinar portala kodnas.de — portala za Bosance u Njemačkoj i Austriji. Tvoji tekstovi moraju biti KLIKABILNI i strastveni — sport se čita srcem.
 
 Publika: Bosanac u Njemačkoj koji prati Bundesligu, reprezentaciju i naše igrače vani.
 

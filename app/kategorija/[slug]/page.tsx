@@ -34,9 +34,9 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const info = kategorijeInfo[slug];
-  if (!info) return { title: "Kategorija — Dijaspora.ba" };
+  if (!info) return { title: "Kategorija — kodnas.de" };
   return {
-    title: `${info.naziv} — Dijaspora.ba`,
+    title: `${info.naziv} — kodnas.de`,
     description: info.opis,
   };
 }

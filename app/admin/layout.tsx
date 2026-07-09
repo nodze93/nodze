@@ -76,7 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 flexShrink: 0,
               }}>D</div>
               <div>
-                <div style={{ color: "white", fontWeight: 700, fontSize: 15, lineHeight: 1.2 }}>dijaspora.ba</div>
+                <div style={{ color: "white", fontWeight: 700, fontSize: 15, lineHeight: 1.2 }}>kodnas.de</div>
                 <div style={{ color: "#6b7280", fontSize: 11 }}>Admin panel</div>
               </div>
             </div>

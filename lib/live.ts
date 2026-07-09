@@ -36,7 +36,7 @@ function vrijemeAgo(ts: number): string {
 const BIH_IZVORI = ["klix", "n1", "slobodna", "avaz", "sportsport"];
 
 function ocistiIzvor(izvor: string | null): string {
-  return (izvor || "Dijaspora.ba").replace(/^🤖\s*/, "").trim();
+  return (izvor || "kodnas.de").replace(/^🤖\s*/, "").trim();
 }
 
 function jeBih(izvor: string, kategorija: string): boolean {
@@ -179,13 +179,13 @@ export const MOCK_SPORT: LiveStavka[] = [
 // Fallback dok baza nema dovoljno objavljenih članaka na toj strani.
 // Linkovi vode na /vijesti (naš sajt), ne na vanjske portale.
 export const MOCK_DE: LiveStavka[] = [
-  { naslov: "Nova pravila za radnu vizu u Njemačkoj — šta se mijenja za Bosance", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
-  { naslov: "Kindergeld i Elterngeld — koliko para dobijaš u 2026.", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
-  { naslov: "Kako naći stan u Njemačkoj bez Schufe — provjeren vodič", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Nova pravila za radnu vizu u Njemačkoj — šta se mijenja za Bosance", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Kindergeld i Elterngeld — koliko para dobijaš u 2026.", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Kako naći stan u Njemačkoj bez Schufe — provjeren vodič", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
 ];
 
 export const MOCK_BIH: LiveStavka[] = [
-  { naslov: "Nostrifikacija diploma: novi sporazum BiH–Njemačka", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
-  { naslov: "Ambasada BiH: elektronski sistem zakazivanja termina", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
-  { naslov: "Sedmični pregled iz BiH — najvažnije za dijasporu", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Nostrifikacija diploma: novi sporazum BiH–Njemačka", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Ambasada BiH: elektronski sistem zakazivanja termina", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Sedmični pregled iz BiH — najvažnije za dijasporu", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
 ];

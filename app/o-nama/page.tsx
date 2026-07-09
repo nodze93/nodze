@@ -4,8 +4,8 @@ import Ticker from "@/components/Ticker";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "O nama — Dijaspora.ba",
-  description: "Dijaspora.ba je portal za Bosance u Njemačkoj i Austriji.",
+  title: "O nama — kodnas.de",
+  description: "kodnas.de je portal za Bosance u Njemačkoj i Austriji.",
 };
 
 export default function ONamaPage() {
@@ -16,7 +16,7 @@ export default function ONamaPage() {
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px" }}>
         <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.5px" }}>
-          O Dijaspora.ba
+          O kodnas.de
         </h1>
         <p style={{ fontSize: 15, color: "var(--tekst-muted)", marginBottom: 40 }}>
           Tvoj vodič kroz život u Njemačkoj, Austriji i Švicarskoj
@@ -25,7 +25,7 @@ export default function ONamaPage() {
         <div style={{ fontSize: 16, lineHeight: 1.8, color: "var(--tekst)" }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, marginTop: 32 }}>Ko smo mi?</h2>
           <p style={{ marginBottom: 16 }}>
-            Dijaspora.ba je nezavisni informativni portal koji prikuplja, piše i objavljuje vijesti i praktične vodiče relevantne za Bosance koji žive u Njemačkoj i Austriji.
+            kodnas.de je nezavisni informativni portal koji prikuplja, piše i objavljuje vijesti i praktične vodiče relevantne za Bosance koji žive u Njemačkoj i Austriji.
           </p>
           <p style={{ marginBottom: 16 }}>
             Znamo iz iskustva kako je teško snaći se u njemackoj birokraciji — Ausländerbehörde, Finanzamt, Krankenkasse... Svaki korak je labirint bez dobrog vodiča na bosanskom jeziku.

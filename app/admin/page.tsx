@@ -118,7 +118,7 @@ export default function AdminDashboard() {
           Dobro jutro 👋
         </h1>
         <p style={{ fontSize: 14, color: "#6b7280" }}>
-          Pregled portala dijaspora.ba
+          Pregled portala kodnas.de
         </p>
       </div>
 

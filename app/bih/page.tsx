@@ -7,7 +7,7 @@ import { dajBIH } from "@/lib/live";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Vijesti iz BiH — Dijaspora.ba",
+  title: "Vijesti iz BiH — kodnas.de",
   description: "Najnovije vijesti iz Bosne i Hercegovine važne za dijasporu — konzulati, pasoši, glasanje, letovi.",
 };
 

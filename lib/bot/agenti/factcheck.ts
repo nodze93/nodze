@@ -6,7 +6,7 @@
 import { pozoviSaAlatom, MODEL_BRZI } from "./claude";
 import type { GeneriraniClanak, FactcheckRezultat, ContextRezultat } from "../tipovi";
 
-const FACTCHECK_PROMPT = `Ti si fact-checker portala Dijaspora.ba.
+const FACTCHECK_PROMPT = `Ti si fact-checker portala kodnas.de.
 
 Dobijaš: (1) napisani članak, (2) izvorni tekst na kojem je baziran.
 
@@ -87,7 +87,7 @@ export async function factcheckClanak(
 // ============================================================
 // CONTEXT AGENT — dijaspora ugao, ton, klikabilnost
 // ============================================================
-const CONTEXT_PROMPT = `Ti si glavni urednik portala Dijaspora.ba.
+const CONTEXT_PROMPT = `Ti si glavni urednik portala kodnas.de.
 
 Provjeri je li članak spreman za našu publiku (Bosanci u Njemačkoj/Austriji):
 - Piše li za dijasporu konkretno (ne generički)?

@@ -75,7 +75,7 @@ function LoginForm() {
               fontWeight: 800,
               fontSize: 18,
             }}>D</div>
-            <span style={{ fontWeight: 800, fontSize: 20, color: "#111" }}>dijaspora.ba</span>
+            <span style={{ fontWeight: 800, fontSize: 20, color: "#111" }}>kodnas.de</span>
           </div>
           <div style={{ fontSize: 13, color: "#888", marginTop: 4 }}>Admin panel</div>
         </div>

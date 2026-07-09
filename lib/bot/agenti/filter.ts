@@ -8,7 +8,7 @@ import { pozoviSaAlatom, MODEL_BRZI } from "./claude";
 import type { Vijest } from "../tipovi";
 import type { TrendsRezultat } from "../trends";
 
-const FILTER_DIJASPORA_PROMPT = `Ti si urednik portala Dijaspora.ba — portala za Bosance, Bošnjake i Bosanke koji žive u Njemačkoj i Austriji.
+const FILTER_DIJASPORA_PROMPT = `Ti si urednik portala kodnas.de — portala za Bosance, Bošnjake i Bosanke koji žive u Njemačkoj i Austriji.
 
 Tvoj zadatak: ocijeni relevantnost svake vijesti za našu publiku, od 0 do 10.
 
@@ -47,7 +47,7 @@ NISKA OCJENA (0-3):
 - Suha PR saopštenja i najave
 - Puke statistike bez priče`;
 
-const FILTER_SVIJET_PROMPT = `Ti si urednik rubrike "Svijet" na portalu Dijaspora.ba — portala za Bosance u Njemačkoj.
+const FILTER_SVIJET_PROMPT = `Ti si urednik rubrike "Svijet" na portalu kodnas.de — portala za Bosance u Njemačkoj.
 
 Publika: Bosanci 25-50 godina, prate svijet, vole klikabilne naslove ali NE lažne.
 
@@ -67,7 +67,7 @@ NISKA OCJENA (0-3):
 - PR saopštenja i korporativne vijesti
 - Sport bez veze s BiH/Bosancima`;
 
-const FILTER_SPORT_PROMPT = `Ti si sportski urednik portala Dijaspora.ba — portala za Bosance u Njemačkoj i Austriji.
+const FILTER_SPORT_PROMPT = `Ti si sportski urednik portala kodnas.de — portala za Bosance u Njemačkoj i Austriji.
 
 Publika: Bosanci koji prate Bundesligu, reprezentaciju BiH i naše igrače vani.
 

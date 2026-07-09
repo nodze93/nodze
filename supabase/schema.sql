@@ -1,5 +1,5 @@
 -- ============================================================
--- DIJASPORA.BA — JEDINSTVENA SUPABASE ŠEMA (v2, konačna)
+-- kodnas.de — JEDINSTVENA SUPABASE ŠEMA (v2, konačna)
 -- ============================================================
 -- Pokreni CIJELI ovaj fajl u Supabase → SQL Editor → Run.
 -- Ova šema pokriva i sajt i bota — nema više dvije verzije.

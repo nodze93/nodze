@@ -5,7 +5,7 @@
 import { pozoviSaAlatom, MODEL_BRZI } from "./claude";
 import type { JezikRezultat } from "../tipovi";
 
-const JEZIK_PROMPT = `Ti si lektor portala Dijaspora.ba koji piše za bosansku dijasporu u Njemačkoj.
+const JEZIK_PROMPT = `Ti si lektor portala kodnas.de koji piše za bosansku dijasporu u Njemačkoj.
 
 Zadatak: provjeri i ispravi tekst da bude čist bosanski standardni jezik. Vrati CIJELI ispravljeni tekst (ne samo izmjene).
 

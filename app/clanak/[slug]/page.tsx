@@ -74,10 +74,32 @@ async function nadjiClanak(slug: string): Promise<PrikazClanak | null> {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const clanak = await nadjiClanak(slug);
-  if (!clanak) return { title: "Članak — Dijaspora.ba" };
+  if (!clanak) return { title: "Članak — kodnas.de" };
+
+  const url = `/clanak/${clanak.slug}`;
+  const opis = clanak.excerpt || "Vijesti i vodiči za Bosance u Njemačkoj i Austriji.";
+  // Slika članka (Unsplash URL) ako postoji, inače podrazumijevana OG slika.
+  const slika = clanak.slika || "/og-default.jpg";
+
   return {
-    title: `${clanak.naslov} — Dijaspora.ba`,
-    description: clanak.excerpt,
+    title: `${clanak.naslov} — kodnas.de`,
+    description: opis,
+    alternates: { canonical: url },
+    openGraph: {
+      title: clanak.naslov,
+      description: opis,
+      url,
+      siteName: "kodnas.de",
+      locale: "bs_BA",
+      type: "article",
+      images: [{ url: slika, alt: clanak.naslov }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: clanak.naslov,
+      description: opis,
+      images: [slika],
+    },
   };
 }
 
@@ -215,9 +237,9 @@ export default async function ClanakPage({ params }: Props) {
           {/* Dijeli */}
           <div style={{ marginTop: 24, padding: 16, background: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 13, fontWeight: 600 }}>Podijeli ovaj članak:</span>
-            <a href={`https://www.facebook.com/sharer/sharer.php?u=https://dijaspora.ba/clanak/${clanak.slug}`} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", background: "#1877F2", color: "white", borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none" }}>Facebook</a>
-            <a href={`https://t.me/share/url?url=https://dijaspora.ba/clanak/${clanak.slug}`} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", background: "#229ED9", color: "white", borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none" }}>Telegram</a>
-            <a href={`https://wa.me/?text=https://dijaspora.ba/clanak/${clanak.slug}`} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", background: "#25D366", color: "white", borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none" }}>WhatsApp</a>
+            <a href={`https://www.facebook.com/sharer/sharer.php?u=https://kodnas.de/clanak/${clanak.slug}`} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", background: "#1877F2", color: "white", borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none" }}>Facebook</a>
+            <a href={`https://t.me/share/url?url=https://kodnas.de/clanak/${clanak.slug}`} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", background: "#229ED9", color: "white", borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none" }}>Telegram</a>
+            <a href={`https://wa.me/?text=https://kodnas.de/clanak/${clanak.slug}`} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", background: "#25D366", color: "white", borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none" }}>WhatsApp</a>
           </div>
         </article>
 
