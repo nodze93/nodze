@@ -31,18 +31,24 @@ function vrijemeAgo(ts: number): string {
   return `${Math.floor(h / 24)}d`;
 }
 
-// Izvori koje smatramo "BiH stranom" (sve ostalo ide na DE/svjetsku stranu).
-// DW Bosanski NIJE ovdje — piše o Njemačkoj, pa ide na DE stranu.
+// Bosanski izvori → rubrika "Vijesti iz BiH" (desno).
 const BIH_IZVORI = ["klix", "n1", "slobodna", "avaz", "sportsport"];
+// Njemački izvori → UVIJEK rubrika "Vijesti iz Njemačke" (lijevo), čak i ako
+// im je kategorija greškom "bih". (DW piše o Njemačkoj → njemačka strana.)
+const DE_IZVORI = ["spiegel", "tagesschau", "dw", "kicker"];
 
 function ocistiIzvor(izvor: string | null): string {
   return (izvor || "kodnas.de").replace(/^🤖\s*/, "").trim();
 }
 
 function jeBih(izvor: string, kategorija: string): boolean {
-  if (kategorija === "bih") return true;
   const s = izvor.toLowerCase();
-  return BIH_IZVORI.some((k) => s.includes(k));
+  // Njemački izvor NIKAD ne ide na bosansku stranu (izvor pobjeđuje kategoriju).
+  if (DE_IZVORI.some((k) => s.includes(k))) return false;
+  // Bosanski izvor uvijek ide na bosansku stranu.
+  if (BIH_IZVORI.some((k) => s.includes(k))) return true;
+  // Inače se oslanjamo na kategoriju.
+  return kategorija === "bih";
 }
 
 interface Red {
