@@ -46,7 +46,7 @@ export default function UrediClanakPage({ params }: Props) {
           setKategorija(c.kategorija || "viza");
           setStatus(c.status || "draft");
           setNaslovnaSlika(c.slika || "");
-          setAutor(c.autor || "Redakcija Dijaspora.ba");
+          setAutor(c.autor || "Redakcija kodnas.de");
           setSeoNaslov(c.seoNaslov || c.naslov || "");
           setSeoOpis(c.seoOpis || c.excerpt || "");
         }
@@ -259,7 +259,7 @@ export default function UrediClanakPage({ params }: Props) {
                   <div style={{ padding: 16, background: "#f9fafb", borderRadius: 8, border: "1px solid #e5e7eb" }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", marginBottom: 10, textTransform: "uppercase" }}>Pregled u Google rezultatima</div>
                     <div style={{ fontSize: 18, color: "#1a0dab", marginBottom: 3 }}>{seoNaslov || naslov || "Naslov članka"}</div>
-                    <div style={{ fontSize: 13, color: "#006621", marginBottom: 3 }}>dijaspora.ba › clanak › ...</div>
+                    <div style={{ fontSize: 13, color: "#006621", marginBottom: 3 }}>kodnas.de › clanak › ...</div>
                     <div style={{ fontSize: 13, color: "#545454", lineHeight: 1.5 }}>
                       {(seoOpis || excerpt || "Opis članka koji se prikazuje ispod naslova u Google pretragama.").slice(0, 155)}
                     </div>
@@ -360,7 +360,7 @@ export default function UrediClanakPage({ params }: Props) {
               type="text"
               value={autor}
               onChange={e => setAutor(e.target.value)}
-              placeholder="Redakcija Dijaspora.ba"
+              placeholder="Redakcija kodnas.de"
               style={{ width: "100%", padding: "9px 12px", border: "1.5px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
             />
           </div>

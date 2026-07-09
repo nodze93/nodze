@@ -16,7 +16,7 @@ export default function NoviClanakPage() {
   const [sadrzaj, setSadrzaj] = useState("");
   const [kategorija, setKategorija] = useState("viza");
   const [naslovnaSlika, setNaslovnaSlika] = useState("");
-  const [autor, setAutor] = useState("Redakcija Dijaspora.ba");
+  const [autor, setAutor] = useState("Redakcija kodnas.de");
   const [tagovi, setTagovi] = useState("");
   const [preview, setPreview] = useState(false);
   const [sprema, setSprema] = useState(false);
