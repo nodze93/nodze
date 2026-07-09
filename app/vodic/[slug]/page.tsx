@@ -17,11 +17,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const url = `/vodic/${vodic.slug}`;
   return {
     title: `${vodic.naziv} — kodnas.de`,
-    description: vodic.opis,
+    description: vodic.opis, // za Google pretragu (SEO)
     alternates: { canonical: url },
     openGraph: {
       title: vodic.naziv,
-      description: vodic.opis,
+      description: "", // bez opisa na društvenoj kartici
       url,
       siteName: "kodnas.de",
       locale: "bs_BA",
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: vodic.naziv,
-      description: vodic.opis,
+      description: "",
       images: ["/og-default.jpg"],
     },
   };
