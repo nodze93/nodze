@@ -48,8 +48,10 @@ export default function HomePage() {
       <Nav />
       {/* Ticker "Uživo" — sakriven na telefonu */}
       <div className="hide-mob"><Ticker /></div>
-      <Hero />
-      <KategorijBar aktivna="sve" />
+      <div className="hero-kat">
+        <Hero />
+        <KategorijBar aktivna="sve" />
+      </div>
 
       {/* Live vijesti — dvije kutije (DESKTOP) */}
       <div className="hide-mob"><LiveVijesti /></div>
@@ -137,6 +139,9 @@ export default function HomePage() {
           }
           .hide-mob { display: none !important; }
           .samo-mob { display: flex !important; }
+          /* Traka kategorija iznad slike (samo telefon) */
+          .hero-kat { display: flex; flex-direction: column; }
+          .hero-kat > :last-child { order: -1; }
           /* Glavni sadržaj bez bočnog razmaka na telefonu (kutije do ivica) */
           .main-layout { padding: 0 !important; gap: 0 !important; }
           .main-layout > main { padding: 0 12px; }
