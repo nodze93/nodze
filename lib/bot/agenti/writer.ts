@@ -85,9 +85,7 @@ STIL:
 - Struktura: šta se desilo → ključni momenti → šta slijedi
 - Na kraju: kad je sljedeća utakmica/šta pratiti dalje (ako je u izvoru)`;
 
-// Zajednička pravila — dodaju se SVAKOM writer promptu. Rješavaju dva
-// česta problema: (1) slaba bosanska gramatika, (2) članak "obeća pa ne
-// isporuči" ili se odsiječe prije poente.
+// Zajednička pravila — dodaju se SVAKOM writer promptu.
 const ZAJEDNICKA_PRAVILA = `
 
 ═══ OBAVEZNA JEZIČKA I SADRŽAJNA PRAVILA (provjeri PRIJE nego vratiš tekst) ═══
@@ -104,11 +102,19 @@ JEZIK (bosanski standard, ijekavica):
 
 SADRŽAJ — nikad ne ostavljaj čitaoca bez odgovora:
 - Ako naslov ili uvod nešto OBEĆA ("evo šta to znači", "evo koliko",
-  "evo ko ima pravo") — tekst to MORA konkretno razriješiti. Ne najavljuj
-  odgovor koji poslije ne daš.
+  "evo ko ima pravo") — tekst to MORA konkretno razriješiti.
 - Prenesi SVE ključne detalje iz izvora (iznosi, datumi, rokovi, uslovi).
-  Ako je detalj bitan za priču a stoji u izvoru — mora biti u članku.
-- Završi članak zaokruženo (zaključak ili "šta dalje"), ne u pola misli.`;
+- Završi članak zaokruženo, ne u pola misli.
+
+PODSJETNIK (polje "pozadina") — prosudi pametno:
+- Ako članak spominje nešto (novi/predloženi zakon, reformu, raniji događaj,
+  instituciju) što prosječan čitalac NE bi razumio bez pozadine, a objašnjenje
+  te pozadine POSTOJI u fetchovanom izvoru — sažmi ga u polje "pozadina"
+  (1-2 kratke rečenice: o čemu se zapravo radi).
+- Piši ISKLJUČIVO iz onoga što stoji u izvoru. NE piši iz svog znanja i NE
+  izmišljaj konkretne brojke ni odredbe.
+- Ako pozadine nema u izvoru, ili je članak već sve objasnio, ili nisi siguran —
+  ostavi "pozadina" PRAZNO ("").`;
 
 const CLANAK_SCHEMA = {
   type: "object" as const,
@@ -130,6 +136,11 @@ const CLANAK_SCHEMA = {
       type: "string",
       description:
         "2-4 ENGLESKE riječi za naslovnu fotografiju. Slika mora biti OZBILJNA i institucionalna/dokumentarna — zgrade, uredi, dokumenti, službeni šalteri, novac/euro, gradovi, saobraćaj. IZBJEGAVAJ emotivne/'stock' motive (bebe, nasmijane porodice, djeca, srca) ČAK I kad je tema porodica/djeca — tada biraj npr. 'government office documents', 'euro banknotes calculator', 'family allowance form'. Primjeri: 'german passport documents', 'berlin government building', 'apartment keys contract', 'football stadium night'.",
+    },
+    pozadina: {
+      type: "string",
+      description:
+        "Opcionalno. Kratak 'Podsjetnik' (1-2 rečenice) koji čitaocu objašnjava pozadinu — o čemu se npr. predloženi zakon/reforma zapravo radi — ALI samo ako to piše u fetchovanom izvoru. Prazan string \"\" ako pozadina nije u izvoru, ako je članak već objasnio, ili ako nisi siguran. NIKAD iz svog znanja.",
     },
   },
   required: ["naslov", "excerpt", "kategorija", "sadrzaj", "min_citanja", "izvori", "slika_pojmovi"],
@@ -156,8 +167,7 @@ export async function fetchIzvor(url: string): Promise<string | null> {
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ");
 
-    // Primarno: pasusi + STAVKE LISTE + podnaslovi. Ranije se hvatao samo <p>,
-    // pa su ključni detalji (često u <li> — iznosi, uslovi, rokovi) promicali.
+    // Pasusi + STAVKE LISTE + podnaslovi (ključni detalji su često u <li>)
     const blokovi = [...cist.matchAll(/<(?:p|li|h2|h3)[^>]*>([\s\S]*?)<\/(?:p|li|h2|h3)>/gi)]
       .map((m) => m[1].replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim())
       .filter((t) => t.length > 40)
@@ -165,8 +175,7 @@ export async function fetchIzvor(url: string): Promise<string | null> {
 
     let tekst = blokovi.join("\n\n").slice(0, 6000);
 
-    // Rezerva: ako je izvučeno premalo (sajt drži tekst netipično),
-    // uzmi ogoljeni tekst cijele stranice.
+    // Rezerva: ako je izvučeno premalo, uzmi ogoljeni tekst cijele stranice
     if (tekst.length < 300) {
       tekst = cist.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 6000);
     }
@@ -231,7 +240,16 @@ ${zvanicniUrl ? `ZVANIČNI IZVOR (${zvanicniUrl}):\n${zvanicniTekst || "(nije do
       toolOpis: "Sačuvaj napisani članak u strukturiranom formatu.",
       schema: CLANAK_SCHEMA,
     });
-    console.log(`   ✅ Napisan: "${clanak.naslov.slice(0, 50)}"`);
+
+    // Podsjetnik box — samo ako je bot popunio pozadinu (iz izvora).
+    const poz = (clanak.pozadina || "").trim();
+    if (poz.length > 20) {
+      clanak.sadrzaj =
+        `<blockquote class="podsjetnik"><strong>📌 Podsjetnik — o čemu se radi:</strong> ${poz}</blockquote>\n` +
+        clanak.sadrzaj;
+    }
+
+    console.log(`   ✅ Napisan: "${clanak.naslov.slice(0, 50)}"${poz.length > 20 ? " (+podsjetnik)" : ""}`);
     return { clanak, izvorniTekst, zvanicniUrl };
   } catch (err) {
     console.error(`   ❌ Writer greška: ${(err as Error).message}`);

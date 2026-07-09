@@ -40,6 +40,7 @@ export interface GeneriraniClanak {
   min_citanja: number;
   izvori: string[];
   slika_pojmovi?: string; // engleski pojmovi za Unsplash pretragu
+  pozadina?: string; // opcionalni "Podsjetnik" box (1-2 rečenice), prazan ako ne treba
 }
 
 // Rezultat Fact-check agenta

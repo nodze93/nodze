@@ -26,11 +26,13 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
   a JA ga ručno kopiram u folder.
 - Claude NE MOŽE sam push (cloud 403) i NE MOŽE lokalno build/test
   (nema npm registry) — zato izmjene testiram na Vercel PREVIEW-u.
+  (Claude može provjeriti SINTAKSU preko TypeScripta, ali ne pravi build.)
 
 ## ⚠️ PRAVILA
 1. Radi na PREVIEW branchu, pa merge u main tek kad potvrdim
 2. Objasni mi jednostavno, korak po korak
 3. Nikad ne otkrivaj javno da "bot piše" ili "prati izvore" (neozbiljno)
+4. Desktop verzija se NE dira kad radimo mobilne izmjene (i obrnuto)
 
 ## SUPABASE
 - Project ID (20 znakova): nfqhnhtktktlyqlwhcsj
@@ -51,26 +53,50 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 ## BOT
 - Pokreće se preko GitHub Actions (.github/workflows/bot-cron.yml)
 - Raspored: 3x dnevno — 06:00 / 12:30 / 20:00 (Berlin). Cron UTC: "0 4", "30 10", "0 18"
+  (Napomena: koristi se i cron-job.org koji češće okida — pazi na to zbog troška.)
 - Kvote po pokretanju (env u workflowu): CLANCI_DE=1, CLANCI_BIH=1, CLANCI_SVIJET=1
   CLANCI_SPORT = 1 ujutro/navečer, 0 u podne (uslovno preko github.event.schedule)
 - DE i BiH ODVOJENI (filter dijeli dijaspora izvore po jeziku: de vs bs)
 - Skip fact-check za sport/svijet; dijaspora (DE+BiH) ide kroz fact-check
+- CONTEXT agent je ISKLJUČEN (ušteda) — nije se koristio u adminu
+- DEDUPE: sve vijesti koje prođu kroz filter se pamte (oznaciObradjeneBatch),
+  pa bot NE troši Claude na ponovno ocjenjivanje istih vijesti svaki run
+- Writer maxTokens=3800, Jezik(lektor) maxTokens=4500 (da se tekst ne siječe)
+- Writer i lektor imaju stroga bosanska gramatička pravila + "obećanje mora biti razriješeno"
 - Piše DRAFTOVE — ja ih objavim u adminu ("Uredi članke" → 🚀)
 
+## SLIKE (PLAN — još nije implementirano)
+- Sad: Unsplash (generičke stock slike, nisu vezane za vijest) — planiramo penzionisati
+- DOGOVORENI plan: Wikimedia Commons (prave fotke poznatih osoba/mjesta, pravno čisto)
+  kao GLAVNO, Pexels kao REZERVA (bolji stock od Unsplasha)
+- og:image iz izvora ODBAČEN — pravno rizično (autorska prava, njemački Abmahnung)
+
 ## KLJUČNE DATOTEKE
-- lib/bot/pipeline.ts — srce bota
+- lib/bot/pipeline.ts — srce bota (dedupe batch, context off)
 - lib/bot/izvori.ts — RSS izvori
 - lib/bot/agenti/{claude,filter,writer,factcheck,jezik}.ts
+- lib/bot/publisher.ts — upis u Supabase + oznaciObradjeneBatch
 - lib/data.ts — javni data sloj (poštuje redoslijed/zakazivanje)
-- lib/live.ts — DE/BiH/Svijet feed (dijeli po izvoru)
-- lib/data/vodici.ts — vodiči (hard-kodirani)
-- components/admin/AdminModeracija.tsx — admin traka + Article Manager
-- app/api/admin/* — admin API (auth, clanci, pipeline, me, redoslijed, naslovna...)
+- lib/live.ts — DE/BiH/Svijet/Sport feed (naši objavljeni članci, sa slikama)
+- lib/data/vodici.ts — vodiči (hard-kodirani, sada 17 vodiča, provjereni)
+- lib/useIsMobile.ts — hook za mobilnu detekciju (NOVO)
+- components/MobilnaNaslovna.tsx — 4 jednake kutije na telefonu (NOVO)
+- components/{HeroRotator,KategorijBar,LiveVijesti}.tsx — naslovna
+- components/admin/AdminModeracija.tsx — admin traka + Article Manager (mobilno)
+- app/admin/* — admin (layout s hamburgerom, clanci, pipeline...)
+- app/clanak/[slug]/page.tsx — stranica članka (popravljen horizontalni scroll)
+- app/page.tsx — naslovna (mobilno vs desktop preko hide-mob/samo-mob)
 - .github/workflows/bot-cron.yml — raspored bota (ZAŠTIĆEN, ručno kopirati)
+
+## MOBILNI OBRAZAC (kako radimo mobilne izmjene bez diranja desktopa)
+- lib/useIsMobile.ts hook u client komponentama
+- CSS klase u app/page.tsx: `.hide-mob` (sakrij na telefonu), `.samo-mob` (samo telefon)
+- Sve mobilne izmjene su izolovane — desktop ostaje identičan
 
 ## MODERACIJA (kako radim)
 - Uloguj se na /admin/login → na dnu svake stranice crna admin traka
 - "Uredi članke" → reorder (▲▼/drag), ★ naslovna, 🚀 objavi, ✏️ uredi, ⏰ zakaži, 🗑️ obriši, + dodaj
+- NA TELEFONU: kartice + veliko "🚀 Objavi" dugme + filter "Na čekanju" (brzo odobravanje)
 - Filter po kategoriji automatski (gdje si, to uređuješ)
 - Mockup primjeri (u kodu) se NE mogu moderirati; samo pravi članci (bot/ručno)
 

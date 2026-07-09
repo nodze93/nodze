@@ -289,6 +289,18 @@ export default async function ClanakPage({ params }: Props) {
         }
         .clanak-sadrzaj th { background: var(--bg); font-weight: 600; }
         .clanak-sadrzaj strong { font-weight: 700; color: var(--tekst); }
+        /* 📌 Podsjetnik kutija (pozadina o čemu se radi) */
+        .clanak-sadrzaj blockquote.podsjetnik {
+          background: var(--zelena-svijetla);
+          border-left: 4px solid var(--zelena);
+          border-radius: 0 10px 10px 0;
+          padding: 14px 18px;
+          margin: 0 0 22px;
+          font-size: 14.5px;
+          line-height: 1.6;
+          color: var(--tekst);
+        }
+        .clanak-sadrzaj blockquote.podsjetnik strong { color: var(--zelena-tamna); }
         /* Ništa ne smije biti šire od ekrana (nema pomjeranja lijevo/desno) */
         .clanak-layout > article { min-width: 0; }
         .clanak-sadrzaj { overflow-wrap: anywhere; word-break: break-word; }
