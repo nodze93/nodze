@@ -3,6 +3,7 @@ import Ticker from "@/components/Ticker";
 import Hero from "@/components/Hero";
 import KategorijBar from "@/components/KategorijBar";
 import LiveVijesti from "@/components/LiveVijesti";
+import MobilnaNaslovna from "@/components/MobilnaNaslovna";
 import NajnovijeSection from "@/components/sections/NajnovijeSection";
 import KategorijaSekcija from "@/components/sections/KategorijaSekcija";
 import NajpopularnijeSection from "@/components/sections/NajpopularnijeSection";
@@ -45,12 +46,16 @@ export default function HomePage() {
   return (
     <>
       <Nav />
-      <Ticker />
+      {/* Ticker "Uživo" — sakriven na telefonu */}
+      <div className="hide-mob"><Ticker /></div>
       <Hero />
       <KategorijBar aktivna="sve" />
 
-      {/* Live vijesti — dvije kutije (v19) */}
-      <LiveVijesti />
+      {/* Live vijesti — dvije kutije (DESKTOP) */}
+      <div className="hide-mob"><LiveVijesti /></div>
+
+      {/* MOBILNA naslovna — 4 jednake kutije sa slikama (SAMO telefon) */}
+      <MobilnaNaslovna />
 
       {/* Main content */}
       <div
@@ -66,7 +71,8 @@ export default function HomePage() {
       >
         {/* Left column — v19 redoslijed sekcija */}
         <main>
-          {/* Iz svijeta — sada na vrhu (forma ista kao prije) */}
+          {/* Iz svijeta — DESKTOP (na mobilnom je u MobilnaNaslovna kutiji) */}
+          <div className="hide-mob">
           <KategorijaSekcija
             naslov="🌍 Iz svijeta"
             podnaslov="Najvažnije svjetske vijesti — politika, ekonomija i krize koje utiču na nas"
@@ -75,6 +81,7 @@ export default function HomePage() {
             prikaziIzvor
             samoTip="svjetske"
           />
+          </div>
           {/* Najnovije — pomjereno ispod svijeta (forma ista) */}
           <NajnovijeSection />
           <VodiciSection />
@@ -90,12 +97,15 @@ export default function HomePage() {
             kategorija="gastarbajter"
             fallback={FALLBACK_GASTARBAJTER}
           />
+          {/* Sport — DESKTOP (na mobilnom je u MobilnaNaslovna kutiji, ispod Svijeta) */}
+          <div className="hide-mob">
           <KategorijaSekcija
             naslov="⚽ Sport"
             podnaslov="Bosanski sportisti vani, reprezentacija, Bundesliga"
             kategorija="sport"
             fallback={FALLBACK_SPORT}
           />
+          </div>
           <NajpopularnijeSection />
         </main>
 
@@ -116,6 +126,8 @@ export default function HomePage() {
       <Footer />
 
       <style>{`
+        /* Mobilno pokazuje "samo-mob", desktop pokazuje "hide-mob" */
+        .samo-mob { display: none; }
         @media (max-width: 768px) {
           .main-layout {
             grid-template-columns: 1fr !important;
@@ -123,6 +135,11 @@ export default function HomePage() {
           .main-layout aside {
             display: none !important;
           }
+          .hide-mob { display: none !important; }
+          .samo-mob { display: flex !important; }
+          /* Glavni sadržaj bez bočnog razmaka na telefonu (kutije do ivica) */
+          .main-layout { padding: 0 !important; gap: 0 !important; }
+          .main-layout > main { padding: 0 12px; }
         }
       `}</style>
     </>

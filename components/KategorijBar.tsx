@@ -28,6 +28,7 @@ export default function KategorijBar({ aktivna = "sve" }: Props) {
   return (
     <div style={{ background: "white", borderBottom: "1px solid var(--border)" }}>
       <div
+        className="kat-bar-scroll"
         style={{
           maxWidth: 1100,
           margin: "0 auto",
@@ -35,6 +36,8 @@ export default function KategorijBar({ aktivna = "sve" }: Props) {
           display: "flex",
           gap: 0,
           overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
         }}
       >
         {kategorije.map((kat) => (
@@ -63,6 +66,7 @@ export default function KategorijBar({ aktivna = "sve" }: Props) {
           </Link>
         ))}
       </div>
+      <style>{`.kat-bar-scroll::-webkit-scrollbar { display: none; }`}</style>
     </div>
   );
 }

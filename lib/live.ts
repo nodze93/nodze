@@ -13,6 +13,7 @@ export interface LiveStavka {
   izvor: string;
   vrijemeAgo: string;
   datum: number; // timestamp za sortiranje
+  slika?: string | null; // naslovna slika članka (za mobilne kutije)
 }
 
 function klijent(): SupabaseClient | null {
@@ -77,6 +78,7 @@ function uStavku(r: Red): LiveStavka {
     izvor: ocistiIzvor(r.izvor),
     vrijemeAgo: vrijemeAgo(ts),
     datum: ts,
+    slika: r.slika,
   };
 }
 
@@ -153,10 +155,25 @@ export async function dajLiveSvijet(limit = 8): Promise<LiveStavka[]> {
     .map(uStavku);
 }
 
+/** ⚽ Naši objavljeni sportski članci (za widget na naslovnoj) */
+export async function dajLiveSport(limit = 8): Promise<LiveStavka[]> {
+  const svi = await dajObjavljene();
+  return svi
+    .filter((r) => (r.tip || "") === "sport" || r.kategorija === "sport")
+    .slice(0, limit)
+    .map(uStavku);
+}
+
 export const MOCK_SVIJET: LiveStavka[] = [
   { naslov: "Šokantan potez u Bruxellesu — EU mijenja pravila za strance", link: "/kategorija/svijet", izvor: "Svijet", vrijemeAgo: "danas", datum: 0 },
   { naslov: "Inflacija ponovo raste — šta to znači za tvoju plaću i uštedu", link: "/kategorija/svijet", izvor: "Svijet", vrijemeAgo: "danas", datum: 0 },
   { naslov: "Napetosti na Bliskom istoku — posljedice za Evropu i dijasporu", link: "/kategorija/svijet", izvor: "Svijet", vrijemeAgo: "danas", datum: 0 },
+];
+
+export const MOCK_SPORT: LiveStavka[] = [
+  { naslov: "Džeko se vraća u Bundesligu? Glasine o transferu tresu dijasporu", link: "/kategorija/sport", izvor: "Sport", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Zmajevi saznali protivnike — evo puta do EURO-a", link: "/kategorija/sport", izvor: "Sport", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Transfer koji trese region: naš reprezentativac pred potpisom", link: "/kategorija/sport", izvor: "Sport", vrijemeAgo: "danas", datum: 0 },
 ];
 
 // Fallback dok baza nema dovoljno objavljenih članaka na toj strani.
