@@ -3,6 +3,7 @@ import "./globals.css";
 import SearchModal from "@/components/SearchModal";
 import AdminModeracija from "@/components/admin/AdminModeracija";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de";
 
@@ -66,6 +67,7 @@ export default function RootLayout({
         <SearchModal />
         <AdminModeracija />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
