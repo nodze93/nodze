@@ -1,51 +1,62 @@
 # TRENUTNI ZADATAK
 
-## Datum: 2026-07-09
+## Datum: 2026-07-10
 
 ## ŠTA SMO RADILI (ova sesija)
-Veliki set izmjena — sve upisano u folder (osim bot-cron.yml koji je zaštićen):
+Sve upisano u folder (osim bot-cron.yml koji je zaštićen):
 
-1. BOT — jeftinije + tačnije + bolja gramatika
-   - Dedupe popravka (pamti sve filtrirane vijesti) → ~85-90% manje Claude poziva
-   - Context agent isključen (1 poziv manje po članku)
-   - Writer 3800 / lektor 4500 tokena (da se tekst ne siječe)
-   - Bosanska gramatička pravila + "obećanje se mora razriješiti"
-   - Bolje čitanje izvora (li/h2/h3 + rezerva)
-   - Fajlovi: pipeline.ts, publisher.ts, writer.ts, jezik.ts, claude.ts
+1. GRAMATIKA — novi završni prolaz
+   - NOVO lib/bot/agenti/gramatika.ts — zaseban, ZADNJI poziv nakon lektora,
+     radi SAMO gramatiku (padeži, rod, slaganje), ne dira stil/HTML.
+   - PREKIDAČ preko env-a: MODEL_GRAMATIKA (default Haiku; postavi
+     "claude-sonnet-4-5" u Vercelu za bolju gramatiku bez izmjene koda).
+     GRAMATIKA_PROLAZ=off ga potpuno isključi.
+   - claude.ts (MODEL_GRAMATIKA const), pipeline.ts (poziv poslije lektora).
 
-2. ADMIN ZA TELEFON (desktop netaknut)
-   - NOVO lib/useIsMobile.ts
-   - Hamburger sidebar (layout.tsx), kartice + veliko "Objavi" + filter "Na čekanju"
-     (AdminModeracija.tsx, clanci/page.tsx), responsive dashboard (page.tsx)
+2. SLIKE — Wikimedia IMPLEMENTIRANO (penzionisan Unsplash kao glavni)
+   - NOVO lib/bot/slike-wikimedia.ts — izvuče IMENA iz naslova → Wikipedia
+     (de/en) glavna slika (~1200px) → licenca s Commons; rezerva Commons pretraga.
+   - pipeline.ts: Wikimedia PRVO, Unsplash samo rezerva. tipovi.ts (SlikaInfo),
+     publisher.ts (oznaka: autor + licenca).
+   - ADMIN dugme za STARE članke: app/admin/slike/page.tsx + 
+     app/api/admin/slike-wikimedia/route.ts (pregled → primijeni, batch) +
+     link u app/admin/layout.tsx. (Pexels NIJE rađen — Wikimedia dovoljno.)
 
-3. NASLOVNA ZA TELEFON (desktop netaknut)
-   - NOVO components/MobilnaNaslovna.tsx — 4 jednake kutije do ivica, sa slikama
-   - lib/live.ts (slika + sport feed), page.tsx (hide-mob/samo-mob, kategorije iznad slike,
-     Ticker sakriven), HeroRotator.tsx (samo naslov+datum), KategorijBar.tsx (swipe)
+3. KATEGORIJE NA TELEFONU (desktop netaknut)
+   - NOVO components/KategorijaMobilna.tsx — naslovni članak + kartice sa
+     slikama, kao naslovna. app/kategorija/[slug]/page.tsx, app/de/page.tsx,
+     app/bih/page.tsx (mobilni blok .kat-mob, Ticker sakriven na telefonu).
 
-4. STRANICA ČLANKA — popravljen horizontalni scroll (app/clanak/[slug]/page.tsx)
+4. MARKETING SLIKA + TEKST (dijeljenje linka)
+   - /public/og-default.jpg regenerisan (PIL): "Sve njemačke vijesti na našem
+     jeziku" + "Aktuelne vijesti iz Njemačke — svaki dan", čipovi BEZ Austrije.
+   - app/layout.tsx metadata (title/description/OG/twitter) na novo pozicioniranje.
 
-5. VODIČI — 12 → 17, svi provjereni (fact-check 2026), 11 ispravki + hackovi (lib/data/vodici.ts)
+5. SEO — provjereno, već dobro
+   - sitemap.ts (dinamičan, svi članci+vodiči) i robots.ts (kodnas.de) OK.
+   - GSC verifikacija ide preko GOOGLE_SITE_VERIFICATION env (još nije postavljeno).
 
 ## STANJE
-- Portal LIVE: kodnas.de
-- Bot: radi preko GitHub Actions (piše draftove) — sada jeftiniji i tačniji
-- SVE izmjene ove sesije su u folderu, spremne za push na PREVIEW
-- Desktop verzija NIJE dirana (sve mobilne izmjene su izolovane)
+- Portal LIVE: kodnas.de. Bot radi (piše draftove).
+- SVE izmjene ove sesije su u folderu, spremne za Commit → Push.
+- Desktop NIJE diran (mobilne izmjene izolovane).
 
-## ⚠️ RUČNI KORACI KOJI ČEKAJU MENE
-1. GitHub Desktop → Commit → Push na PREVIEW → testirati NA TELEFONU → merge u main
-2. (Ako nije ranije) bot-cron.yml ručno kopirati; GITHUB_TOKEN u Vercel; moderacija.sql u Supabase
+## ⚠️ RUČNI KORACI KOJI ČEKAJU KORISNIKA
+1. GitHub Desktop → Commit → Push (SVE nepokupljeno zajedno — bot+slike+kategorije+og).
+2. Test Wikimedia: admin → 🖼️ Slike → "Pronađi slike" → pregled → primijeni.
+3. Facebook (kad želi uživo): supabase/facebook.sql + FB_PAGE_ID/FB_PAGE_TOKEN env.
+   Nakon push: FB Sharing Debugger → Scrape Again (da povuče novu og sliku).
+4. Google: Search Console → dodaj kodnas.de → HTML tag → daj mi kod ILI postavi
+   GOOGLE_SITE_VERIFICATION u Vercel → submit sitemap.xml.
 
-## SLJEDEĆI KORACI / OPCIJE
-1. SLIKE: implementirati Wikimedia (glavno) + Pexels (rezerva), penzionisati Unsplash
-   (og:image iz izvora ODBAČEN — pravno rizično)
-2. Nova serija vodiča: Bürgergeld, Wohngeld, penzija BiH–Njemačka, otvaranje firme, Minijob
-3. Uskladiti stari vodič "trudnoća" ako još negdje spominje Kindergeld za dijete u BiH
-4. GSC + Bing verifikacija + submit sitemap → pa Indexing API
-
-## PROMPT ZA SLJEDEĆI CHAT
-"Otvori PROJECT_MEMORY.md, PROGRESS.md, CURRENT_TASK.md. Šta smo radili? Šta je sljedeći korak?"
+## DOGOVORENO ALI NIJE RAĐENO (sljedeći koraci)
+- KAPALJKA: pisati u seriji, objavljivati postepeno kroz dan (preko zakazano_za)
+  da uvijek ima svježe. AUTO-OBJAVA kasnije — kad se gramatika potvrdi kao dobra.
+- Dizanje obima na ~20 članaka/dan (~€25/mj). Podešava se iz admina (bot_config:
+  vremena + kvote), NE treba kod. Realan trošak ~4 EUR centa/članak.
+- Impressum + Datenschutz: pravno OBAVEZNO (Njemačka, Abmahnung rizik), ali
+  korisnik NIJE spreman upisati prave podatke → odloženo. NE stavljati placeholder.
+- Ako Haiku gramatika i dalje slaba → prebaci MODEL_GRAMATIKA na Sonnet (env).
 
 ## STATUS
-🟡 Sve izmjene spremne u folderu — čeka push na preview + test na telefonu
+🟡 Sve spremno u folderu — čeka Commit → Push + testove (Wikimedia, og, telefon).

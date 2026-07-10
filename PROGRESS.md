@@ -1,7 +1,54 @@
 # PROGRESS LOG — KODNAS.DE
 
 ## STATUS: LIVE + bogat feature set (izmjene čekaju push/merge na preview)
-Zadnji update: 2026-07-09
+Zadnji update: 2026-07-10
+
+## 🆕 SESIJA 2026-07-10 (gramatika, Wikimedia slike, kategorije na telefonu, marketing)
+
+### Gramatika — završni prolaz (odvojen od lektora)
+- [x] NOVO lib/bot/agenti/gramatika.ts — zaseban ZADNJI poziv, radi SAMO
+      gramatiku (padeži, rod, slaganje, ijekavica), ne dira stil/HTML.
+- [x] PREKIDAČ env: MODEL_GRAMATIKA (default Haiku → postavi "claude-sonnet-4-5"
+      za bolju gramatiku bez izmjene koda). GRAMATIKA_PROLAZ=off isključi.
+- [x] claude.ts (MODEL_GRAMATIKA), pipeline.ts (poziv poslije lektora).
+- Razlog: Haiku slabiji za bosansku gramatiku; besplatna pravila već iscrpljena.
+
+### Slike — Wikimedia IMPLEMENTIRANO (Unsplash pao na rezervu)
+- [x] NOVO lib/bot/slike-wikimedia.ts — izvuče vlastita IMENA iz naslova
+      (Merz, Washington, Džeko, Bundestag...) → Wikipedia (de/en) glavna slika
+      (~1200px, oštro+brzo) → licenca s Commons; rezerva Commons full-text.
+      Za apstraktne naslove bez imena → null (članak zadrži staru sliku).
+- [x] pipeline.ts: Wikimedia PRVO, Unsplash rezerva. tipovi.ts (SlikaInfo),
+      publisher.ts (oznaka slike = autor + Wikimedia Commons + licenca).
+- [x] ADMIN dugme za STARE članke: app/admin/slike/page.tsx (pregled sa
+      staro→novo, odznači šta ne želiš, pa primijeni) + 
+      app/api/admin/slike-wikimedia/route.ts (preview/apply, batch po 8) +
+      link "🖼️ Slike" u app/admin/layout.tsx.
+- Napomena: og:image iz izvora ostaje ODBAČEN (Abmahnung rizik). Pexels nije rađen.
+
+### Kategorije na telefonu — izgled kao naslovna (desktop netaknut)
+- [x] NOVO components/KategorijaMobilna.tsx — naslovni članak (velika slika +
+      naslov + datum) + ostali kao kartice sa slikama, do ivica ekrana.
+- [x] app/kategorija/[slug]/page.tsx, app/de/page.tsx, app/bih/page.tsx —
+      mobilni blok (.kat-mob) + desktop lista sakrivena na telefonu (.kat-desktop-lista),
+      Ticker sakriven na telefonu. Desktop identičan kao prije.
+
+### Marketing — slika i tekst za dijeljenje linka
+- [x] /public/og-default.jpg regenerisan (PIL): naslov "Sve njemačke vijesti
+      na našem jeziku" (bijelo), podnaslov "Aktuelne vijesti iz Njemačke —
+      svaki dan", čipovi BEZ Austrije, čist zeleni dizajn s logom.
+- [x] app/layout.tsx — title/description/OG/twitter na novo pozicioniranje
+      (njemačke vijesti na bosanskom), Austrija maknuta iz vidljivog teksta.
+
+### SEO — provjereno (već dobro postavljeno)
+- [x] sitemap.ts dinamičan (statične + kategorije + SVI objavljeni članci iz
+      baze + svi vodiči), robots.ts (dozvoli sve, blokiraj admin/api, sitemap).
+      Oba na kodnas.de. GSC verifikacija ide preko GOOGLE_SITE_VERIFICATION env.
+
+### Odluke/strategija
+- Pozicioniranje: NJEMAČKE vijesti na bosanskom (ne takmičiti se s klixom na
+  bh. vijestima). Cilj ~20 članaka/dan (~€25/mj). Realan trošak ~4 EUR centa/članak
+  (NE 0.5 — ranija procjena bila pogrešna). Kapaljka + auto-objava = dogovoreno, TODO.
 
 ## 🆕 SESIJA 2026-07-09 (bot, mobilna verzija, vodiči)
 
@@ -77,11 +124,14 @@ Zadnji update: 2026-07-09
 2. (Ranije) bot-cron.yml ručno kopirati; GITHUB_TOKEN u Vercel; moderacija.sql u Supabase
 
 ## 📋 TODO / SLJEDEĆE
-- [ ] SLIKE: implementirati Wikimedia (glavno) + Pexels (rezerva), penzionisati Unsplash
+- [x] SLIKE: Wikimedia implementiran (bot + admin dugme). Unsplash = rezerva.
+- [ ] KAPALJKA: postepeno objavljivanje kroz dan (zakazano_za) + AUTO-OBJAVA
+      (kad se gramatika potvrdi). Dizanje kvota na ~20/dan (iz admina bot_config).
+- [ ] Impressum + Datenschutz stranice (pravno obavezno, čeka prave podatke korisnika).
+- [ ] Ako Haiku gramatika slaba → MODEL_GRAMATIKA=claude-sonnet-4-5 (env u Vercelu).
 - [ ] Nova serija vodiča: Bürgergeld, Wohngeld, penzija BiH–Njemačka, otvaranje firme, Minijob
 - [ ] Uskladiti stari vodič "trudnoća" ako još negdje spominje Kindergeld za dijete u BiH
-- [ ] GSC/Bing verifikacija + Indexing API
-- [ ] Veliki hero na naslovnoj → dinamički (URAĐENO ranije, provjeriti)
+- [ ] GSC: dodaj property + submit sitemap (GOOGLE_SITE_VERIFICATION env). Bing opciono.
 
 ## 💡 ZA POSLIJE
 - Ispovijesti sekcija, Telegram kanal, TikTok video

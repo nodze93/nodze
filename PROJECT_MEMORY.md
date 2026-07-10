@@ -16,6 +16,9 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 ## MODELI
 - MODEL_BRZI = claude-haiku-4-5
 - MODEL_PISAC = claude-haiku-4-5 (bio Sonnet — promijenjeno radi ušteda)
+- MODEL_GRAMATIKA = env prekidač (default Haiku; "claude-sonnet-4-5" za bolju
+  gramatiku bez izmjene koda). Koristi ga završni gramatički prolaz (gramatika.ts).
+- Realan trošak: ~4 EUR centa po članku (Haiku $1/$5 po M tokena, više poziva/članku).
 
 ## ⚙️ KAKO SE MIJENJA KOD (VAŽNO — novi način!)
 - Claude piše fajlove DIREKTNO u moj folder preko mosta:
@@ -63,24 +66,37 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
   pa bot NE troši Claude na ponovno ocjenjivanje istih vijesti svaki run
 - Writer maxTokens=3800, Jezik(lektor) maxTokens=4500 (da se tekst ne siječe)
 - Writer i lektor imaju stroga bosanska gramatička pravila + "obećanje mora biti razriješeno"
+- ZAVRŠNI GRAMATIČKI PROLAZ (gramatika.ts) nakon lektora — samo gramatika;
+  model = MODEL_GRAMATIKA (Haiku; env prekidač na Sonnet). GRAMATIKA_PROLAZ=off isključi.
+- SLIKE: prvo Wikimedia (slike-wikimedia.ts), Unsplash samo rezerva.
 - Piše DRAFTOVE — ja ih objavim u adminu ("Uredi članke" → 🚀)
+- Raspored/kvote se podešavaju IZ ADMINA (bot_config: vremena + kvote_de/bih/svijet/sport),
+  ne iz koda. Cilj obima ~20/dan. cron-job.org kuca /api/cron/tick svakih ~15 min.
 
-## SLIKE (PLAN — još nije implementirano)
-- Sad: Unsplash (generičke stock slike, nisu vezane za vijest) — planiramo penzionisati
-- DOGOVORENI plan: Wikimedia Commons (prave fotke poznatih osoba/mjesta, pravno čisto)
-  kao GLAVNO, Pexels kao REZERVA (bolji stock od Unsplasha)
-- og:image iz izvora ODBAČEN — pravno rizično (autorska prava, njemački Abmahnung)
+## SLIKE (IMPLEMENTIRANO — Wikimedia)
+- lib/bot/slike-wikimedia.ts: izvuče IMENA iz naslova → Wikipedia (de/en) glavna
+  slika (~1200px) → licenca s Commons; rezerva Commons full-text. null ako nema
+  dobrog pogotka (apstraktne teme → zadrži staru/Unsplash sliku).
+- Bot (pipeline.ts): Wikimedia PRVO, Unsplash REZERVA. Oznaka: autor + licenca.
+- Admin dugme za STARE članke: /admin/slike (pregled → primijeni), API
+  /api/admin/slike-wikimedia (preview/apply). Radi po naslovu → najbolje za
+  poznata imena/mjesta; arhivska slika (nije današnji kadar) — to je ok.
+- og:image iz izvora ODBAČEN — pravno rizično (Abmahnung). Pexels nije rađen.
 
 ## KLJUČNE DATOTEKE
 - lib/bot/pipeline.ts — srce bota (dedupe batch, context off)
 - lib/bot/izvori.ts — RSS izvori
-- lib/bot/agenti/{claude,filter,writer,factcheck,jezik}.ts
-- lib/bot/publisher.ts — upis u Supabase + oznaciObradjeneBatch
+- lib/bot/agenti/{claude,filter,writer,factcheck,jezik,gramatika}.ts
+  (gramatika.ts = NOVO, završni gramatički prolaz)
+- lib/bot/slike-wikimedia.ts — NOVO, Wikimedia/Wikipedia slike (glavno)
+- lib/bot/publisher.ts — upis u Supabase + oznaciObradjeneBatch + oznaka slike
 - lib/data.ts — javni data sloj (poštuje redoslijed/zakazivanje)
 - lib/live.ts — DE/BiH/Svijet/Sport feed (naši objavljeni članci, sa slikama)
 - lib/data/vodici.ts — vodiči (hard-kodirani, sada 17 vodiča, provjereni)
 - lib/useIsMobile.ts — hook za mobilnu detekciju (NOVO)
 - components/MobilnaNaslovna.tsx — 4 jednake kutije na telefonu (NOVO)
+- components/KategorijaMobilna.tsx — kategorije na telefonu kao naslovna (NOVO)
+- app/admin/slike/page.tsx + app/api/admin/slike-wikimedia/route.ts — zamjena slika (NOVO)
 - components/{HeroRotator,KategorijBar,LiveVijesti}.tsx — naslovna
 - components/admin/AdminModeracija.tsx — admin traka + Article Manager (mobilno)
 - app/admin/* — admin (layout s hamburgerom, clanci, pipeline...)
