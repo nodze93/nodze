@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: "kodnas.de — Njemačke vijesti na našem jeziku",
   description:
-    "Sve važne vijesti iz Njemačke, na našem jeziku — aktuelno, svaki dan. Plus praktični vodiči za dijasporu: viza, posao, stan, zdravstvo, porez.",
+    "Pratimo sve njemačke izvore iz minute u minutu i najvažnije donosimo na jedno mjesto — na našem jeziku. Plus praktični vodiči: viza, posao, stan, zdravstvo, porez.",
   keywords: [
     "njemačke vijesti na bosanskom",
     "vijesti Njemačka dijaspora",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Sve njemačke vijesti — na našem jeziku",
-    description: "Aktuelne vijesti iz Njemačke, svaki dan.",
+    description: "Iz minute u minutu — sve njemačke vijesti na jednom mjestu, na našem jeziku.",
     url: SITE,
     siteName: "kodnas.de",
     locale: "bs_BA",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Sve njemačke vijesti — na našem jeziku",
-    description: "Aktuelne vijesti iz Njemačke, svaki dan.",
+    description: "Iz minute u minutu — sve njemačke vijesti na jednom mjestu, na našem jeziku.",
     images: ["/og-default.jpg"],
   },
   verification,
