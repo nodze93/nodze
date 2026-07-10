@@ -2,6 +2,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import KategorijBar from "@/components/KategorijBar";
 import Ticker from "@/components/Ticker";
+import KategorijaMobilna from "@/components/KategorijaMobilna";
 import Link from "next/link";
 import { getClanciByKategorija } from "@/lib/data/clanci";
 import { dajPoKategoriji } from "@/lib/data";
@@ -74,12 +75,12 @@ export default async function KategorijaPage({ params }: Props) {
   return (
     <>
       <Nav />
-      <Ticker />
+      <div className="kat-tick"><Ticker /></div>
       <KategorijBar aktivna={slug} />
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+      <div className="kat-wrap" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
         {/* Header */}
-        <div style={{ marginBottom: 28 }}>
+        <div className="kat-header kat-pad" style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 12, color: "var(--tekst-muted)", marginBottom: 6 }}>
             <a href="/" style={{ color: "var(--zelena)" }}>Početna</a> → {info.naziv}
           </div>
@@ -95,7 +96,7 @@ export default async function KategorijaPage({ params }: Props) {
             <p>Nema još članaka u ovoj kategoriji. Uskoro!</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
+          <div className="kat-desktop-lista" style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
             {clanci.map((clanak) => (
               <Link
                 key={clanak.id}
@@ -128,10 +129,30 @@ export default async function KategorijaPage({ params }: Props) {
             ))}
           </div>
         )}
+
+        {/* MOBILNI izgled — naslovni članak + kartice (kao naslovna) */}
+        <KategorijaMobilna
+          stavke={clanci.map((c) => ({
+            slug: c.slug,
+            naslov: c.naslov,
+            slika: c.slika,
+            meta: `${c.datum} · ${c.minCitanja} min čitanja`,
+            oznaka: info.naziv,
+          }))}
+        />
       </div>
 
       <Footer />
-      <style>{`.kat-red:hover { background: #fafafa !important; }`}</style>
+      <style>{`
+        .kat-red:hover { background: #fafafa !important; }
+        @media (max-width: 768px) {
+          .kat-wrap { padding: 12px 0 0 !important; }
+          .kat-pad { padding-left: 14px !important; padding-right: 14px !important; }
+          .kat-header h1 { font-size: 21px !important; }
+          .kat-desktop-lista { display: none !important; }
+          .kat-tick { display: none !important; }
+        }
+      `}</style>
     </>
   );
 }

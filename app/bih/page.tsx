@@ -3,6 +3,7 @@ import Ticker from "@/components/Ticker";
 import KategorijBar from "@/components/KategorijBar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import KategorijaMobilna from "@/components/KategorijaMobilna";
 import { dajBIH } from "@/lib/live";
 import type { Metadata } from "next";
 
@@ -19,15 +20,15 @@ export default async function BihPage() {
   return (
     <>
       <Nav />
-      <Ticker />
+      <div className="kat-tick"><Ticker /></div>
       <KategorijBar aktivna="bih" />
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
-        <div style={{ fontSize: 12, color: "var(--tekst-muted)", marginBottom: 16 }}>
+      <div className="kat-wrap" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+        <div className="kat-pad" style={{ fontSize: 12, color: "var(--tekst-muted)", marginBottom: 16 }}>
           <Link href="/" style={{ color: "var(--zelena)" }}>Početna</Link> → Vijesti iz BiH
         </div>
 
-        <div style={{ marginBottom: 28 }}>
+        <div className="kat-pad" style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.5px" }}>
             🇧🇦 Vijesti iz BiH
           </h1>
@@ -42,7 +43,7 @@ export default async function BihPage() {
             <p>Nema još vijesti u ovoj rubrici. Uskoro!</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
+          <div className="kat-desktop-lista" style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
             {clanci.map((c) => (
               <Link
                 key={c.slug}
@@ -71,10 +72,30 @@ export default async function BihPage() {
             ))}
           </div>
         )}
+
+        {/* MOBILNI izgled — naslovni članak + kartice (kao naslovna) */}
+        <KategorijaMobilna
+          stavke={clanci.map((c) => ({
+            slug: c.slug,
+            naslov: c.naslov,
+            slika: c.slika,
+            meta: `${c.datum} · ${c.minCitanja} min čitanja`,
+            oznaka: c.izvor,
+          }))}
+        />
       </div>
 
       <Footer />
-      <style>{`.kat-red:hover { background: #fafafa !important; }`}</style>
+      <style>{`
+        .kat-red:hover { background: #fafafa !important; }
+        @media (max-width: 768px) {
+          .kat-wrap { padding: 12px 0 0 !important; }
+          .kat-pad { padding-left: 14px !important; padding-right: 14px !important; }
+          .kat-wrap h1 { font-size: 21px !important; }
+          .kat-desktop-lista { display: none !important; }
+          .kat-tick { display: none !important; }
+        }
+      `}</style>
     </>
   );
 }
