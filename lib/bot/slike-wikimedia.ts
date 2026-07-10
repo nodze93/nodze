@@ -75,7 +75,7 @@ async function wikiLeadImage(wiki: "de" | "en", pojam: string): Promise<{ url: s
     gsrnamespace: "0",
     prop: "pageimages",
     piprop: "original|name",
-    pithumbsize: "1000",
+    pithumbsize: "1200",
   });
   const data = (await jsonFetch(`https://${wiki}.wikipedia.org/w/api.php?${params}`)) as
     | { query?: { pages?: Record<string, { original?: { source?: string }; thumbnail?: { source?: string }; pageimage?: string }> } }
@@ -83,7 +83,9 @@ async function wikiLeadImage(wiki: "de" | "en", pojam: string): Promise<{ url: s
   const pages = data?.query?.pages;
   if (!pages) return null;
   for (const p of Object.values(pages)) {
-    const url = p.original?.source || p.thumbnail?.source;
+    // Prednost: kvalitetan ~1200px thumbnail (oštar, ali se brzo učita).
+    // Original (puna rezolucija) samo ako thumbnail ne postoji.
+    const url = p.thumbnail?.source || p.original?.source;
     const file = p.pageimage || "";
     if (!url || !file) continue;
     if (LOSE_FILE.test(file)) continue; // preskoči zastave/mape/logo
@@ -130,7 +132,7 @@ async function commonsPretraga(pojam: string): Promise<WikiSlika | null> {
     gsrlimit: "12",
     prop: "imageinfo",
     iiprop: "url|extmetadata|mime|size",
-    iiurlwidth: "1000",
+    iiurlwidth: "1200",
   });
   const data = (await jsonFetch(`${COMMONS}?${params}`)) as
     | { query?: { pages?: Record<string, Record<string, unknown>> } }
