@@ -2,7 +2,7 @@
 // PIPELINE ORCHESTRATOR — srce bota
 // ============================================================
 // RSS + Trends → Filter (1) → Writer (2) → Fact-check (3, samo dijaspora)
-//              → Jezik/lektor (4) → Supabase DRAFT
+//              → Jezik/lektor (4) → Gramatika (5, samo gramatika) → Supabase DRAFT
 //
 // Context provjera je isključena radi uštede (nije se koristila u adminu).
 // Ti na kraju u adminu vidiš 🟢🟡🔴 i odobriš jednim klikom.
@@ -12,6 +12,7 @@ import { filterVijesti } from "./agenti/filter";
 import { writeClanak } from "./agenti/writer";
 import { factcheckClanak } from "./agenti/factcheck";
 import { jezikCheck } from "./agenti/jezik";
+import { gramatikaProlaz } from "./agenti/gramatika";
 import { ucitajObradjene, oznaciObradjeneBatch, sacuvajDraft, logujPipeline } from "./publisher";
 import { nadjiSliku } from "./slike";
 import type { PipelineRezultat, FactcheckRezultat, ContextRezultat } from "./tipovi";
@@ -122,12 +123,25 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
           : FACTCHECK_PRESKOCEN;
         const context = CONTEXT_DEFAULT;
 
-        // Jezik (lektor) — zadnja stanica
+        // Jezik (lektor) — provjera jezika, kroatizmi, stil
         const jezik = await jezikCheck({
           naslov: clanak.naslov,
           excerpt: clanak.excerpt,
           sadrzaj: clanak.sadrzaj,
         });
+
+        // ZAVRŠNI GRAMATIČKI PROLAZ — zaseban poziv, SAMO gramatika.
+        // Model je prekidač (MODEL_GRAMATIKA): default Haiku, lako na Sonnet.
+        const gram = await gramatikaProlaz({
+          naslov: jezik.ispravljen_naslov,
+          excerpt: jezik.ispravljen_excerpt,
+          sadrzaj: jezik.ispravljen_sadrzaj,
+        });
+        // Ubaci gramatički ispravljen tekst kao finalni (ide u bazu).
+        jezik.ispravljen_naslov = gram.naslov;
+        jezik.ispravljen_excerpt = gram.excerpt;
+        jezik.ispravljen_sadrzaj = gram.sadrzaj;
+        jezik.broj_ispravki += gram.broj_ispravki;
 
         // Naslovna slika (Unsplash — samo URL, ne čuvamo fajl)
         const slika = await nadjiSliku(clanak.slika_pojmovi || vijest.naslov);
