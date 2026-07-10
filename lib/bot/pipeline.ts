@@ -15,7 +15,8 @@ import { jezikCheck } from "./agenti/jezik";
 import { gramatikaProlaz } from "./agenti/gramatika";
 import { ucitajObradjene, oznaciObradjeneBatch, sacuvajDraft, logujPipeline } from "./publisher";
 import { nadjiSliku } from "./slike";
-import type { PipelineRezultat, FactcheckRezultat, ContextRezultat } from "./tipovi";
+import { nadjiSlikuWiki } from "./slike-wikimedia";
+import type { PipelineRezultat, FactcheckRezultat, ContextRezultat, SlikaInfo } from "./tipovi";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -143,8 +144,17 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
         jezik.ispravljen_sadrzaj = gram.sadrzaj;
         jezik.broj_ispravki += gram.broj_ispravki;
 
-        // Naslovna slika (Unsplash — samo URL, ne čuvamo fajl)
-        const slika = await nadjiSliku(clanak.slika_pojmovi || vijest.naslov);
+        // Naslovna slika: PRVO Wikimedia (prava, besplatna, sigurna za Njemačku),
+        // pa Unsplash kao rezerva ako Wikimedia nema ništa relevantno.
+        const pojam = clanak.slika_pojmovi || vijest.naslov;
+        let slika: SlikaInfo | null = null;
+        const wiki = await nadjiSlikuWiki(pojam);
+        if (wiki) {
+          slika = { url: wiki.url, autor: wiki.autor, izvor: "wikimedia", licenca: wiki.licenca };
+        } else {
+          const u = await nadjiSliku(pojam);
+          if (u) slika = { url: u.url, autor: u.autor, izvor: "unsplash" };
+        }
 
         const slug = await sacuvajDraft({ clanak, vijest, factcheck, context, jezik, zvanicniUrl, slika });
         if (slug) {

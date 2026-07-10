@@ -72,6 +72,14 @@ export interface JezikRezultat {
   komentar: string;
 }
 
+// Normalizovana slika (Wikimedia ILI Unsplash) — jedinstven oblik za upis
+export interface SlikaInfo {
+  url: string;
+  autor: string;
+  izvor: "wikimedia" | "unsplash";
+  licenca?: string;
+}
+
 export interface PipelineRezultat {
   procitanoRss: number;
   prosloFilter: number;

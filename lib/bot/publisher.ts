@@ -2,8 +2,15 @@
 // PUBLISHER — upis u Supabase (SERVICE ROLE — zaobilazi RLS)
 // ============================================================
 import { createServerClient } from "../supabase";
-import type { Vijest, GeneriraniClanak, FactcheckRezultat, ContextRezultat, JezikRezultat } from "./tipovi";
-import type { UnsplashSlika } from "./slike";
+import type { Vijest, GeneriraniClanak, FactcheckRezultat, ContextRezultat, JezikRezultat, SlikaInfo } from "./tipovi";
+
+// Formatiraj oznaku autora slike prema izvoru (Wikimedia traži autora + licencu).
+function oznakaSlike(s: SlikaInfo): string {
+  if (s.izvor === "wikimedia") {
+    return `${s.autor} — Wikimedia Commons${s.licenca ? ` (${s.licenca})` : ""}`;
+  }
+  return `${s.autor} / Unsplash`;
+}
 
 // Slug: ispravno mapiranje naših slova (đ→d, ne đ→s!)
 export function napraviSlug(naslov: string): string {
@@ -72,7 +79,7 @@ export async function sacuvajDraft(args: {
   context: ContextRezultat;
   jezik: JezikRezultat;
   zvanicniUrl: string | null;
-  slika: UnsplashSlika | null;
+  slika: SlikaInfo | null;
 }): Promise<string | null> {
   const { clanak, vijest, factcheck, context, jezik, zvanicniUrl, slika } = args;
   const db = createServerClient();
@@ -119,7 +126,7 @@ export async function sacuvajDraft(args: {
     tip: vijest.tip,
 
     slika: slika?.url || null,
-    slika_autor: slika ? `${slika.autor} / Unsplash` : null,
+    slika_autor: slika ? oznakaSlike(slika) : null,
   });
 
   if (error) {
