@@ -21,13 +21,13 @@ if (process.env.BING_SITE_VERIFICATION) {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
-  title: "kodnas.de — Tvoj vodič kroz život vani",
+  title: "kodnas.de — Njemačke vijesti na našem jeziku",
   description:
-    "Portal za Bosance u Njemačkoj i Austriji. Vijesti, vodiči i praktične informacije o vizi, poslu, stanu, zdravstvu, porezu i penziji.",
+    "Sve važne vijesti iz Njemačke, na našem jeziku — aktuelno, svaki dan. Plus praktični vodiči za dijasporu: viza, posao, stan, zdravstvo, porez.",
   keywords: [
-    "dijaspora",
+    "njemačke vijesti na bosanskom",
+    "vijesti Njemačka dijaspora",
     "Bosanci u Njemačkoj",
-    "Bosanci u Austriji",
     "radna viza",
     "Aufenthaltstitel",
     "Elterngeld",
@@ -38,8 +38,8 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "kodnas.de — Tvoj vodič kroz život vani",
-    description: "Portal za Bosance u Njemačkoj i Austriji.",
+    title: "Sve njemačke vijesti — na našem jeziku",
+    description: "Aktuelne vijesti iz Njemačke, svaki dan.",
     url: SITE,
     siteName: "kodnas.de",
     locale: "bs_BA",
@@ -48,8 +48,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "kodnas.de — Tvoj vodič kroz život vani",
-    description: "Portal za Bosance u Njemačkoj i Austriji.",
+    title: "Sve njemačke vijesti — na našem jeziku",
+    description: "Aktuelne vijesti iz Njemačke, svaki dan.",
     images: ["/og-default.jpg"],
   },
   verification,
