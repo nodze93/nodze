@@ -343,7 +343,7 @@ function Manager({ onClose }: { onClose: () => void }) {
                 <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
                   <span className={`tag-pill tag-${c.kategorija}`}>{c.kategorija}</span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: c.status === "published" ? "#059669" : "#d97706" }}>
-                    {c.status === "published" ? "● Objavljen" : "○ Draft"}
+                    {c.status !== "published" ? "○ Draft" : (c.zakazanoZa && new Date(c.zakazanoZa) > new Date()) ? "⏰ Zakazan" : "● Objavljen"}
                   </span>
                   {c.jeNaslovna && <span style={{ fontSize: 12, color: "#d97706", fontWeight: 700 }}>★ Naslovna</span>}
                   {c.zakazanoZa && new Date(c.zakazanoZa) > new Date() && (
@@ -412,11 +412,11 @@ function Manager({ onClose }: { onClose: () => void }) {
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#111", lineHeight: 1.4, marginTop: 3 }}>{c.naslov}</div>
                   <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2, display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 700, color: c.status === "published" ? "#059669" : "#d97706" }}>
-                      {c.status === "published" ? "● Objavljen" : "○ Draft"}
+                      {c.status !== "published" ? "○ Draft" : (c.zakazanoZa && new Date(c.zakazanoZa) > new Date()) ? "⏰ Zakazan" : "● Objavljen"}
                     </span>
                     {c.jeNaslovna && <span style={{ color: "#d97706", fontWeight: 700 }}>★ Naslovna</span>}
                     {c.zakazanoZa && new Date(c.zakazanoZa) > new Date() && (
-                      <span style={{ color: "#7c3aed", fontWeight: 700 }}>⏰ Zakazan {new Date(c.zakazanoZa).toLocaleString("bs-BA", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+                      <span style={{ color: "#7c3aed", fontWeight: 700 }}>⏰ {new Date(c.zakazanoZa).toLocaleString("bs-BA", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
                     )}
                   </div>
                 </div>

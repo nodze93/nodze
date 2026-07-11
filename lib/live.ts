@@ -61,6 +61,7 @@ interface Red {
   min_citanja: number | null;
   datum_objave: string | null;
   created_at: string;
+  zakazano_za: string | null;
 }
 
 async function dajObjavljene(): Promise<Red[]> {
@@ -68,12 +69,15 @@ async function dajObjavljene(): Promise<Red[]> {
   if (!db) return [];
   const { data, error } = await db
     .from("clanci")
-    .select("slug,naslov,izvor,kategorija,tip,slika,min_citanja,datum_objave,created_at")
+    .select("slug,naslov,izvor,kategorija,tip,slika,min_citanja,datum_objave,created_at,zakazano_za")
     .eq("status", "published")
     .order("datum_objave", { ascending: false, nullsFirst: false })
-    .limit(40);
+    .limit(60);
   if (error || !data) return [];
-  return data as Red[];
+  // VAŽNO: sakrij članke zakazane za budućnost (isto kao stranica članka),
+  // da zakazani ne procuri u live kutije i ne daje 404 na klik.
+  const sada = Date.now();
+  return (data as Red[]).filter((r) => !r.zakazano_za || Date.parse(r.zakazano_za) <= sada);
 }
 
 function uStavku(r: Red): LiveStavka {
