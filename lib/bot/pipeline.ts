@@ -81,14 +81,12 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
     }
 
     // ── 3. Filter Agent — kvote po grupi (env podesivo) ─
-    // Default: 1 DE + 1 BiH + 1 svijet + 1 sport po pokretanju.
-    // DE i BiH su ODVOJENI — BiH nikad ne ostane prazan.
+    // Default: 1 DE + 1 svijet + 1 sport po pokretanju. (BiH rubrika uklonjena.)
     const kDE = parseInt(process.env.CLANCI_DE || process.env.CLANCI_DIJASPORA || "1", 10);
-    const kBih = parseInt(process.env.CLANCI_BIH || "1", 10);
     const kSvijet = parseInt(process.env.CLANCI_SVIJET || "1", 10);
     const kSport = parseInt(process.env.CLANCI_SPORT || "1", 10);
 
-    const filtrirane = await filterVijesti(nove, trends, kDE, kBih, kSvijet, kSport);
+    const filtrirane = await filterVijesti(nove, trends, kDE, kSvijet, kSport);
     rez.prosloFilter = filtrirane.length;
 
     // ⚡ UŠTEDA: zapamti SVE vijesti koje su prošle kroz filter kao "viđene".

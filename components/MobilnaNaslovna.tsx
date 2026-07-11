@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
-  dajLiveDE, dajLiveBIH, dajLiveSvijet, dajLiveSport,
-  MOCK_DE, MOCK_BIH, MOCK_SVIJET, MOCK_SPORT,
+  dajLiveDE, dajLiveSvijet, dajLiveSport,
+  MOCK_DE, MOCK_SVIJET, MOCK_SPORT,
   type LiveStavka,
 } from "@/lib/live";
 
@@ -60,14 +60,13 @@ function Kutija({
 }
 
 export default async function MobilnaNaslovna() {
-  const [de, bih, svijet, sport] = await Promise.all([
-    dajLiveDE(5), dajLiveBIH(5), dajLiveSvijet(5), dajLiveSport(5),
+  const [de, svijet, sport] = await Promise.all([
+    dajLiveDE(5), dajLiveSvijet(5), dajLiveSport(5),
   ]);
 
   return (
     <div className="samo-mob mob-kutije">
       <Kutija naslov="Vijesti iz Njemačke" emoji="🇩🇪" href="/de" stavke={de.length ? de : MOCK_DE} />
-      <Kutija naslov="Vijesti iz BiH" emoji="🇧🇦" href="/bih" stavke={bih.length ? bih : MOCK_BIH} />
       <Kutija naslov="Iz svijeta" emoji="🌍" href="/kategorija/svijet" stavke={svijet.length ? svijet : MOCK_SVIJET} />
       <Kutija naslov="Sport" emoji="⚽" href="/kategorija/sport" stavke={sport.length ? sport : MOCK_SPORT} />
 

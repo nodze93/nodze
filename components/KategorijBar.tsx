@@ -7,7 +7,6 @@ import Link from "next/link";
 const kategorije = [
   { label: "SVE", value: "sve", href: "/" },
   { label: "🇩🇪 DE", value: "de", href: "/de" },
-  { label: "🇧🇦 BiH", value: "bih", href: "/bih" },
   { label: "SVIJET", value: "svijet", href: "/kategorija/svijet" },
   { label: "Viza", value: "viza", href: "/kategorija/viza" },
   { label: "Stan", value: "stan", href: "/kategorija/stan" },

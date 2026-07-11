@@ -8,11 +8,9 @@
 import type { FeedIzvor } from "./tipovi";
 
 export const RSS_IZVORI: FeedIzvor[] = [
-  // ── DIJASPORA / BiH + Njemačka (servisne i BiH teme) ──────────
-  { ime: "Klix.ba",            url: "https://www.klix.ba/rss",                        jezik: "bs", tip: "dijaspora", strana: "bih" },
-  { ime: "N1 BiH",             url: "https://n1info.ba/feed/",                        jezik: "bs", tip: "dijaspora", strana: "bih" },
-  { ime: "Slobodna Evropa",    url: "https://www.slobodnaevropa.org/api/zrqiteuuir",  jezik: "bs", tip: "dijaspora", strana: "bih" },
-  // DW Bosanski je na bosanskom ALI piše o Njemačkoj → ide na DE stranu
+  // ── VIJESTI IZ NJEMAČKE (dijaspora — servisne i njemačke teme) ──
+  // BiH izvori uklonjeni: portal je fokusiran samo na Njemačku, svijet i sport.
+  // DW Bosanski je na bosanskom ALI piše o Njemačkoj → ostaje (DE strana).
   { ime: "DW Bosanski",        url: "https://rss.dw.com/rdf/rss-bos-all",             jezik: "bs", tip: "dijaspora", strana: "de" },
   { ime: "Tagesschau",         url: "https://www.tagesschau.de/index~rss2.xml",           jezik: "de", tip: "dijaspora", strana: "de" },
   // Inland = domaće teme (zakoni, boravak, socijala) — najrelevantnije za nas

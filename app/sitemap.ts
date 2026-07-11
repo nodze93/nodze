@@ -8,11 +8,11 @@ const BASE = (process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de").replace(/
 // Kategorije koje imaju svoju stranicu (/kategorija/<slug>).
 const KATEGORIJE = [
   "viza", "posao", "stan", "zdravstvo", "porodica", "porez", "penzija",
-  "povratak", "svijet", "bih", "sport", "finansije", "gastarbajter", "biznis",
+  "povratak", "svijet", "sport", "finansije", "gastarbajter", "biznis",
 ];
 
-// Statične javne stranice.
-const STATICNE = ["", "/vijesti", "/vodici", "/de", "/bih", "/o-nama", "/kontakt"];
+// Statične javne stranice. (BiH rubrika uklonjena.)
+const STATICNE = ["", "/vijesti", "/vodici", "/de", "/o-nama", "/kontakt"];
 
 function klijent() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

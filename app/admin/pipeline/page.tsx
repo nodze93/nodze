@@ -145,7 +145,6 @@ export default function PipelinePage() {
 
   const kvote: { k: keyof BotConfig; naziv: string }[] = [
     { k: "kvota_de", naziv: "🇩🇪 DE" },
-    { k: "kvota_bih", naziv: "🇧🇦 BiH" },
     { k: "kvota_svijet", naziv: "🌍 Svijet" },
     { k: "kvota_sport", naziv: "⚽ Sport" },
   ];
