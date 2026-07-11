@@ -27,7 +27,12 @@ const STOP = new Set([
   "fordert", "sollen", "kommt", "bringt", "steht", "will", "gibt",
 ]);
 
-// Izvuci značajne riječi (dužina ≥5, bez stop-riječi) iz naslova.
+// Generički KORIJENI koji znaju procuriti (deklinirani oblici stop-riječi).
+const STOP_KORIJEN = new Set(["njemač", "bosanс", "godine", "godina", "mjesec"]);
+
+// Izvuci KORIJENE tema iz naslova (prvih 6 slova značajnih riječi).
+// Korijen umjesto cijele riječi — da padeži ne razbiju poklapanje
+// ("zdravstvena"/"zdravstvenog" → oba "zdravs"; "osiguranje"/"osiguranja" → "osigur").
 export function temaTokeni(naslov: string): Set<string> {
   const rijeci = (naslov || "")
     .toLowerCase()
@@ -35,7 +40,10 @@ export function temaTokeni(naslov: string): Set<string> {
     .split(/\s+/);
   const out = new Set<string>();
   for (const w of rijeci) {
-    if (w.length >= 5 && !STOP.has(w)) out.add(w);
+    if (w.length < 5 || STOP.has(w)) continue;
+    const korijen = w.slice(0, 6);
+    if (STOP_KORIJEN.has(korijen)) continue;
+    out.add(korijen);
   }
   return out;
 }
