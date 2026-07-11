@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import SearchModal from "@/components/SearchModal";
 import AdminModeracija from "@/components/admin/AdminModeracija";
+import ScrollNaVrh from "@/components/ScrollNaVrh";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -63,6 +64,7 @@ export default function RootLayout({
   return (
     <html lang="bs">
       <body>
+        <ScrollNaVrh />
         {children}
         <SearchModal />
         <AdminModeracija />
