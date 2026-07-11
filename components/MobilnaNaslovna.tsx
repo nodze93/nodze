@@ -13,14 +13,15 @@ import {
 // idu skroz do ivica ekrana. Slika je siva kutija kad članak nema sliku.
 
 function Kutija({
-  naslov, emoji, href, stavke,
+  naslov, emoji, href, stavke, limit = 5,
 }: {
   naslov: string;
   emoji: string;
   href: string;
   stavke: LiveStavka[];
+  limit?: number;
 }) {
-  const lista = stavke.slice(0, 5);
+  const lista = stavke.slice(0, limit);
   if (lista.length === 0) return null;
 
   return (
@@ -61,12 +62,12 @@ function Kutija({
 
 export default async function MobilnaNaslovna() {
   const [de, svijet, sport] = await Promise.all([
-    dajLiveDE(5), dajLiveSvijet(5), dajLiveSport(5),
+    dajLiveDE(9), dajLiveSvijet(5), dajLiveSport(5),
   ]);
 
   return (
     <div className="samo-mob mob-kutije">
-      <Kutija naslov="Vijesti iz Njemačke" emoji="🇩🇪" href="/de" stavke={de.length ? de : MOCK_DE} />
+      <Kutija naslov="Vijesti iz Njemačke" emoji="🇩🇪" href="/de" stavke={de.length ? de : MOCK_DE} limit={9} />
       <Kutija naslov="Iz svijeta" emoji="🌍" href="/kategorija/svijet" stavke={svijet.length ? svijet : MOCK_SVIJET} />
       <Kutija naslov="Sport" emoji="⚽" href="/kategorija/sport" stavke={sport.length ? sport : MOCK_SPORT} />
 
