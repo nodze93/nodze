@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Vijesti — kodnas.de",
-  description: "Sve vijesti relevantne za Bosance u Njemačkoj i Austriji.",
+  description: "Sve njemačke vijesti na našem jeziku, iz minute u minutu.",
 };
 
 export const revalidate = 300;
@@ -52,7 +52,7 @@ export default async function VijestPage() {
           <aside>
             <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, padding: 20, marginBottom: 16 }}>
               <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.5px", color: "var(--tekst-muted)" }}>Kategorije</h3>
-              {["Viza", "Posao", "Stan", "Zdravstvo", "Porodica", "Porez", "Penzija", "Svijet", "BiH", "Povratak"].map((kat) => (
+              {["Viza", "Posao", "Stan", "Zdravstvo", "Porodica", "Porez", "Penzija", "Finansije", "Sport", "Svijet"].map((kat) => (
                 <a
                   key={kat}
                   href={`/kategorija/${kat.toLowerCase()}`}

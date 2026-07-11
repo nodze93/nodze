@@ -5,24 +5,16 @@ import { dajNajcitanije } from "@/lib/data";
 // NAJPOPULARNIJE OVE SEDMICE — numerisana lista (v19 stil)
 // ============================================================
 
-const MOCK = [
-  { slug: "skandal-konzulat-berlin", naslov: "Skandal u BiH konzulatu u Berlinu — čekanje na pasoš 8 mjeseci, a neko preskače red", meta: "bih · 5 min" },
-  { slug: "dzeko-bundesliga-povratak", naslov: "Džeko se vraća u Bundesligu? Glasine o transferu tresu bosansku dijasporu", meta: "sport · 3 min" },
-  { slug: "bosanka-frankfurt-porez", naslov: "Bosanka iz Frankfurta dobila 12.400€ povrata poreza — trik koji malo ko zna", meta: "finansije · 4 min" },
-  { slug: "njemacka-plata-bosanski-doktor", naslov: "Bosanski ljekar u Münchenu zarađuje 7.800€/mj. — od nule do specijaliste za 3 godine", meta: "vijesti · 7 min" },
-  { slug: "stan-minhen-bez-schufe", naslov: "Kako naći stan u Minhenu bez Schufe — provjeren vodič", meta: "stan · 5 min" },
-];
-
 export default async function NajpopularnijeSection() {
   const izBaze = await dajNajcitanije(5);
-  const stavke =
-    izBaze.length > 0
-      ? izBaze.map((c) => ({
-          slug: c.slug,
-          naslov: c.naslov,
-          meta: `${c.kategorija} · ${c.min_citanja} min`,
-        }))
-      : MOCK;
+  const stavke = izBaze.map((c) => ({
+    slug: c.slug,
+    naslov: c.naslov,
+    meta: `${c.kategorija} · ${c.min_citanja} min`,
+  }));
+
+  // Bez izmišljenih primjera — ako nema članaka, sekcija se ne prikazuje.
+  if (stavke.length === 0) return null;
 
   return (
     <div className="section" style={{ marginBottom: 28 }}>

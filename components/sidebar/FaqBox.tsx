@@ -16,7 +16,7 @@ const faqs = [
   {
     pitanje: "Mogu li zadržati BiH državljanstvo?",
     odgovor:
-      "Ako uzmeš njemačko državljanstvo, moraš se odreći bosanskog. Austrija ima iste uvjete. Ima izuzetaka — pročitaj naš vodič.",
+      "Njemačka od 2024. dozvoljava dvojno državljanstvo — možeš uzeti njemačko i zadržati bosansko. Detalji su u našem vodiču o državljanstvu.",
   },
   {
     pitanje: "Kako prijaviti dijete za Kindergeld?",

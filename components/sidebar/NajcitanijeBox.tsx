@@ -1,33 +1,25 @@
 import Link from "next/link";
+import { dajNajcitanije } from "@/lib/data";
 
-const stavke = [
-  {
-    broj: 1,
-    naslov: "Nova radna viza — šta se mijenja od 2026",
-    meta: "Viza · 2.4k",
-    href: "/clanak/nova-radna-viza-2026",
-  },
-  {
-    broj: 2,
-    naslov: "Elterngeld — koliko para dobijaš kao roditelj",
-    meta: "Porodica · 1.9k",
-    href: "/clanak/elterngeld-2026",
-  },
-  {
-    broj: 3,
-    naslov: "Povrat poreza — kako do novca svake godine",
-    meta: "Porez · 1.5k",
-    href: "/clanak/povrat-poreza",
-  },
-  {
-    broj: 4,
-    naslov: "Stan bez Schufe — je li moguće i kako",
-    meta: "Stan · 1.2k",
-    href: "/clanak/stan-bez-schufe",
-  },
+// Kad baza još nema pregleda — pokaži PRAVE vodiče (nema mrtvih linkova).
+const FALLBACK = [
+  { naslov: "Radna viza za Njemačku — korak po korak", meta: "Vodič", href: "/vodic/radna-viza-njemacka" },
+  { naslov: "Krankenkasse — kako se prijaviti", meta: "Vodič", href: "/vodic/krankenkasse" },
+  { naslov: "Povrat poreza — kako do novca svake godine", meta: "Vodič", href: "/vodic/povrat-poreza" },
+  { naslov: "Pronalazak stana — Schufa i Mietvertrag", meta: "Vodič", href: "/vodic/pronalazak-stana" },
 ];
 
-export default function NajcitanijeBox() {
+export default async function NajcitanijeBox() {
+  const izBaze = await dajNajcitanije(4);
+  const stavke =
+    izBaze.length > 0
+      ? izBaze.map((c) => ({
+          naslov: c.naslov,
+          meta: c.kategorija,
+          href: `/clanak/${c.slug}`,
+        }))
+      : FALLBACK;
+
   return (
     <div
       style={{
@@ -79,7 +71,7 @@ export default function NajcitanijeBox() {
               marginTop: 1,
             }}
           >
-            {stavka.broj}
+            {i + 1}
           </div>
           <div>
             <div

@@ -19,8 +19,8 @@ const vodici = [
 const portal = [
   { label: "O nama", href: "/o-nama" },
   { label: "Kontakt", href: "/kontakt" },
-  { label: "Newsletter", href: "/newsletter" },
-  { label: "Oglašavanje", href: "/oglasavanje" },
+  { label: "Sve vijesti", href: "/vijesti" },
+  { label: "Vodiči", href: "/vodici" },
 ];
 
 export default function Footer() {
@@ -46,9 +46,17 @@ export default function Footer() {
         {/* Brand */}
         <div>
           <div
-            style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}
+            style={{
+              fontSize: 20,
+              fontWeight: 700,
+              marginBottom: 8,
+              fontFamily: "Georgia, 'Playfair Display', 'Times New Roman', serif",
+              fontStyle: "italic",
+              letterSpacing: "-0.5px",
+            }}
           >
-            dijaspora<span style={{ color: "var(--zelena)" }}>.ba</span>
+            <span style={{ color: "var(--tekst)" }}>Kod </span>
+            <span style={{ color: "var(--zelena)" }}>nas</span>
           </div>
           <p
             style={{
@@ -57,8 +65,8 @@ export default function Footer() {
               lineHeight: 1.6,
             }}
           >
-            Tvoj vodič kroz život u Njemačkoj, Austriji i Švicarskoj. Vijesti,
-            vodiči i praktične informacije za Bosance u dijaspori.
+            Sve njemačke vijesti na našem jeziku, iz minute u minutu — na jednom
+            mjestu. Plus praktični vodiči: viza, posao, stan, zdravstvo i porezi.
           </p>
         </div>
 
@@ -170,7 +178,7 @@ export default function Footer() {
         }}
       >
         <span>© 2026 kodnas.de — Sva prava zadržana</span>
-        <span>Napravljeno za Bosance vani</span>
+        <span>Njemačke vijesti na našem jeziku</span>
       </div>
 
       <style>{`

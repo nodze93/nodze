@@ -1,53 +1,57 @@
 import { dajHero } from "@/lib/data";
 import HeroRotator, { type HeroClanak } from "./HeroRotator";
 
-// Fallback za GLAVNU vijest dok baza nema današnjih objavljenih članaka
+// Fallback za GLAVNU vijest dok baza nema današnjih objavljenih članaka.
+// Vodi na PRAVU stranicu (vodič), ne na izmišljeni članak.
 const FALLBACK_GLAVNI: HeroClanak[] = [
   {
-    slug: "nova-radna-viza-2026",
+    slug: "radna-viza-njemacka",
+    href: "/vodic/radna-viza-njemacka",
     kategorija: "viza",
-    label: "Viza",
-    naslov: "Nova pravila za radnu vizu u Njemačkoj — što se mijenja za Bosance od 2026. godine",
+    label: "Vodič",
+    naslov: "Radna viza za Njemačku — korak po korak, od ugovora do slijetanja",
     excerpt:
-      "Fachkräfteeinwanderungsgesetz je promijenio sve. Koje dokumente trebaš, koji je rok čekanja, i kako aplicirati korak po korak iz BiH.",
-    meta: "Danas · 8 min",
-    datum: "Danas",
+      "Fachkräfteeinwanderungsgesetz, Chancenkarte, Plava karta — koje dokumente trebaš i kako aplicirati. Sve u jednom vodiču.",
+    meta: "Vodič · 15 min",
+    datum: "",
     slika: "https://loremflickr.com/900/600/passport,documents?lock=51",
   },
 ];
 
-// TRI BOČNE KARTICE — fiksne, ručno se postavljaju ovdje (ne rotiraju)
-// slika: URL naslovne fotografije (može se zamijeniti pravom slikom kasnije)
-const BOCNI_FIKSNI: HeroClanak[] = [
+// BOČNE KARTICE kad baza nema članaka — vode na PRAVE vodiče (nema mrtvih linkova).
+const FALLBACK_BOCNI: HeroClanak[] = [
   {
-    slug: "elterngeld-2026",
-    kategorija: "porodica",
-    label: "Porodica",
-    naslov: "Elterngeld 2026 — koliko para dobijaš i kako aplicirati odmah nakon poroda",
+    slug: "krankenkasse",
+    href: "/vodic/krankenkasse",
+    kategorija: "zdravstvo",
+    label: "Vodič",
+    naslov: "Krankenkasse — kako se prijaviti i ko može biti suosiguran",
     excerpt: "",
-    meta: "Jučer · 6 min",
-    datum: "Jučer",
-    slika: "https://loremflickr.com/200/200/office,documents?lock=41",
+    meta: "Vodič · 8 min",
+    datum: "",
+    slika: "https://loremflickr.com/200/200/hospital,healthcare?lock=41",
   },
   {
-    slug: "stan-minhen-bez-schufe",
+    slug: "pronalazak-stana",
+    href: "/vodic/pronalazak-stana",
     kategorija: "stan",
-    label: "Stan",
-    naslov: "Kako naći stan u Minhenu bez Schufe — provjeren vodič za novopridošle",
+    label: "Vodič",
+    naslov: "Pronalazak stana — Schufa, Mietvertrag i prava stanara",
     excerpt: "",
-    meta: "2 dana · 5 min",
-    datum: "2 dana",
+    meta: "Vodič · 10 min",
+    datum: "",
     slika: "https://loremflickr.com/200/200/apartment,building?lock=42",
   },
   {
-    slug: "sedmicni-pregled-bih",
-    kategorija: "bih",
-    label: "BiH",
-    naslov: "Sedmični pregled iz BiH — što se desilo dok si bio na poslu",
+    slug: "povrat-poreza",
+    href: "/vodic/povrat-poreza",
+    kategorija: "finansije",
+    label: "Vodič",
+    naslov: "Povrat poreza — kako dobiti natrag novac od države svake godine",
     excerpt: "",
-    meta: "Jučer · 3 min",
-    datum: "Jučer",
-    slika: "https://loremflickr.com/200/200/sarajevo,city?lock=43",
+    meta: "Vodič · 7 min",
+    datum: "",
+    slika: "https://loremflickr.com/200/200/tax,money?lock=43",
   },
 ];
 
@@ -62,11 +66,19 @@ export default async function Hero() {
   const danasnji = svi.filter((k) => k.danasnji);
   const glavniInitial = danasnji.length >= 1 ? danasnji : svi;
 
+  // Bočne kartice = PRAVI objavljeni članci iz baze (pravi /clanak/ linkovi).
+  // Ako baza nema dovoljno članaka — dopuni pravim vodičima (nema 404).
+  const bocniIzBaze = svi.slice(0, 3);
+  const bocni =
+    bocniIzBaze.length >= 3
+      ? bocniIzBaze
+      : [...bocniIzBaze, ...FALLBACK_BOCNI].slice(0, 3);
+
   return (
     <HeroRotator
       glavniInitial={glavniInitial}
       glavniFallback={FALLBACK_GLAVNI}
-      bocni={BOCNI_FIKSNI}
+      bocni={bocni}
     />
   );
 }

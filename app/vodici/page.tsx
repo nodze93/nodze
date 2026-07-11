@@ -7,11 +7,11 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Korak-po-korak vodiči — kodnas.de",
-  description: "Praktični vodiči za Bosance u Njemačkoj i Austriji: viza, stan, zdravstvo, porez i penzija.",
+  description: "Praktični vodiči za Bosance u Njemačkoj: viza, stan, zdravstvo, porez i penzija.",
   alternates: { canonical: "/vodici" },
   openGraph: {
     title: "Korak-po-korak vodiči — kodnas.de",
-    description: "Praktični vodiči za Bosance u Njemačkoj i Austriji.",
+    description: "Praktični vodiči za Bosance u Njemačkoj.",
     url: "/vodici",
     siteName: "kodnas.de",
     locale: "bs_BA",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Korak-po-korak vodiči — kodnas.de",
-    description: "Praktični vodiči za Bosance u Njemačkoj i Austriji.",
+    description: "Praktični vodiči za Bosance u Njemačkoj.",
     images: ["/og-default.jpg"],
   },
 };
@@ -40,7 +40,7 @@ export default function VodiciPage() {
             Korak-po-korak vodiči
           </h1>
           <p style={{ fontSize: 15, color: "var(--tekst-muted)" }}>
-            Praktični vodiči koji te vode kroz birokratske procedure u Njemačkoj i Austriji.
+            Praktični vodiči koji te vode kroz birokratske procedure u Njemačkoj.
           </p>
         </div>
 

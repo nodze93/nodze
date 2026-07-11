@@ -13,6 +13,7 @@ export interface HeroClanak {
   datum: string;
   slika?: string;
   danasnji?: boolean;
+  href?: string; // ako je postavljen, koristi se umjesto /clanak/{slug} (npr. za vodiče)
 }
 
 // Koliko dugo stoji jedna vijest prije rotacije (10 minuta)
@@ -86,7 +87,7 @@ export default function HeroRotator({ glavniInitial, glavniFallback, bocni }: Pr
         {/* Glavni članak — ROTIRA se; slika sa naslovom preko (Klix stil) */}
         <Link
           key={idx}
-          href={`/clanak/${glavni.slug}`}
+          href={glavni.href ?? `/clanak/${glavni.slug}`}
           className="hero-fade hero-glavni"
           style={{
             position: "relative",
@@ -154,7 +155,6 @@ export default function HeroRotator({ glavniInitial, glavniFallback, bocni }: Pr
 
             {glavni.excerpt && (
               <p
-                className="hero-excerpt"
                 style={{
                   fontSize: 14.5,
                   color: "rgba(255,255,255,0.9)",
@@ -177,7 +177,7 @@ export default function HeroRotator({ glavniInitial, glavniFallback, bocni }: Pr
           {bocni.map((item, i) => (
             <Link
               key={`${item.slug}-${i}`}
-              href={`/clanak/${item.slug}`}
+              href={item.href ?? `/clanak/${item.slug}`}
               style={{
                 padding: "14px 18px",
                 borderBottom: i < bocni.length - 1 ? "1px solid var(--border)" : "none",
@@ -240,8 +240,6 @@ export default function HeroRotator({ glavniInitial, glavniFallback, bocni }: Pr
         @media (max-width: 768px) {
           .hero-inner { grid-template-columns: 1fr !important; }
           .hero-side { display: none !important; }
-          /* Na telefonu preko slike ostaje samo naslov (+ sitni datum) */
-          .hero-excerpt { display: none !important; }
         }
       `}</style>
     </div>

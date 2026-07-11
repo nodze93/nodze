@@ -5,11 +5,31 @@ import { useState } from "react";
 export default function NewsletterBox() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [saljem, setSaljem] = useState(false);
+  const [greska, setGreska] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Supabase insert
-    setSubmitted(true);
+    if (saljem) return;
+    setGreska("");
+    setSaljem(true);
+    try {
+      const r = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j?.uspjeh) {
+        setSubmitted(true);
+      } else {
+        setGreska(j?.greska || "Nešto nije u redu. Pokušaj ponovo.");
+      }
+    } catch {
+      setGreska("Nema veze sa serverom. Pokušaj ponovo.");
+    } finally {
+      setSaljem(false);
+    }
   };
 
   return (
@@ -22,7 +42,7 @@ export default function NewsletterBox() {
       }}
     >
       <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>
-        Tjedni digest
+        Sedmični digest
       </h3>
       <p
         style={{
@@ -67,6 +87,7 @@ export default function NewsletterBox() {
           />
           <button
             type="submit"
+            disabled={saljem}
             style={{
               width: "100%",
               padding: 9,
@@ -76,13 +97,17 @@ export default function NewsletterBox() {
               borderRadius: 6,
               fontSize: 13,
               fontWeight: 600,
-              cursor: "pointer",
+              cursor: saljem ? "default" : "pointer",
+              opacity: saljem ? 0.7 : 1,
               transition: "background 0.15s",
             }}
             className="hover:bg-white/30"
           >
-            Pretplati se →
+            {saljem ? "Šaljem…" : "Pretplati se →"}
           </button>
+          {greska && (
+            <div style={{ fontSize: 11, marginTop: 8, color: "#fee2e2" }}>{greska}</div>
+          )}
         </form>
       )}
     </div>
