@@ -14,8 +14,14 @@ export const RSS_IZVORI: FeedIzvor[] = [
   { ime: "Slobodna Evropa",    url: "https://www.slobodnaevropa.org/api/zrqiteuuir",  jezik: "bs", tip: "dijaspora", strana: "bih" },
   // DW Bosanski je na bosanskom ALI piše o Njemačkoj → ide na DE stranu
   { ime: "DW Bosanski",        url: "https://rss.dw.com/rdf/rss-bos-all",             jezik: "bs", tip: "dijaspora", strana: "de" },
-  { ime: "Tagesschau",         url: "https://www.tagesschau.de/index~rss2.xml",       jezik: "de", tip: "dijaspora", strana: "de" },
-  { ime: "Spiegel",            url: "https://www.spiegel.de/schlagzeilen/index.rss",  jezik: "de", tip: "dijaspora", strana: "de" },
+  { ime: "Tagesschau",         url: "https://www.tagesschau.de/index~rss2.xml",           jezik: "de", tip: "dijaspora", strana: "de" },
+  // Inland = domaće teme (zakoni, boravak, socijala) — najrelevantnije za nas
+  { ime: "Tagesschau Inland",  url: "https://www.tagesschau.de/inland/index~rss2.xml",     jezik: "de", tip: "dijaspora", strana: "de" },
+  // Wirtschaft = ekonomija (cijene struje/goriva, stanarine, Bürgergeld, energija)
+  { ime: "Tagesschau Wirt.",   url: "https://www.tagesschau.de/wirtschaft/index~rss2.xml", jezik: "de", tip: "dijaspora", strana: "de" },
+  { ime: "Spiegel",            url: "https://www.spiegel.de/schlagzeilen/index.rss",      jezik: "de", tip: "dijaspora", strana: "de" },
+  // DW njemački — široka pokrivenost Njemačke, dijaspori prijateljski ugao
+  { ime: "DW Deutsch",         url: "https://rss.dw.com/rdf/rss-de-all",                  jezik: "de", tip: "dijaspora", strana: "de" },
 
   // ── SVIJET (klikabilne međunarodne vijesti) ───────────────────
   // BBC World — najpouzdaniji svjetski RSS
@@ -74,4 +80,7 @@ export const SEED_POJMOVI = [
   "Steuererklärung", "Elterngeld", "Aufenthaltstitel", "Kindergeld",
   "Krankenkasse", "Arbeitslosengeld", "Bürgergeld", "Wohngeld",
   "Niederlassungserlaubnis", "Einbürgerung",
+  // svakodnevni/praktični troškovi i teme koje dijaspora najviše gura
+  "Strompreis", "Spritpreis", "Energiekosten", "Mieterhöhung",
+  "Bahnstreik", "Führerschein", "Mindestlohn", "Rente",
 ];

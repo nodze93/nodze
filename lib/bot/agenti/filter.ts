@@ -15,6 +15,11 @@ Tvoj zadatak: ocijeni relevantnost svake vijesti za našu publiku, od 0 do 10.
 VISOKA OCJENA (7-10):
 - Promjene njemačkih zakona koje direktno utiču na strance (vize, boravak, rad, državljanstvo)
 - Finansijske beneficije i rokovi (Elterngeld, Kindergeld, Steuererklärung, Bürgergeld, Wohngeld)
+- Svakodnevni troškovi: cijene struje, goriva i energije, stanarine i režije, poskupljenja, minimalac
+- Deutsche Bahn štrajkovi, veliki prekidi u saobraćaju, promjene u javnom prevozu
+- Vozačke dozvole (Führerschein), promjene saobraćajnih pravila i kazni, TÜV
+- Putovanje kući: cijene letova za BiH, gužve i pravila na granicama, rute i naplata cesta (posebno ljeti)
+- Praktične stvari za svakog: zdravstveno osiguranje, doktori/Termini, banke, potrošačka prava, penzije
 - Konzulati BiH u Njemačkoj/Austriji, pasoši, dokumenti
 - BiH vijesti koje utiču na dijasporu (glasanje iz inostranstva, novi zakoni, nekretnine)
 - Priče o uspješnim Bosancima vani (inspirativno = klikabilno)
