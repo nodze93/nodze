@@ -14,7 +14,7 @@ import { factcheckClanak } from "./agenti/factcheck";
 import { jezikCheck } from "./agenti/jezik";
 import { gramatikaProlaz } from "./agenti/gramatika";
 import { temaTokeni, istaTema } from "./dedupe";
-import { ucitajObradjene, ucitajTeme, oznaciTema, oznaciObradjen, oznaciObradjeneBatch, sacuvajDraft, logujPipeline } from "./publisher";
+import { ucitajObradjene, ucitajTeme, ucitajNaslove, oznaciTema, oznaciNaslov, oznaciObradjen, oznaciObradjeneBatch, sacuvajDraft, logujPipeline } from "./publisher";
 import { nadjiSliku } from "./slike";
 import { nadjiSlikuWiki } from "./slike-wikimedia";
 import type { PipelineRezultat, FactcheckRezultat, ContextRezultat, SlikaInfo } from "./tipovi";
@@ -106,6 +106,7 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
     // Dedupe po TEMI: naslovi nedavno napisanih priča (hvata istu vijest
     // koja dođe s drugog izvora/linka — link-dedupe to ne uhvati).
     const vidjeneTeme = (await ucitajTeme()).map(temaTokeni);
+    const vidjeniNaslovi = (await ucitajNaslove()).map(temaTokeni);
     for (const vijest of filtrirane) {
       try {
         // Ista priča s drugog izvora → preskoči (da ne pišemo duplikat).
@@ -155,6 +156,17 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
         jezik.ispravljen_sadrzaj = gram.sadrzaj;
         jezik.broj_ispravki += gram.broj_ispravki;
 
+        // Dedupe po GOTOVOM naslovu — najjači sloj: hvata istu priču čak i
+        // kad su izvorni naslovi drugačije sročeni (npr. dva članka isti dan
+        // s istog izvora o istoj reformi).
+        const finalNaslov = jezik.ispravljen_naslov || clanak.naslov;
+        const naslovTk = temaTokeni(finalNaslov);
+        if (vidjeniNaslovi.some((t) => istaTema(naslovTk, t))) {
+          console.log(`   ⏭️  Duplikat (naslov) — preskačem: ${finalNaslov.slice(0, 55)}`);
+          await oznaciObradjen(vijest.link);
+          continue;
+        }
+
         // Naslovna slika: PRVO Wikimedia (prava, besplatna, sigurna za Njemačku),
         // pa Unsplash kao rezerva ako Wikimedia nema ništa relevantno.
         const pojam = clanak.slika_pojmovi || vijest.naslov;
@@ -176,9 +188,12 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
             slug,
             kategorija: clanak.kategorija,
           });
-          // Zapamti temu (naslov izvora) — za dedupe u ovom i budućim runovima.
+          // Zapamti temu (izvorni naslov) I gotov naslov — za dedupe u ovom i
+          // budućim runovima (dva sloja: po izvoru + po gotovom naslovu).
           vidjeneTeme.push(teme);
+          vidjeniNaslovi.push(naslovTk);
           await oznaciTema(vijest.naslov);
+          await oznaciNaslov(finalNaslov);
         } else {
           rez.greske++;
         }
