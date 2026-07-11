@@ -67,25 +67,33 @@ export default function Nav() {
           ☰
         </button>
 
-        {/* Logo — fensi wordmark */}
+        {/* Logo — wordmark "Dnevni filter njemačkih vijesti" (verzal, novinski) */}
         <Link href="/" className="nav-logo" style={{ textDecoration: "none", color: "inherit" }}>
-          <div
-            style={{
-              fontFamily: "Georgia, 'Playfair Display', 'Times New Roman', serif",
-              fontStyle: "italic",
-              fontSize: 25,
-              fontWeight: 700,
-              letterSpacing: "-0.5px",
-              lineHeight: 1,
-              display: "flex",
-              alignItems: "baseline",
-              gap: 5,
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span style={{ color: "var(--tekst)" }}>Kod</span>
-            <span style={{ color: "var(--zelena)" }}>nas</span>
-            <span style={{ color: "var(--tekst-light)", fontWeight: 600 }}>u…</span>
+          <div style={{ lineHeight: 1.14, display: "flex", flexDirection: "column" }}>
+            <span
+              style={{
+                fontSize: 16,
+                fontWeight: 800,
+                letterSpacing: "0.5px",
+                textTransform: "uppercase",
+                color: "var(--tekst)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Dnevni filter
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: "1.2px",
+                textTransform: "uppercase",
+                color: "var(--tekst-light)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              njemačkih vijesti
+            </span>
           </div>
         </Link>
 
@@ -165,22 +173,31 @@ export default function Nav() {
             borderBottom: "1px solid var(--border)",
           }}
         >
-          <div
-            style={{
-              fontFamily: "Georgia, 'Playfair Display', 'Times New Roman', serif",
-              fontStyle: "italic",
-              fontSize: 23,
-              fontWeight: 700,
-              letterSpacing: "-0.5px",
-              display: "flex",
-              alignItems: "baseline",
-              gap: 5,
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span style={{ color: "var(--tekst)" }}>Kod</span>
-            <span style={{ color: "var(--zelena)" }}>nas</span>
-            <span style={{ color: "var(--tekst-light)", fontWeight: 600 }}>u…</span>
+          <div style={{ lineHeight: 1.14, display: "flex", flexDirection: "column" }}>
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 800,
+                letterSpacing: "0.5px",
+                textTransform: "uppercase",
+                color: "var(--tekst)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Dnevni filter
+            </span>
+            <span
+              style={{
+                fontSize: 10.5,
+                fontWeight: 600,
+                letterSpacing: "1.2px",
+                textTransform: "uppercase",
+                color: "var(--tekst-light)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              njemačkih vijesti
+            </span>
           </div>
           <button
             onClick={() => setMeniOpen(false)}

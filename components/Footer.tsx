@@ -45,18 +45,29 @@ export default function Footer() {
       >
         {/* Brand */}
         <div>
-          <div
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              marginBottom: 8,
-              fontFamily: "Georgia, 'Playfair Display', 'Times New Roman', serif",
-              fontStyle: "italic",
-              letterSpacing: "-0.5px",
-            }}
-          >
-            <span style={{ color: "var(--tekst)" }}>Kod </span>
-            <span style={{ color: "var(--zelena)" }}>nas</span>
+          <div style={{ marginBottom: 8, lineHeight: 1.14, display: "flex", flexDirection: "column" }}>
+            <span
+              style={{
+                fontSize: 16,
+                fontWeight: 800,
+                letterSpacing: "0.5px",
+                textTransform: "uppercase",
+                color: "var(--tekst)",
+              }}
+            >
+              Dnevni filter
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: "1.2px",
+                textTransform: "uppercase",
+                color: "var(--tekst-light)",
+              }}
+            >
+              njemačkih vijesti
+            </span>
           </div>
           <p
             style={{
