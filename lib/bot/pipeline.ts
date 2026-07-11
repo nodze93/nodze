@@ -13,7 +13,8 @@ import { writeClanak } from "./agenti/writer";
 import { factcheckClanak } from "./agenti/factcheck";
 import { jezikCheck } from "./agenti/jezik";
 import { gramatikaProlaz } from "./agenti/gramatika";
-import { ucitajObradjene, oznaciObradjeneBatch, sacuvajDraft, logujPipeline } from "./publisher";
+import { temaTokeni, istaTema } from "./dedupe";
+import { ucitajObradjene, ucitajTeme, oznaciTema, oznaciObradjen, oznaciObradjeneBatch, sacuvajDraft, logujPipeline } from "./publisher";
 import { nadjiSliku } from "./slike";
 import { nadjiSlikuWiki } from "./slike-wikimedia";
 import type { PipelineRezultat, FactcheckRezultat, ContextRezultat, SlikaInfo } from "./tipovi";
@@ -102,8 +103,18 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
     }
 
     // ── 4-5-6-7. Writer → Fact-check → Context → Jezik → Draft
+    // Dedupe po TEMI: naslovi nedavno napisanih priča (hvata istu vijest
+    // koja dođe s drugog izvora/linka — link-dedupe to ne uhvati).
+    const vidjeneTeme = (await ucitajTeme()).map(temaTokeni);
     for (const vijest of filtrirane) {
       try {
+        // Ista priča s drugog izvora → preskoči (da ne pišemo duplikat).
+        const teme = temaTokeni(vijest.naslov);
+        if (vidjeneTeme.some((t) => istaTema(teme, t))) {
+          console.log(`   ⏭️  Duplikat teme — preskačem: ${vijest.naslov.slice(0, 55)}`);
+          await oznaciObradjen(vijest.link);
+          continue;
+        }
         console.log(`\n─── ${vijest.naslov.slice(0, 60)} ───`);
 
         const { clanak, izvorniTekst, zvanicniUrl } = await writeClanak(vijest);
@@ -165,6 +176,9 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
             slug,
             kategorija: clanak.kategorija,
           });
+          // Zapamti temu (naslov izvora) — za dedupe u ovom i budućim runovima.
+          vidjeneTeme.push(teme);
+          await oznaciTema(vijest.naslov);
         } else {
           rez.greske++;
         }

@@ -37,6 +37,7 @@ export async function ucitajObradjene(): Promise<Set<string>> {
   const { data, error } = await db
     .from("obradjeni_linkovi")
     .select("link")
+    .not("link", "like", `${TEMA_PREFIX}%`) // tema-redovi se čitaju posebno
     .order("created_at", { ascending: false })
     .limit(2000);
   if (error) {
@@ -44,6 +45,34 @@ export async function ucitajObradjene(): Promise<Set<string>> {
     return new Set();
   }
   return new Set((data || []).map((r: { link: string }) => r.link));
+}
+
+// Prefiks za "tema" redove u obradjeni_linkovi (dedupe po temi, bez nove tabele).
+const TEMA_PREFIX = "tema::";
+
+// Učitaj nedavne teme (naslove već napisanih priča) za dedupe po temi.
+export async function ucitajTeme(limit = 300): Promise<string[]> {
+  const db = createServerClient();
+  const { data, error } = await db
+    .from("obradjeni_linkovi")
+    .select("link")
+    .like("link", `${TEMA_PREFIX}%`)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn(`⚠️  Teme učitavanje: ${error.message}`);
+    return [];
+  }
+  return (data || []).map((r: { link: string }) => r.link.slice(TEMA_PREFIX.length));
+}
+
+// Zapamti temu (naslov) napisanog članka — da se ista priča ne piše opet.
+export async function oznaciTema(naslov: string): Promise<void> {
+  if (!naslov) return;
+  const db = createServerClient();
+  await db
+    .from("obradjeni_linkovi")
+    .upsert({ link: TEMA_PREFIX + naslov.slice(0, 300) }, { onConflict: "link", ignoreDuplicates: true });
 }
 
 export async function oznaciObradjen(link: string): Promise<void> {
