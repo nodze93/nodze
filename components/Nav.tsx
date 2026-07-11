@@ -193,6 +193,18 @@ export default function Nav() {
 
         {/* Glavne rubrike */}
         <div style={{ display: "flex", flexDirection: "column" }}>
+          <Link
+            href="/"
+            onClick={() => setMeniOpen(false)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "15px 20px", borderBottom: "1px solid var(--border)",
+              textDecoration: "none", color: "var(--tekst)", fontSize: 15, fontWeight: 700,
+            }}
+          >
+            <span>🏠 Naslovna</span>
+            <span style={{ color: "var(--zelena)", fontSize: 16 }}>→</span>
+          </Link>
           {glavnePrije.map((k) => (
             <Link
               key={k.href}

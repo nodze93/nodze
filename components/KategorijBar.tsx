@@ -6,14 +6,11 @@ import Link from "next/link";
 // v19 raspored — isti kao u headeru
 const kategorije = [
   { label: "SVE", value: "sve", href: "/" },
-  { label: "🇩🇪 DE", value: "de", href: "/de" },
-  { label: "SVIJET", value: "svijet", href: "/kategorija/svijet" },
-  { label: "Viza", value: "viza", href: "/kategorija/viza" },
-  { label: "Stan", value: "stan", href: "/kategorija/stan" },
-  { label: "Zdravstvo", value: "zdravstvo", href: "/kategorija/zdravstvo" },
-  { label: "Porodica", value: "porodica", href: "/kategorija/porodica" },
-  { label: "Finansije", value: "finansije", href: "/kategorija/finansije" },
+  { label: "🇩🇪 Njemačka", value: "de", href: "/de" },
+  { label: "Svijet", value: "svijet", href: "/kategorija/svijet" },
   { label: "Sport", value: "sport", href: "/kategorija/sport" },
+  { label: "Finansije", value: "finansije", href: "/kategorija/finansije" },
+  { label: "Vodiči", value: "vodici", href: "/vodici" },
   { label: "Gastarbajter", value: "gastarbajter", href: "/kategorija/gastarbajter" },
 ];
 
