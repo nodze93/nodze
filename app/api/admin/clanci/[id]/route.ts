@@ -49,9 +49,11 @@ async function azuriraj(req: Request, { params }: Props) {
   // podrška za camelCase iz starog UI-ja
   if (body.minCitanja !== undefined) izmjene.min_citanja = body.minCitanja;
 
-  // Kad se objavljuje — upiši datum objave
+  // Kad se objavljuje — upiši datum objave. Ako je članak ZAKAZAN za budućnost,
+  // datum objave = to buduće vrijeme (da pokaže tačan datum kad se pojavi).
   if (izmjene.status === "published") {
-    izmjene.datum_objave = new Date().toISOString();
+    const z = izmjene.zakazano_za ? new Date(izmjene.zakazano_za as string) : null;
+    izmjene.datum_objave = (z && z.getTime() > Date.now() ? z : new Date()).toISOString();
   }
 
   try {
@@ -67,9 +69,11 @@ async function azuriraj(req: Request, { params }: Props) {
     // Osvježi sajt odmah da izmjena/objava odmah pređe na naslovnu/kategorije
     osvjeziSajt();
 
-    // AUTO-OBJAVA NA FACEBOOK — samo kad se članak PRVI PUT objavi.
-    // Dedupe preko kolone fb_post_id (ako je već postavljena, preskoči).
-    if (izmjene.status === "published" && data && !data.fb_post_id) {
+    // AUTO-OBJAVA NA FACEBOOK — samo kad se članak PRVI PUT objavi I ODMAH.
+    // Ako je ZAKAZAN za budućnost, NE objavljuj na FB sada (link bi vodio na
+    // skriven članak); podijeliš ga ručno kad se pojavi, ili kasnije dodamo cron.
+    const zakazanoBuduce = izmjene.zakazano_za && new Date(izmjene.zakazano_za as string).getTime() > Date.now();
+    if (izmjene.status === "published" && data && !data.fb_post_id && !zakazanoBuduce) {
       try {
         const fb = await objaviNaFacebook({
           naslov: data.naslov, slug: data.slug, slika: data.slika, excerpt: data.excerpt,

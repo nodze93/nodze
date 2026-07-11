@@ -86,6 +86,9 @@ function Manager({ onClose }: { onClose: () => void }) {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   // Filter po statusu (klijentski) — na telefonu brzo vidiš šta čeka odobrenje.
   const [statusFilter, setStatusFilter] = useState<"sve" | "draft" | "published">("sve");
+  // Zakazivanje objave (izbor vremena prije objave)
+  const [zakazivan, setZakazivan] = useState<Clanak | null>(null);
+  const [zakazVrijeme, setZakazVrijeme] = useState("");
   // Ako smo na /kategorija/<slug>, filtriraj automatski na tu kategoriju.
   const [filterKat, setFilterKat] = useState<string>(() => {
     if (typeof window === "undefined") return "";
@@ -193,6 +196,37 @@ function Manager({ onClose }: { onClose: () => void }) {
       await ucitaj();
     } catch {
       setPoruka("❌ Greška pri promjeni statusa.");
+    }
+  }
+
+  // Otvori prozor za zakazivanje (default: za 2 sata od sada)
+  function otvoriZakazivanje(c: Clanak) {
+    const d = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    const p = (n: number) => String(n).padStart(2, "0");
+    setZakazVrijeme(`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`);
+    setZakazivan(c);
+  }
+
+  // Potvrdi: objavi ALI zakazano za odabrano vrijeme (sakriveno dok ne dođe).
+  async function potvrdiZakazivanje() {
+    if (!zakazivan) return;
+    if (!zakazVrijeme) { setPoruka("Odaberi vrijeme objave."); return; }
+    const kada = new Date(zakazVrijeme);
+    if (isNaN(kada.getTime()) || kada.getTime() <= Date.now()) {
+      setPoruka("Vrijeme mora biti u budućnosti."); return;
+    }
+    try {
+      await fetch(`/api/admin/clanci/${zakazivan.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "published", zakazano_za: kada.toISOString() }),
+      });
+      setZakazivan(null);
+      setZakazVrijeme("");
+      setPoruka("✅ Članak zakazan — sam će se objaviti u zadato vrijeme.");
+      await ucitaj();
+    } catch {
+      setPoruka("❌ Greška pri zakazivanju.");
     }
   }
 
@@ -330,6 +364,14 @@ function Manager({ onClose }: { onClose: () => void }) {
                   {c.status === "published" ? "👁 Skini s objave" : "🚀 Objavi članak"}
                 </button>
 
+                {/* Zakaži objavu za određeno vrijeme (samo za draftove) */}
+                {c.status !== "published" && (
+                  <button
+                    onClick={() => otvoriZakazivanje(c)}
+                    style={{ width: "100%", padding: "11px", marginBottom: 8, border: "1.5px solid #7c3aed", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", color: "#7c3aed", background: "white" }}
+                  >⏰ Zakaži za određeno vrijeme</button>
+                )}
+
                 {/* Podijeli na Facebook */}
                 <button
                   onClick={() => podijeliNaFb(c)}
@@ -383,6 +425,9 @@ function Manager({ onClose }: { onClose: () => void }) {
                 <div style={{ display: "flex", gap: 5, alignItems: "center", flexShrink: 0 }}>
                   <button onClick={() => postaviNaslovnu(c.id, c.jeNaslovna)} title="Naslovna" style={{ ...akcija, color: c.jeNaslovna ? "#d97706" : "#9ca3af" }}>★</button>
                   <button onClick={() => promijeniStatus(c)} title={c.status === "published" ? "Skini s objave" : "Objavi"} style={akcija}>{c.status === "published" ? "👁" : "🚀"}</button>
+                  {c.status !== "published" && (
+                    <button onClick={() => otvoriZakazivanje(c)} title="Zakaži objavu za određeno vrijeme" style={{ ...akcija, color: "#7c3aed" }}>⏰</button>
+                  )}
                   <button onClick={() => podijeliNaFb(c)} title="Podijeli na Facebook" style={{ ...akcija, color: "#1877F2" }}>🔵</button>
                   <button onClick={() => setUredjivan(c)} title="Uredi" style={akcija}>✏️</button>
                   <button onClick={() => obrisi(c)} title="Obriši" style={{ ...akcija, color: "#ef4444" }}>🗑️</button>
@@ -399,6 +444,41 @@ function Manager({ onClose }: { onClose: () => void }) {
           onClose={() => setUredjivan(null)}
           onSaved={async () => { setUredjivan(null); await ucitaj(); }}
         />
+      )}
+
+      {/* Prozor za zakazivanje objave */}
+      {zakazivan && (
+        <div
+          onClick={() => setZakazivan(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "white", borderRadius: 14, padding: 22, width: "100%", maxWidth: 420, boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}>
+            <div style={{ fontSize: 17, fontWeight: 800, color: "#111", marginBottom: 6 }}>⏰ Zakaži objavu</div>
+            <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 14, lineHeight: 1.4 }}>
+              Članak će se sam pojaviti na sajtu u zadato vrijeme (do tada je sakriven).
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 12, padding: "8px 10px", background: "#f9fafb", borderRadius: 8 }}>
+              {zakazivan.naslov}
+            </div>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6 }}>Vrijeme objave</label>
+            <input
+              type="datetime-local"
+              value={zakazVrijeme}
+              onChange={(e) => setZakazVrijeme(e.target.value)}
+              style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: 14, marginBottom: 16 }}
+            />
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setZakazivan(null)}
+                style={{ flex: 1, padding: "11px", border: "1.5px solid #d1d5db", borderRadius: 10, background: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", color: "#374151" }}
+              >Otkaži</button>
+              <button
+                onClick={potvrdiZakazivanje}
+                style={{ flex: 2, padding: "11px", border: "none", borderRadius: 10, background: "#7c3aed", color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer" }}
+              >⏰ Zakaži objavu</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
