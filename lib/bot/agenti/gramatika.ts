@@ -51,6 +51,13 @@ GRAMATIKA — traži OVE greške posebno (najčešće su):
 
 7) ZAREZ ispred zavisne rečenice (koji/koja/koje/što/da/jer) gdje pravilo traži.
 
+8) KROATIZMI → BOSANSKI STANDARD (ispravi, ali PAŽLJIVO):
+   • "što" UPITNO → "šta" ("šta se mijenja"), ALI relativno OSTAVI ("ono što", "sve što").
+   • "uopće"→"uopšte"; "liječnik"→"doktor"; "dobiva/dobivaju"→"dobija/dobijaju";
+     "ovisi"→"zavisi"; "utječe"→"utiče"; "financije"→"finansije"; "prijevoz"→"prevoz";
+     "tjedan"→"sedmica"; "tisuća"→"hiljada"; "sudjeluje"→"učestvuje"; "vezano uz"→"vezano za".
+   • Germanizme (Finanzamt, Elterngeld, Termin...) NE diraj.
+
 OCJENA (koliko si gramatičkih grešaka našao/ispravio):
 - "cisto" = 0-2 sitne greške
 - "sitne_greske" = 3-6 grešaka, sve ispravljene

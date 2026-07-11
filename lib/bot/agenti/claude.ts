@@ -21,12 +21,12 @@ export function claude(): Anthropic {
 export const MODEL_BRZI = "claude-haiku-4-5";
 export const MODEL_PISAC = "claude-haiku-4-5";
 
-// ── PREKIDAČ za završni gramatički prolaz (gramatika.ts) ──────────────
-// Default: Haiku (najjeftinije). Da se dobije BOLJA bosanska gramatika,
-// dovoljno je u Vercel env postaviti:  MODEL_GRAMATIKA=claude-sonnet-4-5
-// i sačuvati — bot odmah počne koristiti Sonnet SAMO za taj zadnji prolaz.
-// Bez ikakve izmjene koda. (Da se prolaz potpuno isključi: GRAMATIKA_PROLAZ=off)
-export const MODEL_GRAMATIKA = process.env.MODEL_GRAMATIKA || "claude-haiku-4-5";
+// ── ZAVRŠNI GRAMATIČKI PROLAZ (gramatika.ts) — model ──────────────────
+// Sonnet (claude-sonnet-5) jer Haiku ne zna pouzdano bosanske padeže/rod.
+// Radi SAMO na tom zadnjem prolazu (pisac i lektor ostaju Haiku — jeftino).
+// Prekidač preko env-a: natrag na Haiku radi uštede →  MODEL_GRAMATIKA=claude-haiku-4-5
+// ili potpuno isključi prolaz →  GRAMATIKA_PROLAZ=off
+export const MODEL_GRAMATIKA = process.env.MODEL_GRAMATIKA || "claude-sonnet-5";
 
 /**
  * Pozovi Claude s forsiranim tool-useom i vrati validiran JSON objekat.

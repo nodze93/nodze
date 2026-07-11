@@ -11,13 +11,13 @@ import { fetchTrends } from "./trends";
 import { filterVijesti } from "./agenti/filter";
 import { writeClanak } from "./agenti/writer";
 import { factcheckClanak } from "./agenti/factcheck";
-import { jezikCheck } from "./agenti/jezik";
 import { gramatikaProlaz } from "./agenti/gramatika";
 import { temaTokeni, istaTema } from "./dedupe";
+import { bosaniziraj } from "./bosanski";
 import { ucitajObradjene, ucitajTeme, ucitajNaslove, oznaciTema, oznaciNaslov, oznaciObradjen, oznaciObradjeneBatch, sacuvajDraft, logujPipeline } from "./publisher";
 import { nadjiSliku } from "./slike";
 import { nadjiSlikuWiki } from "./slike-wikimedia";
-import type { PipelineRezultat, FactcheckRezultat, ContextRezultat, SlikaInfo } from "./tipovi";
+import type { PipelineRezultat, FactcheckRezultat, ContextRezultat, SlikaInfo, JezikRezultat } from "./tipovi";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -134,25 +134,30 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
           : FACTCHECK_PRESKOCEN;
         const context = CONTEXT_DEFAULT;
 
-        // Jezik (lektor) — provjera jezika, kroatizmi, stil
-        const jezik = await jezikCheck({
+        // JEDAN jezički prolaz — Sonnet (gramatika + kroatizmi).
+        // Stari Haiku lektor je UKLONJEN; Sonnet ga zamjenjuje (bolja gramatika,
+        // a trošak sličan jer je nestao cijeli jedan prolaz).
+        const gram = await gramatikaProlaz({
           naslov: clanak.naslov,
           excerpt: clanak.excerpt,
           sadrzaj: clanak.sadrzaj,
         });
+        const jezik: JezikRezultat = {
+          ispravljen_naslov: gram.naslov,
+          ispravljen_excerpt: gram.excerpt,
+          ispravljen_sadrzaj: gram.sadrzaj,
+          broj_ispravki: gram.broj_ispravki,
+          ispravke: (gram.ispravke || []).map((i) => ({
+            original: i.original, ispravljeno: i.ispravljeno, razlog: "gramatika/jezik",
+          })),
+          ocjena: gram.ocjena,
+          komentar: "Sonnet jezički prolaz (bez zasebnog Haiku lektora)",
+        };
 
-        // ZAVRŠNI GRAMATIČKI PROLAZ — zaseban poziv, SAMO gramatika.
-        // Model je prekidač (MODEL_GRAMATIKA): default Haiku, lako na Sonnet.
-        const gram = await gramatikaProlaz({
-          naslov: jezik.ispravljen_naslov,
-          excerpt: jezik.ispravljen_excerpt,
-          sadrzaj: jezik.ispravljen_sadrzaj,
-        });
-        // Ubaci gramatički ispravljen tekst kao finalni (ide u bazu).
-        jezik.ispravljen_naslov = gram.naslov;
-        jezik.ispravljen_excerpt = gram.excerpt;
-        jezik.ispravljen_sadrzaj = gram.sadrzaj;
-        jezik.broj_ispravki += gram.broj_ispravki;
+        // Besplatni deterministički popravak kroatizama (0 troška, 100% pouzdano).
+        jezik.ispravljen_naslov = bosaniziraj(jezik.ispravljen_naslov);
+        jezik.ispravljen_excerpt = bosaniziraj(jezik.ispravljen_excerpt);
+        jezik.ispravljen_sadrzaj = bosaniziraj(jezik.ispravljen_sadrzaj);
 
         // Dedupe po GOTOVOM naslovu — najjači sloj: hvata istu priču čak i
         // kad su izvorni naslovi drugačije sročeni (npr. dva članka isti dan
