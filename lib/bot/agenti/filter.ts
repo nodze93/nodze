@@ -5,8 +5,24 @@
 // Dijaspora vijesti: relevantnost za život Bosanaca u Njemačkoj.
 // Svjetske vijesti: klikabilnost (da li bi naš čovjek kliknuo).
 import { pozoviSaAlatom, MODEL_BRZI } from "./claude";
+import { temaTokeni, istaTema } from "../dedupe";
 import type { Vijest } from "../tipovi";
 import type { TrendsRezultat } from "../trends";
+
+// Odaberi top-N vijesti koje su RAZLIČITE teme — i međusobno, i od nedavno
+// napisanih (vidjene). Tako bot ne vrti istu veliku priču nego širi teme.
+function odaberiRazlicite(sortirane: Vijest[], n: number, vidjene: Set<string>[]): Vijest[] {
+  const izabrani: Vijest[] = [];
+  const uzeteTeme: Set<string>[] = [...vidjene];
+  for (const v of sortirane) {
+    if (izabrani.length >= n) break;
+    const tk = temaTokeni(v.naslov);
+    if (uzeteTeme.some((t) => istaTema(tk, t))) continue; // već pokrivena tema
+    izabrani.push(v);
+    uzeteTeme.push(tk);
+  }
+  return izabrani;
+}
 
 const FILTER_DIJASPORA_PROMPT = `Ti si urednik portala kodnas.de — portala za Bosance, Bošnjake i Bosanke koji žive u Njemačkoj i Austriji.
 
@@ -164,7 +180,8 @@ export async function filterVijesti(
   trends: TrendsRezultat | null,
   maxDE = 1,
   maxSvjetske = 1,
-  maxSport = 1
+  maxSport = 1,
+  vidjeneTeme: Set<string>[] = []
 ): Promise<Vijest[]> {
   console.log(`🔍 Filter Agent: ocjenjujem ${vijesti.length} vijesti...`);
 
@@ -181,9 +198,11 @@ export async function filterVijesti(
   ]);
 
   const poOcjeni = (a: Vijest, b: Vijest) => (b.score || 0) - (a.score || 0);
-  const topDE = ocDE.sort(poOcjeni).slice(0, maxDE);
-  const topSvjetske = ocSvjetske.sort(poOcjeni).slice(0, maxSvjetske);
-  const topSport = ocSport.sort(poOcjeni).map((v) => ({ ...v, kategorija: "sport" })).slice(0, maxSport);
+  // Biraj RAZLIČITE teme (ne istu veliku priču opet, i ne dvije iste u istom runu).
+  const topDE = odaberiRazlicite(ocDE.sort(poOcjeni), maxDE, vidjeneTeme);
+  const topSvjetske = odaberiRazlicite(ocSvjetske.sort(poOcjeni), maxSvjetske, vidjeneTeme);
+  const topSport = odaberiRazlicite(ocSport.sort(poOcjeni), maxSport, vidjeneTeme)
+    .map((v) => ({ ...v, kategorija: "sport" }));
   const rezultat = [...topDE, ...topSvjetske, ...topSport];
 
   console.log(`✅ Filter: ${rezultat.length} prošlo (${topDE.length} DE + ${topSvjetske.length} svijet + ${topSport.length} sport)`);

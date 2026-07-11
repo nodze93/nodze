@@ -86,7 +86,11 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
     const kSvijet = parseInt(process.env.CLANCI_SVIJET || "1", 10);
     const kSport = parseInt(process.env.CLANCI_SPORT || "1", 10);
 
-    const filtrirane = await filterVijesti(nove, trends, kDE, kSvijet, kSport);
+    // Nedavno pokrivene teme (zadnjih ~300 članaka) — da filter bira RAZLIČITE
+    // priče, a ne istu veliku vijest (npr. zdravstvenu reformu) opet i opet.
+    const vidjeneTeme = (await ucitajTeme()).map(temaTokeni);
+
+    const filtrirane = await filterVijesti(nove, trends, kDE, kSvijet, kSport, vidjeneTeme);
     rez.prosloFilter = filtrirane.length;
 
     // ⚡ UŠTEDA: zapamti SVE vijesti koje su prošle kroz filter kao "viđene".
@@ -103,7 +107,6 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
     // ── 4-5-6-7. Writer → Fact-check → Context → Jezik → Draft
     // Dedupe po TEMI: naslovi nedavno napisanih priča (hvata istu vijest
     // koja dođe s drugog izvora/linka — link-dedupe to ne uhvati).
-    const vidjeneTeme = (await ucitajTeme()).map(temaTokeni);
     const vidjeniNaslovi = (await ucitajNaslove()).map(temaTokeni);
     for (const vijest of filtrirane) {
       try {
