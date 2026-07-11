@@ -35,6 +35,9 @@ export const RSS_IZVORI: FeedIzvor[] = [
   { ime: "Avaz Sport",         url: "https://avaz.ba/rss/sport",                      jezik: "bs", tip: "sport" },
   { ime: "SportSport.ba",      url: "https://sportsport.ba/feed",                     jezik: "bs", tip: "sport" },
   { ime: "BBC Sport",          url: "https://feeds.bbci.co.uk/sport/rss.xml",         jezik: "en", tip: "sport" },
+  // Guardian Sport — globalni sport: tenis (Đoković), veliki mečevi, svjetske face
+  { ime: "Guardian Sport",     url: "https://www.theguardian.com/sport/rss",          jezik: "en", tip: "sport" },
+  // Kicker — njemačka liga (Bayern, Dortmund, Stuttgart, Leverkusen...)
   { ime: "Kicker",             url: "https://newsfeed.kicker.de/news/aktuell",        jezik: "de", tip: "sport" },
 ];
 

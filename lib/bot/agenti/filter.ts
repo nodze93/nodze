@@ -54,25 +54,25 @@ NISKA OCJENA (0-3):
 
 const FILTER_SPORT_PROMPT = `Ti si sportski urednik portala kodnas.de — portala za Bosance u Njemačkoj i Austriji.
 
-Publika: Bosanci koji prate Bundesligu, reprezentaciju BiH i naše igrače vani.
+Publika: Bosanci u Njemačkoj koji prate i naše zvijezde, i Bundesligu, i veliki svjetski sport.
 
-Ocijeni svaku vijest 0-10: da li bi naš čitalac kliknuo?
+Ocijeni svaku vijest 0-10. VAŽNO — pravi RAVNOTEŽU, NE biraj samo naše fudbalere.
+Tri jednako vrijedne grupe (sve tri idu 7-10 kad je priča velika):
 
-VISOKA OCJENA (7-10):
-- Bosanski sportisti u inostranstvu (transferi, golovi, povrede, izjave)
-- Reprezentacija BiH (sve: nogomet, košarka, rukomet...)
-- AKTUELNI veliki svjetski događaji o kojima svi pričaju — čak i BEZ BiH veze:
-  Svjetsko prvenstvo (ko je prošao, rezultati nokaut faze), Liga prvaka,
-  EURO, veliki finali i derbiji (npr. Španija–Portugal, El Clásico, Real–Barca)
-- Bundesliga — velike utakmice, dramatični rezultati, skandali
-- Transferi koji tresu svijet, region ili Bundesligu (Mbappé, Haaland i sl.)
-- Emotivne sportske priče (povratak nakon povrede, uspjeh naših ljudi)
+1) NAŠE ZVIJEZDE: bosanski sportisti vani (Džeko i drugi), reprezentacija BiH
+   (nogomet, košarka, rukomet), veliki uspjesi i transferi naših ljudi.
+2) NJEMAČKA LIGA: Bundesliga i njemački klubovi — Bayern, Dortmund, Leipzig,
+   Leverkusen, Stuttgart, Frankfurt... velike utakmice, transferi, skandali,
+   naši igrači u Bundesligi.
+3) SVJETSKE FACE I DOGAĐAJI (čak i BEZ BiH veze): globalne zvijezde o kojima svi
+   pričaju — tenis (Đoković i veliki Grand Slam mečevi), Liga prvaka, veliki finali
+   i derbiji (El Clásico, Real–Barca), transferi koji tresu svijet (Mbappé, Haaland),
+   NBA i velike svjetske priče, Formula 1.
 
 NISKA OCJENA (0-3):
-- Niželigaški sport bez naših igrača i bez svjetskog značaja
-- Sportovi koje naša publika ne prati (npr. kriket, bejzbol) bez velike priče
-- Suhe statistike i najave bez rezultata/priče
-- Sitni lokalni sport trećih zemalja`;
+- Niželigaški/lokalni sport bez naših igrača i bez svjetskog značaja
+- Sportovi koje naša publika ne prati (kriket, bejzbol...) bez velike priče
+- Suhe statistike i najave bez rezultata/priče`;
 
 const FILTER_SCHEMA = {
   type: "object" as const,
