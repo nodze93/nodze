@@ -155,6 +155,7 @@ export default function HeroRotator({ glavniInitial, glavniFallback, bocni }: Pr
 
             {glavni.excerpt && (
               <p
+                className="hero-excerpt"
                 style={{
                   fontSize: 14.5,
                   color: "rgba(255,255,255,0.9)",
@@ -240,6 +241,8 @@ export default function HeroRotator({ glavniInitial, glavniFallback, bocni }: Pr
         @media (max-width: 768px) {
           .hero-inner { grid-template-columns: 1fr !important; }
           .hero-side { display: none !important; }
+          /* Na telefonu: samo naslov na slici, bez opisa (da nije previše teksta) */
+          .hero-excerpt { display: none !important; }
         }
       `}</style>
     </div>
