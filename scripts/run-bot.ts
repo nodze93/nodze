@@ -5,8 +5,14 @@ import { config } from "dotenv";
 config({ path: ".env.local" });
 
 import { pokreniPipeline } from "../lib/bot/pipeline";
+import { pokreniPipeline2 } from "../lib/bot/pipeline2";
 
-pokreniPipeline()
+// Lijevak ("Dnevni filter") je PODRAZUMIJEVAN.
+// Povratak na stari bot: postavi env NOVI_PIPELINE=off
+const koristiStari = process.env.NOVI_PIPELINE === "off";
+const pokreni = koristiStari ? pokreniPipeline : pokreniPipeline2;
+
+pokreni()
   .then((r) => {
     console.log("\n=== REZULTAT ===");
     console.log(JSON.stringify(r, null, 2));
