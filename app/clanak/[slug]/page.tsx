@@ -137,7 +137,7 @@ export default async function ClanakPage({ params }: Props) {
           </h1>
 
           {/* Meta */}
-          <div style={{ display: "flex", gap: 16, fontSize: 13, color: "var(--tekst-light)", marginBottom: 24, alignItems: "center" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 13, color: "var(--tekst-light)", marginBottom: 24, alignItems: "center" }}>
             <span>📅 {clanak.datum}</span>
             <span>·</span>
             <span>⏱ {clanak.minCitanja} min čitanja</span>
@@ -213,7 +213,7 @@ export default async function ClanakPage({ params }: Props) {
           </div>
 
           {/* Dijeli */}
-          <div style={{ marginTop: 24, padding: 16, background: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ marginTop: 24, padding: 16, background: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 13, fontWeight: 600 }}>Podijeli ovaj članak:</span>
             <a href={`https://www.facebook.com/sharer/sharer.php?u=https://kodnas.de/clanak/${clanak.slug}`} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", background: "#1877F2", color: "white", borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none" }}>Facebook</a>
             <a href={`https://t.me/share/url?url=https://kodnas.de/clanak/${clanak.slug}`} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", background: "#229ED9", color: "white", borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none" }}>Telegram</a>
@@ -277,6 +277,8 @@ export default async function ClanakPage({ params }: Props) {
           font-size: 15px;
         }
         .clanak-sadrzaj table {
+          display: block;
+          overflow-x: auto;
           width: 100%;
           border-collapse: collapse;
           margin: 20px 0;
@@ -289,8 +291,13 @@ export default async function ClanakPage({ params }: Props) {
         }
         .clanak-sadrzaj th { background: var(--bg); font-weight: 600; }
         .clanak-sadrzaj strong { font-weight: 700; color: var(--tekst); }
+        /* Da ništa ne gura stranicu u širinu na telefonu */
+        .clanak-sadrzaj { overflow-wrap: break-word; word-break: break-word; }
+        .clanak-sadrzaj img { max-width: 100%; height: auto; border-radius: 8px; }
+        .clanak-sadrzaj a { word-break: break-word; }
         @media (max-width: 768px) {
-          .clanak-layout { grid-template-columns: 1fr !important; }
+          .clanak-layout { grid-template-columns: 1fr !important; overflow-x: hidden; }
+          .clanak-layout > article { min-width: 0; }
           .clanak-layout aside { display: none !important; }
         }
       `}</style>
