@@ -6,8 +6,11 @@
 - Domena: kodnas.de
 
 ## CILJ
-News portal za Bosance u Njemačkoj i Austriji. Bot piše vijesti automatski.
-Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
+News portal za NAŠU dijasporu u NJEMAČKOJ (Austrija maknuta). Bot piše vijesti
+automatski. Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
+- POZICIONIRANJE: "sve njemačke vijesti na našem jeziku, iz minute u minutu".
+- LOGO (wordmark): "DNEVNI FILTER njemačkih vijesti" (verzal, varijanta D).
+  Staro "Kod nas u…" / "dijaspora.ba" IZBAČENO svuda.
 
 ## STACK
 - Next.js 15 (App Router, ^15.3.0), TypeScript, Tailwind
@@ -73,6 +76,22 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 - Raspored/kvote se podešavaju IZ ADMINA (bot_config: vremena + kvote_de/bih/svijet/sport),
   ne iz koda. Cilj obima ~20/dan. cron-job.org kuca /api/cron/tick svakih ~15 min.
 
+## BOT 2.0 — "LIJEVAK" (pipeline2) — GLAVNI OD 2026-07-12
+- Nova arhitektura: pročitaj mnogo, objavi malo. AI skupo radi ~8 članaka/dan.
+- Tok: ~1500 RSS → dedupe link → PRAVILA (bez AI) → KLJUČNE RIJEČI+tier (bez AI, top 40)
+  → AI TRIAŽA (JEDAN poziv, samo naslov+opis) → dedupe tema → za pobjednike writer
+  čita cijeli tekst → fact-check/jezik → draft. Trošak: centi/dan.
+- Fajlovi: lib/bot/izvori-prosireni.ts (izvori po sloju/tier), lib/bot/lijevak/pravila.ts,
+  lib/bot/lijevak/kljucne.ts, lib/bot/agenti/triaza.ts, lib/bot/pipeline2.ts. Dok: BOT-LIJEVAK.md.
+- PALJENJE: scripts/run-bot.ts sad PODRAZUMIJEVANO zove lijevak (nije potreban env).
+  Povratak na stari bot: NOVI_PIPELINE=off. (pipeline.ts ima i NOVI_PIPELINE=on prekidač.)
+- Env štimanje (opciono): PRAG_TRIAZA=68, BROJ_OBJAVA=8, TOP_ZA_TRIAZU=40, MAX_STAROST_SATI=36.
+  Za "strože/više članaka" najlakše da Claude promijeni default u kodu (env treba YAML-prolaz).
+- MEMORIJA: publisher.ts ucitajNedavneNaslove() → signal triaži (vec_poznato spusti
+  duplikat; NOVI razvoj iste teme = nova vijest). NE ažurira stare članke (odluka).
+- TVRĐA DEDUPE: dedupe.ts normLink() + istaTemaStrogo(); pipeline2 preskoči već objavljeno.
+- ⚠️ STARI pipeline.ts/izvori.ts/filter.ts/publisher.ts JOŠ imaju BiH — lijevak je čist.
+
 ## SLIKE (IMPLEMENTIRANO — Wikimedia)
 - lib/bot/slike-wikimedia.ts: izvuče IMENA iz naslova → Wikipedia (de/en) glavna
   slika (~1200px) → licenca s Commons; rezerva Commons full-text. null ako nema
@@ -92,7 +111,10 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 - lib/bot/publisher.ts — upis u Supabase + oznaciObradjeneBatch + oznaka slike
 - lib/data.ts — javni data sloj (poštuje redoslijed/zakazivanje)
 - lib/live.ts — DE/BiH/Svijet/Sport feed (naši objavljeni članci, sa slikama)
-- lib/data/vodici.ts — vodiči (hard-kodirani, sada 17 vodiča, provjereni)
+- lib/data/vodici.ts — vodiči (hard-kodirani, sada 31 vodič: viza 7, stan 8,
+  zdravstvo 8, porodica 8, posao 3, +1 finansije/porez/penzija/gastarbajter)
+- lib/bot/pipeline2.ts + lib/bot/lijevak/{pravila,kljucne}.ts + lib/bot/agenti/triaza.ts
+  + lib/bot/izvori-prosireni.ts — NOVI LIJEVAK (glavni bot). BOT-LIJEVAK.md = dok.
 - lib/useIsMobile.ts — hook za mobilnu detekciju (NOVO)
 - components/MobilnaNaslovna.tsx — 4 jednake kutije na telefonu (NOVO)
 - components/KategorijaMobilna.tsx — kategorije na telefonu kao naslovna (NOVO)

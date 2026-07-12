@@ -1,7 +1,59 @@
 # PROGRESS LOG — KODNAS.DE
 
 ## STATUS: LIVE + bogat feature set (izmjene čekaju push/merge na preview)
-Zadnji update: 2026-07-10
+Zadnji update: 2026-07-12
+
+## 🆕 SESIJA 2026-07-12 (audit, novi logo, kompletni vodiči, BOT 2.0 "lijevak", memorija, admin mobilni)
+
+### Audit sajta + čišćenje (frontend)
+- [x] Footer: rebrand, izbačena Austrija/Švicarska, izbačeni mrtvi linkovi
+      (/newsletter, /oglasavanje → /vijesti, /vodici).
+- [x] "Uvijek mrtvi" linkovi: Hero bočne kartice + NajcitanijeBox sad vuku PRAVE
+      članke iz baze (fallback = pravi vodiči). Nema više izmišljenih /clanak/.
+- [x] Izbačeni BiH-mock fallbackovi (page.tsx, NajnovijeSection, NajpopularnijeSection)
+      — prazna sekcija se sakrije umjesto lažnih linkova.
+- [x] Rebrand + de-Austrija: o-nama, vijesti, vodici, FaqBox, ai-chat.
+- [x] Newsletter forma SPOJENA na /api/newsletter (prije "TODO", nije snimala).
+
+### Logo — novi wordmark "Dnevni filter njemačkih vijesti"
+- [x] Varijanta D (verzal): "DNEVNI FILTER" + sitnije "NJEMAČKIH VIJESTI".
+      Nav.tsx (header+drawer) + Footer.tsx. Staro "Kod nas u…" izbačeno.
+
+### Vodiči — sve grupe kompletirane (17 → 31)
+- [x] Stan 1→8, Zdravstvo 1→8, Porodica 1→8. (viza 7, posao 3, +1 ostale.)
+- [x] Provjerene brojke 2026: Kindergeld 259€, Rundfunkbeitrag 18,36€,
+      Mietpreisbremse do 2029, Pflegegeld PG2~347/PG3~599/PG4~800/PG5~990€.
+- [x] Popravljena 2 ćirilična slova (jedno staro u Westbalkan vodiču).
+
+### BOT 2.0 — "LIJEVAK" (pipeline2), pali se prekidačem
+- [x] Tok: ~1500 RSS → dedupe → PRAVILA (bez AI) → KLJUČNE RIJEČI+tier (bez AI, top 40)
+      → AI TRIAŽA (JEDAN poziv, naslov+opis) → dedupe tema → pobjednici: writer
+      čita cijeli tekst → fact-check/jezik → draft. AI skupo radi ~8 članaka/dan.
+- [x] NOVO: izvori-prosireni.ts (tier), lijevak/pravila.ts, lijevak/kljucne.ts,
+      agenti/triaza.ts, pipeline2.ts. + BOT-LIJEVAK.md.
+- [x] rss.ts (fetchIzvore), pipeline.ts (NOVI_PIPELINE prekidač), run-bot.ts
+      (lijevak PODRAZUMIJEVAN; stari = NOVI_PIPELINE=off), tipovi.ts.
+- [x] Env štimanje: PRAG_TRIAZA=68, BROJ_OBJAVA=8, TOP_ZA_TRIAZU=40, MAX_STAROST_SATI=36.
+- [x] Popravke: triaža u grupama po 20 + izbačen "razlog" + zaštita (bio max_tokens crash);
+      izbačena 3 mrtva feeda (Bundesregierung/Focus/Köln). PRVI TEST (run #33) → piše draftove. ✅
+
+### Memorija tema + tvrđa dedupe (protiv ponavljanja) — BEZ diranja starih članaka
+- [x] publisher.ts ucitajNedavneNaslove() → signal triaži ("vec_poznato" spusti duplikat,
+      ali "novi razvoj iste teme" prolazi kao nova vijest).
+- [x] ODLUKA: NE ažurirati stare članke. Rezolucija štrajka = nova vijest, ne dodatak.
+- [x] dedupe.ts: normLink() + istaTemaStrogo() (≥3 iste riječi ILI jaccard ≥0.55);
+      pipeline2.ts normalizovan link-dedupe + izbaciVecObjavljene() preko dana.
+
+### Scroll fix + Admin za telefon (ponovo — prošli put nije stvarno radilo)
+- [x] ScrollNaVrh.tsx — pravi uzrok = browser scroll restoration; sad na reload
+      isključi pa forsira vrh, "nazad" i dalje pamti poziciju.
+- [x] app/admin/layout.tsx — sidebar je bio uvijek vidljiv (jeo pola ekrana!);
+      sad fioka na ☰ + sadržaj cijela širina. Logo "kodnas.de".
+- [x] app/admin/clanci/page.tsx — tabela → KARTICE na telefonu (velika dugmad). Desktop = tabela.
+
+### VAŽNO — nesklad
+- Bot-BACKEND (izvori.ts, filter.ts, publisher.ts, pipeline.ts) JOŠ IMA BiH,
+  iako je frontend očišćen. NOVI lijevak (pipeline2) je čist. Nebitno kad se koristi lijevak.
 
 ## 🆕 SESIJA 2026-07-10 (gramatika, Wikimedia slike, kategorije na telefonu, marketing)
 
