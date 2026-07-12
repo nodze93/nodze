@@ -46,6 +46,8 @@ export const IZVORI_PRO: FeedIzvorPro[] = [
   { ime: "Berlin (Morgenpost)", tier: "lokalno",  url: "https://www.morgenpost.de/berlin/rss",                 jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
   { ime: "Frankfurt (FR)",      tier: "lokalno",  url: "https://www.fr.de/frankfurt/rssfeed.rdf",              jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
   { ime: "Hamburg (Abendblatt)",tier: "lokalno",  url: "https://www.abendblatt.de/hamburg/rss",                jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
+  { ime: "Bayern (Merkur)",     tier: "lokalno",  url: "https://www.merkur.de/bayern/rssfeed.rdf",             jezik: "de", tip: "dijaspora", strana: "de" }, // cijela Bavarska
+  { ime: "Stuttgart (StZ)",     tier: "lokalno",  url: "https://www.stuttgarter-zeitung.de/news.rss.feed",     jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
 
   // ══════════════ SLOJ 4: FINANSIJE / EKONOMIJA ══════════════
   { ime: "Tagesschau Wirtschaft",tier: "finansije",url: "https://www.tagesschau.de/wirtschaft/index~rss2.xml", jezik: "de", tip: "dijaspora", strana: "de" },
