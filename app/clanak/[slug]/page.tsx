@@ -141,8 +141,6 @@ export default async function ClanakPage({ params }: Props) {
             <span>📅 {clanak.datum}</span>
             <span>·</span>
             <span>⏱ {clanak.minCitanja} min čitanja</span>
-            <span>·</span>
-            <span>👁 {clanak.procitano.toLocaleString()} pročitano</span>
           </div>
 
           {/* Naslovna slika — prava fotka ako postoji, inače uredan baner */}

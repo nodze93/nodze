@@ -233,5 +233,6 @@ export function formatirajMeta(c: DbClanak): string {
     else dijelovi.push(d.toLocaleDateString("bs-BA", { day: "numeric", month: "short" }));
   }
   dijelovi.push(`${c.min_citanja} min`);
+  // Broj čitanja (broj_pregleda) NAMJERNO nije ovdje — vidi ga samo admin.
   return dijelovi.join(" · ");
 }
