@@ -57,9 +57,13 @@ export default function HomePage() {
             samoTip="svjetske"
           />
           </div>
-          {/* Najnovije — pomjereno ispod svijeta (forma ista) */}
+          {/* Najnovije — SAMO desktop (na telefonu poslije Sporta idu odmah Vodiči) */}
+          <div className="hide-mob">
           <NajnovijeSection />
+          </div>
           <VodiciSection />
+          {/* Viza + Gastarbajter — SAMO desktop (telefon: poslije Vodiča odmah Najpopularnije) */}
+          <div className="hide-mob">
           <KategorijaSekcija
             naslov="Viza i ulazak"
             podnaslov="Chancenkarte, radna viza, Plava karta, porodično spajanje"
@@ -70,6 +74,7 @@ export default function HomePage() {
             podnaslov="Priče iz dijaspore — život, iskustva i korisni savjeti"
             kategorija="gastarbajter"
           />
+          </div>
           {/* Sport — DESKTOP (na mobilnom je u MobilnaNaslovna kutiji, ispod Svijeta) */}
           <div className="hide-mob">
           <KategorijaSekcija
