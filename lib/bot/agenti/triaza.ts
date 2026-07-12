@@ -1,13 +1,11 @@
 // ============================================================
-// LIJEVAK · KORAK 3 — AI TRIAŽA (jedan jeftin poziv na naslov+opis)
+// LIJEVAK · KORAK 3 — AI TRIAŽA (jeftini pozivi na naslov+opis)
 // ============================================================
-// AI NE čita cijele članke. Dobije listu od ~40 (naslov + kratak
-// opis) i u JEDNOM pozivu ocijeni svaki po dimenzijama. Kod onda
-// izračuna ukupnu ocjenu (težine su OVDJE, lako se štimaju) i uzme
-// samo pobjednike. Tek za njih pipeline kasnije vuče cijeli tekst.
-//
-// Trošak: ~40 kratkih stavki × ~40 tokena = par hiljada tokena,
-// jedan poziv. Doslovno centi.
+// AI NE čita cijele članke. Dobije naslov + kratak opis i ocijeni
+// svaki po dimenzijama. Radi u MANJIM grupama (batch) da odgovor
+// nikad ne pređe limit tokena. Kod onda izračuna ukupnu ocjenu
+// (težine su OVDJE) i uzme pobjednike. Tek za njih pipeline vuče
+// cijeli tekst i piše.
 
 import { pozoviSaAlatom, MODEL_BRZI } from "./claude";
 import type { Vijest, TriazaOcjena } from "../tipovi";
@@ -16,16 +14,14 @@ const TRIAZA_PROMPT = `Ti si glavni urednik portala kodnas.de — "Dnevni filter
 
 Dobićeš listu vijesti (samo naslov i kratak opis). Za SVAKU ocijeni 4 stvari, svaku od 0 do 100:
 
-1) relevantnost_de — koliko ovo utiče na svakodnevni život u Njemačkoj (zakoni, novac, cijene, posao, stan, zdravstvo, saobraćaj, vrijeme). Suha politička prepucavanja bez posljedica = nisko.
+1) relevantnost_de — koliko utiče na svakodnevni život u Njemačkoj (zakoni, novac, cijene, posao, stan, zdravstvo, saobraćaj, vrijeme). Suha politička prepucavanja bez posljedica = nisko.
 2) relevantnost_dijaspora — koliko je baš za NAS: strance/doseljenike (boravak, državljanstvo, Kindergeld, priznavanje diploma, putovanje kući, konzulati, naši ljudi vani). Ako je jednako bitno svakome ko živi u Njemačkoj, to je i za nas.
 3) hitnost — koliko je vremenski osjetljivo (štrajk sutra, upozorenje na nevrijeme, rok za prijavu). Evergreen tema = nisko.
 4) klik — hoće li naš čitalac stvarno kliknuti (jasna korist ili jaka priča), bez lažnog senzacionalizma.
 
-Takođe:
-- vec_poznato = true ako je to očito već poznata/uveliko ispričana priča od jučer/danas (da ne objavljujemo isto dvaput).
-- kategorija = najprikladnija rubrika.
+Takođe: vec_poznato = true ako je očito već ispričana priča; kategorija = najprikladnija rubrika.
 
-Budi STROG. Većina vijesti je prosječna. Visoke ocjene čuvaj za ono što stvarno mijenja ili olakšava život našim ljudima u Njemačkoj, ili je stvarno velika priča.`;
+Budi STROG. Visoke ocjene čuvaj za ono što stvarno mijenja ili olakšava život našim ljudima u Njemačkoj, ili je stvarno velika priča.`;
 
 const TRIAZA_SCHEMA = {
   type: "object" as const,
@@ -47,23 +43,23 @@ const TRIAZA_SCHEMA = {
             enum: ["viza", "posao", "stan", "zdravstvo", "porodica", "porez", "penzija",
                    "finansije", "saobracaj", "vrijeme", "vijesti", "sport", "svijet"],
           },
-          razlog: { type: "string", description: "kratko zašto" },
         },
-        required: ["index", "relevantnost_de", "relevantnost_dijaspora", "hitnost", "klik", "vec_poznato", "kategorija", "razlog"],
+        required: ["index", "relevantnost_de", "relevantnost_dijaspora", "hitnost", "klik", "vec_poznato", "kategorija"],
       },
     },
   },
   required: ["ocjene"],
 };
 
+type StavkaOcjene = Omit<TriazaOcjena, "ukupno" | "razlog">;
 interface TriazaOdgovor {
-  ocjene: Omit<TriazaOcjena, "ukupno">[];
+  ocjene: StavkaOcjene[];
 }
 
 // Težine za ukupnu ocjenu — OVDJE se štima uređivačka politika.
 const T = { de: 0.30, dijaspora: 0.30, hitnost: 0.20, klik: 0.20 };
 
-function ukupnaOcjena(o: Omit<TriazaOcjena, "ukupno">): number {
+function ukupnaOcjena(o: StavkaOcjene): number {
   let u =
     T.de * o.relevantnost_de +
     T.dijaspora * o.relevantnost_dijaspora +
@@ -74,15 +70,58 @@ function ukupnaOcjena(o: Omit<TriazaOcjena, "ukupno">): number {
 }
 
 export interface TriazaOpcije {
-  prag?: number;        // minimalna ukupna ocjena (default 68, env PRAG_TRIAZA)
-  brojObjava?: number;  // koliko ih ide dalje na pisanje (default 8)
-  kapDijaspora?: number; // max dijaspora po pokretanju (default 5)
-  kapSvijet?: number;   // max svijet (default 3)
-  kapSport?: number;    // max sport (default 3)
+  prag?: number;
+  brojObjava?: number;
+  kapDijaspora?: number;
+  kapSvijet?: number;
+  kapSport?: number;
+}
+
+// Ocijeni jednu grupu (do ~20). Vrati vijesti obogaćene triaza ocjenom.
+async function triazirajBatch(batch: Vijest[]): Promise<Vijest[]> {
+  const lista = batch
+    .map((v, idx) => `[${idx}] (${v.izvor}${v.tier ? "/" + v.tier : ""}): "${v.naslov}" — ${(v.excerpt || "").slice(0, 150)}`)
+    .join("\n");
+
+  let odgovor: TriazaOdgovor;
+  try {
+    odgovor = await pozoviSaAlatom<TriazaOdgovor>({
+      model: MODEL_BRZI,
+      system: TRIAZA_PROMPT,
+      user: `Ocijeni ovih ${batch.length} vijesti:\n\n${lista}`,
+      maxTokens: 3500,
+      toolName: "ocijeni_vijesti",
+      toolOpis: "Vrati ocjene po dimenzijama za SVAKU vijest iz liste.",
+      schema: TRIAZA_SCHEMA,
+    });
+  } catch (err) {
+    console.warn(`⚠️  Triaža batch nije uspjela: ${(err as Error).message}`);
+    return [];
+  }
+
+  // Zaštita: ako odgovor stigne krnj (bez validne liste) — preskoči batch, ne ruši.
+  if (!odgovor || !Array.isArray(odgovor.ocjene)) {
+    console.warn("⚠️  Triaža batch: odgovor bez validne liste ocjena — preskačem.");
+    return [];
+  }
+
+  const out: Vijest[] = [];
+  for (const o of odgovor.ocjene) {
+    const v = batch[o.index];
+    if (!v) continue;
+    const ukupno = ukupnaOcjena(o);
+    out.push({
+      ...v,
+      kategorija: o.kategorija || v.kategorija,
+      triaza: { ...o, ukupno },
+      score: ukupno,
+    });
+  }
+  return out;
 }
 
 /**
- * Ocijeni sve (title+desc), izračunaj ukupno, i vrati POBJEDNIKE
+ * Ocijeni sve (title+desc) u grupama, izračunaj ukupno i vrati POBJEDNIKE
  * (iznad praga, uz blage kvote po tipu da ne bude sve sport/svijet).
  */
 export async function triazirajVijesti(
@@ -99,43 +138,16 @@ export async function triazirajVijesti(
     sport: opcije.kapSport ?? 3,
   };
 
-  console.log(`🧠 Triaža: ocjenjujem ${vijesti.length} (naslov+opis, jedan poziv)...`);
+  console.log(`🧠 Triaža: ocjenjujem ${vijesti.length} (naslov+opis, u grupama po 20)...`);
 
-  const lista = vijesti
-    .map((v, idx) => `[${idx}] (${v.izvor}${v.tier ? "/" + v.tier : ""}): "${v.naslov}" — ${(v.excerpt || "").slice(0, 160)}`)
-    .join("\n");
-
-  let odgovor: TriazaOdgovor;
-  try {
-    odgovor = await pozoviSaAlatom<TriazaOdgovor>({
-      model: MODEL_BRZI,
-      system: TRIAZA_PROMPT,
-      user: `Ocijeni ovih ${vijesti.length} vijesti:\n\n${lista}`,
-      maxTokens: 4000,
-      toolName: "ocijeni_vijesti",
-      toolOpis: "Vrati ocjene po dimenzijama za SVAKU vijest iz liste.",
-      schema: TRIAZA_SCHEMA,
-    });
-  } catch (err) {
-    console.warn(`⚠️  Triaža nije uspjela: ${(err as Error).message}`);
-    return [];
-  }
-
-  // Spoji ocjene s vijestima + izračunaj ukupno
+  // Grupe po 20 — da odgovor nikad ne pređe limit tokena.
+  const BATCH = 20;
   const ocijenjene: Vijest[] = [];
-  for (const o of odgovor.ocjene) {
-    const v = vijesti[o.index];
-    if (!v) continue;
-    const ukupno = ukupnaOcjena(o);
-    ocijenjene.push({
-      ...v,
-      kategorija: o.kategorija || v.kategorija,
-      triaza: { ...o, ukupno },
-      score: ukupno, // da downstream (log/prikaz) ima jedinstven "score"
-    });
+  for (let i = 0; i < vijesti.length; i += BATCH) {
+    const dio = await triazirajBatch(vijesti.slice(i, i + BATCH));
+    ocijenjene.push(...dio);
   }
 
-  // Iznad praga, sortirano po ukupnoj ocjeni
   const iznadPraga = ocijenjene
     .filter((v) => (v.triaza?.ukupno ?? 0) >= prag)
     .sort((a, b) => (b.triaza?.ukupno ?? 0) - (a.triaza?.ukupno ?? 0));

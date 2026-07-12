@@ -62,7 +62,7 @@ export interface TriazaOcjena {
   vec_poznato: boolean;         // da li je ovo već poznata/objavljena priča danas
   kategorija: string;
   ukupno: number;               // izračunato u kodu (težinska suma) — ne od modela
-  razlog: string;
+  razlog?: string;              // opciono (izbačeno iz sheme radi uštede tokena)
 }
 
 // Rezultat Writer agenta

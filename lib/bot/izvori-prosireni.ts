@@ -27,8 +27,7 @@ export const IZVORI_PRO: FeedIzvorPro[] = [
   // Javni servis + saopštenja institucija. Ovdje je tačnost, ne senzacija.
   { ime: "Tagesschau",          tier: "sluzbeni", url: "https://www.tagesschau.de/index~rss2.xml",            jezik: "de", tip: "dijaspora", strana: "de" },
   { ime: "Tagesschau Inland",   tier: "sluzbeni", url: "https://www.tagesschau.de/inland/index~rss2.xml",     jezik: "de", tip: "dijaspora", strana: "de" },
-  { ime: "Bundesregierung",     tier: "sluzbeni", url: "https://www.bundesregierung.de/breg-de/aktuelles.rss",jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
-  { ime: "Presseportal Polizei",tier: "sluzbeni", url: "https://www.presseportal.de/rss/polizei.rss2",        jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
+  { ime: "Presseportal Polizei",tier: "sluzbeni", url: "https://www.presseportal.de/rss/polizei.rss2",        jezik: "de", tip: "dijaspora", strana: "de" },
 
   // ══════════════ SLOJ 2: VELIKI MEDIJI ══════════════
   { ime: "Spiegel",             tier: "mediji",   url: "https://www.spiegel.de/schlagzeilen/index.rss",       jezik: "de", tip: "dijaspora", strana: "de" },
@@ -36,7 +35,6 @@ export const IZVORI_PRO: FeedIzvorPro[] = [
   { ime: "Süddeutsche",         tier: "mediji",   url: "https://rss.sueddeutsche.de/rss/Topthemen",            jezik: "de", tip: "dijaspora", strana: "de" },
   { ime: "FAZ",                 tier: "mediji",   url: "https://www.faz.net/rss/aktuell/",                     jezik: "de", tip: "dijaspora", strana: "de" },
   { ime: "n-tv",                tier: "mediji",   url: "https://www.n-tv.de/rss",                              jezik: "de", tip: "dijaspora", strana: "de" },
-  { ime: "Focus",               tier: "mediji",   url: "https://rss.focus.de/fol/XML/rss_folnews.xml",         jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
   { ime: "DW Deutsch",          tier: "mediji",   url: "https://rss.dw.com/rdf/rss-de-all",                    jezik: "de", tip: "dijaspora", strana: "de" },
   // DW Bosanski: naš jezik, ali piše o Njemačkoj → strana "de"
   { ime: "DW Bosanski",         tier: "mediji",   url: "https://rss.dw.com/rdf/rss-bos-all",                   jezik: "bs", tip: "dijaspora", strana: "de" },
@@ -48,7 +46,6 @@ export const IZVORI_PRO: FeedIzvorPro[] = [
   { ime: "Berlin (Morgenpost)", tier: "lokalno",  url: "https://www.morgenpost.de/berlin/rss",                 jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
   { ime: "Frankfurt (FR)",      tier: "lokalno",  url: "https://www.fr.de/frankfurt/rssfeed.rdf",              jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
   { ime: "Hamburg (Abendblatt)",tier: "lokalno",  url: "https://www.abendblatt.de/hamburg/rss",                jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
-  { ime: "Köln (Stadt-Anz.)",   tier: "lokalno",  url: "https://www.ksta.de/feed/index.rss",                   jezik: "de", tip: "dijaspora", strana: "de" }, // provjeri
 
   // ══════════════ SLOJ 4: FINANSIJE / EKONOMIJA ══════════════
   { ime: "Tagesschau Wirtschaft",tier: "finansije",url: "https://www.tagesschau.de/wirtschaft/index~rss2.xml", jezik: "de", tip: "dijaspora", strana: "de" },
