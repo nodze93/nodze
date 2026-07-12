@@ -29,6 +29,40 @@ export interface Vijest {
   score?: number;
   razlogFiltera?: string;
   kategorija?: string;
+  // ── NOVI LIJEVAK (pipeline2) — sve opcionalno, ne dira stari pipeline ──
+  tier?: TierIzvora;      // sloj izvora (sluzbeni, mediji, lokalno...)
+  predScore?: number;     // bodovi iz jeftinog (bez-AI) keyword/tier filtera
+  triaza?: TriazaOcjena;  // ocjena AI triaže (title+desc)
+}
+
+// ── NOVI LIJEVAK: slojevi izvora (tier) ──────────────────────
+// Sluzbeni = najviše povjerenje (vlada, ministarstva, policija, DWD...).
+export type TierIzvora =
+  | "sluzbeni"
+  | "mediji"
+  | "lokalno"
+  | "poslovi"
+  | "vrijeme"
+  | "saobracaj"
+  | "finansije"
+  | "eu";
+
+// Prošireni izvor sa slojem (tier). Nasljeđuje sve iz FeedIzvor.
+export interface FeedIzvorPro extends FeedIzvor {
+  tier: TierIzvora;
+}
+
+// Rezultat AI triaže za jednu vijest (ocjena samo na naslov+opis).
+export interface TriazaOcjena {
+  index: number;
+  relevantnost_de: number;      // 0-100: koliko je bitno za život u Njemačkoj
+  relevantnost_dijaspora: number; // 0-100: koliko baš za NAŠU dijasporu
+  hitnost: number;              // 0-100: koliko je hitno/vremenski osjetljivo
+  klik: number;                 // 0-100: hoće li čitalac kliknuti
+  vec_poznato: boolean;         // da li je ovo već poznata/objavljena priča danas
+  kategorija: string;
+  ukupno: number;               // izračunato u kodu (težinska suma) — ne od modela
+  razlog: string;
 }
 
 // Rezultat Writer agenta
@@ -40,7 +74,6 @@ export interface GeneriraniClanak {
   min_citanja: number;
   izvori: string[];
   slika_pojmovi?: string; // engleski pojmovi za Unsplash pretragu
-  pozadina?: string; // opcionalni "Podsjetnik" box (1-2 rečenice), prazan ako ne treba
 }
 
 // Rezultat Fact-check agenta
@@ -70,14 +103,6 @@ export interface JezikRezultat {
   ispravke: { original: string; ispravljeno: string; razlog: string }[];
   ocjena: "cisto" | "sitne_greske" | "puno_gresaka";
   komentar: string;
-}
-
-// Normalizovana slika (Wikimedia ILI Unsplash) — jedinstven oblik za upis
-export interface SlikaInfo {
-  url: string;
-  autor: string;
-  izvor: "wikimedia" | "unsplash";
-  licenca?: string;
 }
 
 export interface PipelineRezultat {

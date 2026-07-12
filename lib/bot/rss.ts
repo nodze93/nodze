@@ -37,9 +37,11 @@ async function fetchJedanFeed(izvor: FeedIzvor): Promise<Vijest[]> {
   }
 }
 
-export async function fetchSveVijesti(): Promise<Vijest[]> {
-  console.log(`📡 Čitam ${RSS_IZVORI.length} RSS feedova...`);
-  const rezultati = await Promise.allSettled(RSS_IZVORI.map(fetchJedanFeed));
+// Čitaj PROIZVOLJAN spisak izvora (koristi novi lijevak s IZVORI_PRO).
+// FeedIzvorPro nasljeđuje FeedIzvor, pa se prosljeđuje bez izmjena.
+export async function fetchIzvore(izvori: FeedIzvor[]): Promise<Vijest[]> {
+  console.log(`📡 Čitam ${izvori.length} RSS feedova...`);
+  const rezultati = await Promise.allSettled(izvori.map(fetchJedanFeed));
   const vijesti = rezultati
     .filter((r): r is PromiseFulfilledResult<Vijest[]> => r.status === "fulfilled")
     .flatMap((r) => r.value);
@@ -53,4 +55,8 @@ export async function fetchSveVijesti(): Promise<Vijest[]> {
 
   console.log(`📡 Prikupljeno ${vijesti.length} vijesti (${svjeze.length} svježih < 48h)`);
   return svjeze;
+}
+
+export async function fetchSveVijesti(): Promise<Vijest[]> {
+  return fetchIzvore(RSS_IZVORI);
 }

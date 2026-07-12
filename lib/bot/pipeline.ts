@@ -1,23 +1,20 @@
 // ============================================================
 // PIPELINE ORCHESTRATOR — srce bota
 // ============================================================
-// RSS + Trends → Filter (1) → Writer (2) → Fact-check (3, samo dijaspora)
-//              → Jezik/lektor (4) → Gramatika (5, samo gramatika) → Supabase DRAFT
+// RSS + Trends → Filter (1) → Writer (2) → Fact-check (3)
+//              → Context (4) → Jezik (5) → Supabase DRAFT
 //
-// Context provjera je isključena radi uštede (nije se koristila u adminu).
-// Ti na kraju u adminu vidiš 🟢🟡🔴 i odobriš jednim klikom.
+// Svaki članak prolazi svih 5 kontrola. Ti na kraju u adminu
+// vidiš 🟢🟡🔴 i odobriš jednim klikom.
 import { fetchSveVijesti } from "./rss";
 import { fetchTrends } from "./trends";
 import { filterVijesti } from "./agenti/filter";
 import { writeClanak } from "./agenti/writer";
-import { factcheckClanak } from "./agenti/factcheck";
-import { gramatikaProlaz } from "./agenti/gramatika";
-import { temaTokeni, istaTema } from "./dedupe";
-import { bosaniziraj } from "./bosanski";
-import { ucitajObradjene, ucitajTeme, ucitajNaslove, oznaciTema, oznaciNaslov, oznaciObradjen, oznaciObradjeneBatch, sacuvajDraft, logujPipeline } from "./publisher";
+import { factcheckClanak, contextCheck } from "./agenti/factcheck";
+import { jezikCheck } from "./agenti/jezik";
+import { ucitajObradjene, sacuvajDraft, logujPipeline } from "./publisher";
 import { nadjiSliku } from "./slike";
-import { nadjiSlikuWiki } from "./slike-wikimedia";
-import type { PipelineRezultat, FactcheckRezultat, ContextRezultat, SlikaInfo, JezikRezultat } from "./tipovi";
+import type { PipelineRezultat, FactcheckRezultat } from "./tipovi";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -30,19 +27,14 @@ const FACTCHECK_PRESKOCEN: FactcheckRezultat = {
   preporuka: "Fact-check preskočen (sport/svijet — niži rizik).",
 };
 
-// Context provjera je ISKLJUČENA (ušteda: jedan Claude poziv po svakom članku).
-// Vraćala je samo true/false kućice koje se u adminu ne koriste. Zadržavamo
-// default objekat da baza (context_report kolona) ostane ista.
-const CONTEXT_DEFAULT: ContextRezultat = {
-  ton_ok: true,
-  dijaspora_kontekst: true,
-  ima_linkove: true,
-  naslov_ok: true,
-  excerpt_ok: true,
-  sugestije: [],
-};
-
 export async function pokreniPipeline(): Promise<PipelineRezultat> {
+  // NOVI LIJEVAK: ako je uključen, preusmjeri na pipeline2 i izađi.
+  // (Stari kod ispod ostaje netaknut kao sigurnosna mreža / fallback.)
+  if (process.env.NOVI_PIPELINE === "on") {
+    const { pokreniPipeline2 } = await import("./pipeline2");
+    return pokreniPipeline2();
+  }
+
   const start = Date.now();
   console.log("\n🚀 ========== DIJASPORA BOT ==========");
   console.log(`⏰ ${new Date().toISOString()}\n`);
@@ -81,22 +73,15 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
     }
 
     // ── 3. Filter Agent — kvote po grupi (env podesivo) ─
-    // Default: 1 DE + 1 svijet + 1 sport po pokretanju. (BiH rubrika uklonjena.)
+    // Default: 1 DE + 1 BiH + 1 svijet + 1 sport po pokretanju.
+    // DE i BiH su ODVOJENI — BiH nikad ne ostane prazan.
     const kDE = parseInt(process.env.CLANCI_DE || process.env.CLANCI_DIJASPORA || "1", 10);
+    const kBih = parseInt(process.env.CLANCI_BIH || "1", 10);
     const kSvijet = parseInt(process.env.CLANCI_SVIJET || "1", 10);
     const kSport = parseInt(process.env.CLANCI_SPORT || "1", 10);
 
-    // Nedavno pokrivene teme (zadnjih ~300 članaka) — da filter bira RAZLIČITE
-    // priče, a ne istu veliku vijest (npr. zdravstvenu reformu) opet i opet.
-    const vidjeneTeme = (await ucitajTeme()).map(temaTokeni);
-
-    const filtrirane = await filterVijesti(nove, trends, kDE, kSvijet, kSport, vidjeneTeme);
+    const filtrirane = await filterVijesti(nove, trends, kDE, kBih, kSvijet, kSport);
     rez.prosloFilter = filtrirane.length;
-
-    // ⚡ UŠTEDA: zapamti SVE vijesti koje su prošle kroz filter kao "viđene".
-    // Bez ovoga filter (Claude) ponovo ocjenjuje istih ~140 vijesti svakih
-    // 15 min. Ovako sljedeći run gleda samo stvarno nove vijesti.
-    await oznaciObradjeneBatch(nove.map((v) => v.link));
 
     if (filtrirane.length === 0) {
       console.log("❌ Nijedna vijest nije prošla filter (prag 6/10).");
@@ -105,18 +90,8 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
     }
 
     // ── 4-5-6-7. Writer → Fact-check → Context → Jezik → Draft
-    // Dedupe po TEMI: naslovi nedavno napisanih priča (hvata istu vijest
-    // koja dođe s drugog izvora/linka — link-dedupe to ne uhvati).
-    const vidjeniNaslovi = (await ucitajNaslove()).map(temaTokeni);
     for (const vijest of filtrirane) {
       try {
-        // Ista priča s drugog izvora → preskoči (da ne pišemo duplikat).
-        const teme = temaTokeni(vijest.naslov);
-        if (vidjeneTeme.some((t) => istaTema(teme, t))) {
-          console.log(`   ⏭️  Duplikat teme — preskačem: ${vijest.naslov.slice(0, 55)}`);
-          await oznaciObradjen(vijest.link);
-          continue;
-        }
         console.log(`\n─── ${vijest.naslov.slice(0, 60)} ───`);
 
         const { clanak, izvorniTekst, zvanicniUrl } = await writeClanak(vijest);
@@ -126,64 +101,27 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
         }
 
         // Fact-check SAMO za dijaspora članke (viši rizik/preciznost).
-        // Sport i svijet ga preskaču radi uštede. Context provjera isključena
-        // (ušteda jednog Claude poziva po članku) — koristimo default.
+        // Sport i svijet preskaču fact-check radi uštede. Context ostaje.
         const jeDijaspora = vijest.tip === "dijaspora";
         if (!jeDijaspora) {
           console.log("   ⏭️  Fact-check preskočen (sport/svijet)");
         }
-        const factcheck = jeDijaspora
-          ? await factcheckClanak(clanak, izvorniTekst)
-          : FACTCHECK_PRESKOCEN;
-        const context = CONTEXT_DEFAULT;
+        const [factcheck, context] = await Promise.all([
+          jeDijaspora
+            ? factcheckClanak(clanak, izvorniTekst)
+            : Promise.resolve(FACTCHECK_PRESKOCEN),
+          contextCheck(clanak),
+        ]);
 
-        // JEDAN jezički prolaz — Sonnet (gramatika + kroatizmi).
-        // Stari Haiku lektor je UKLONJEN; Sonnet ga zamjenjuje (bolja gramatika,
-        // a trošak sličan jer je nestao cijeli jedan prolaz).
-        const gram = await gramatikaProlaz({
+        // Jezik (lektor) — zadnja stanica
+        const jezik = await jezikCheck({
           naslov: clanak.naslov,
           excerpt: clanak.excerpt,
           sadrzaj: clanak.sadrzaj,
         });
-        const jezik: JezikRezultat = {
-          ispravljen_naslov: gram.naslov,
-          ispravljen_excerpt: gram.excerpt,
-          ispravljen_sadrzaj: gram.sadrzaj,
-          broj_ispravki: gram.broj_ispravki,
-          ispravke: (gram.ispravke || []).map((i) => ({
-            original: i.original, ispravljeno: i.ispravljeno, razlog: "gramatika/jezik",
-          })),
-          ocjena: gram.ocjena,
-          komentar: "Sonnet jezički prolaz (bez zasebnog Haiku lektora)",
-        };
 
-        // Besplatni deterministički popravak kroatizama (0 troška, 100% pouzdano).
-        jezik.ispravljen_naslov = bosaniziraj(jezik.ispravljen_naslov);
-        jezik.ispravljen_excerpt = bosaniziraj(jezik.ispravljen_excerpt);
-        jezik.ispravljen_sadrzaj = bosaniziraj(jezik.ispravljen_sadrzaj);
-
-        // Dedupe po GOTOVOM naslovu — najjači sloj: hvata istu priču čak i
-        // kad su izvorni naslovi drugačije sročeni (npr. dva članka isti dan
-        // s istog izvora o istoj reformi).
-        const finalNaslov = jezik.ispravljen_naslov || clanak.naslov;
-        const naslovTk = temaTokeni(finalNaslov);
-        if (vidjeniNaslovi.some((t) => istaTema(naslovTk, t))) {
-          console.log(`   ⏭️  Duplikat (naslov) — preskačem: ${finalNaslov.slice(0, 55)}`);
-          await oznaciObradjen(vijest.link);
-          continue;
-        }
-
-        // Naslovna slika: PRVO Wikimedia (prava, besplatna, sigurna za Njemačku),
-        // pa Unsplash kao rezerva ako Wikimedia nema ništa relevantno.
-        const pojam = clanak.slika_pojmovi || vijest.naslov;
-        let slika: SlikaInfo | null = null;
-        const wiki = await nadjiSlikuWiki(pojam);
-        if (wiki) {
-          slika = { url: wiki.url, autor: wiki.autor, izvor: "wikimedia", licenca: wiki.licenca };
-        } else {
-          const u = await nadjiSliku(pojam);
-          if (u) slika = { url: u.url, autor: u.autor, izvor: "unsplash" };
-        }
+        // Naslovna slika (Unsplash — samo URL, ne čuvamo fajl)
+        const slika = await nadjiSliku(clanak.slika_pojmovi || vijest.naslov);
 
         const slug = await sacuvajDraft({ clanak, vijest, factcheck, context, jezik, zvanicniUrl, slika });
         if (slug) {
@@ -194,12 +132,6 @@ export async function pokreniPipeline(): Promise<PipelineRezultat> {
             slug,
             kategorija: clanak.kategorija,
           });
-          // Zapamti temu (izvorni naslov) I gotov naslov — za dedupe u ovom i
-          // budućim runovima (dva sloja: po izvoru + po gotovom naslovu).
-          vidjeneTeme.push(teme);
-          vidjeniNaslovi.push(naslovTk);
-          await oznaciTema(vijest.naslov);
-          await oznaciNaslov(finalNaslov);
         } else {
           rez.greske++;
         }
