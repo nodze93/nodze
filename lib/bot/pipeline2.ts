@@ -21,7 +21,7 @@ import { IZVORI_PRO } from "./izvori-prosireni";
 import { primijeniPravila } from "./lijevak/pravila";
 import { bodujKljucnim } from "./lijevak/kljucne";
 import { triazirajVijesti } from "./agenti/triaza";
-import { temaTokeni, istaTema } from "./dedupe";
+import { temaTokeni, istaTema, istaTemaStrogo, normLink } from "./dedupe";
 import { writeClanak } from "./agenti/writer";
 import { factcheckClanak, contextCheck } from "./agenti/factcheck";
 import { jezikCheck } from "./agenti/jezik";
@@ -39,6 +39,7 @@ const FACTCHECK_PRESKOCEN: FactcheckRezultat = {
 };
 
 // Izbaci istu priču koja se pojavila iz dva izvora (poredi teme naslova).
+// UNUTAR jednog pokretanja → koristi blažu istaTema.
 function izbaciDuplikateTeme(vijesti: Vijest[]): Vijest[] {
   const zadrzane: { v: Vijest; tokeni: Set<string> }[] = [];
   for (const v of vijesti) {
@@ -47,6 +48,19 @@ function izbaciDuplikateTeme(vijesti: Vijest[]): Vijest[] {
     zadrzane.push({ v, tokeni });
   }
   return zadrzane.map((z) => z.v);
+}
+
+// Izbaci ono što je već objavljeno RANIJIH dana (skoro identičan naslov).
+// STROG prag — da "novi razvoj iste teme" (npr. rezolucija štrajka) prođe.
+function izbaciVecObjavljene(vijesti: Vijest[], memNaslovi: string[]): Vijest[] {
+  if (memNaslovi.length === 0) return vijesti;
+  const memTok = memNaslovi.map((n) => temaTokeni(n));
+  return vijesti.filter((v) => {
+    const t = temaTokeni(v.naslov);
+    const dup = memTok.some((m) => istaTemaStrogo(m, t));
+    if (dup) console.log(`   🧯 Preskočeno (već objavljeno ranije): ${v.naslov.slice(0, 55)}`);
+    return !dup;
+  });
 }
 
 export async function pokreniPipeline2(): Promise<PipelineRezultat> {
@@ -73,9 +87,10 @@ export async function pokreniPipeline2(): Promise<PipelineRezultat> {
       return rez;
     }
 
-    // ── 2. Dedupe po linku (već obrađeno) ──────────────────────
+    // ── 2. Dedupe po linku (već obrađeno) — normalizovani link ─
     const obradjeni = await ucitajObradjene();
-    const nove = vijesti.filter((v) => !obradjeni.has(v.link));
+    const obradjeniNorm = new Set(Array.from(obradjeni).map(normLink));
+    const nove = vijesti.filter((v) => !obradjeniNorm.has(normLink(v.link)));
     console.log(`🔁 Dedupe (link): ${vijesti.length} → ${nove.length} novih`);
     if (nove.length === 0) {
       await zavrsi(rez, start, "uspjeh", null);
@@ -94,15 +109,18 @@ export async function pokreniPipeline2(): Promise<PipelineRezultat> {
     // ── 5. AI TRIAŽA (jedan poziv na naslov+opis) → pobjednici ─
     // Memorija tema: naslovi objavljeni zadnjih par dana → signal triaži
     // (ne da izbaci istu temu, nego da prepozna "isto" vs "novi razvoj").
-    const memorija = await ucitajNedavneNaslove(3, 30);
-    if (memorija.length) console.log(`🧠 Memorija: ${memorija.length} nedavnih naslova (signal triaži)`);
-    let izabrane = await triazirajVijesti(uzak, { vecPokriveno: memorija });
+    const memorija = await ucitajNedavneNaslove(3, 50);
+    if (memorija.length) console.log(`🧠 Memorija: ${memorija.length} nedavnih naslova (signal + dedupe)`);
+    let izabrane = await triazirajVijesti(uzak, { vecPokriveno: memorija.slice(0, 30) });
 
-    // ── 6. Dedupe po TEMI (ista priča iz dva izvora) ───────────
+    // ── 6. Dedupe po TEMI ──────────────────────────────────────
+    // (a) unutar pokretanja: ista priča iz dva izvora
+    // (b) preko dana: skoro identičan naslov već objavljen ranije
     const prijeTeme = izabrane.length;
     izabrane = izbaciDuplikateTeme(izabrane);
+    izabrane = izbaciVecObjavljene(izabrane, memorija);
     if (izabrane.length < prijeTeme) {
-      console.log(`🧯 Tema-dedupe: ${prijeTeme} → ${izabrane.length} (izbačene duple priče)`);
+      console.log(`🧯 Tema-dedupe: ${prijeTeme} → ${izabrane.length} (duple/već objavljene priče)`);
     }
     rez.prosloFilter = izabrane.length;
 

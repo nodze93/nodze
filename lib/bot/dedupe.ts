@@ -51,6 +51,7 @@ export function temaTokeni(naslov: string): Set<string> {
 // Da li su dva skupa tokena "ista priča"?
 // Pošto su glagoli/punila izbačeni, ostaju uglavnom teme (imenice/imena):
 // ≥2 zajedničke teme ILI Jaccard ≥ 0.4 → tretiramo kao istu priču.
+// (Koristi se za dedupe UNUTAR jednog pokretanja.)
 export function istaTema(a: Set<string>, b: Set<string>): boolean {
   if (a.size === 0 || b.size === 0) return false;
   let shared = 0;
@@ -58,4 +59,28 @@ export function istaTema(a: Set<string>, b: Set<string>): boolean {
   if (shared === 0) return false;
   const jaccard = shared / (a.size + b.size - shared);
   return shared >= 2 || jaccard >= 0.4;
+}
+
+// STROGA verzija — za dedupe PREKO pokretanja (protiv istog članka drugi dan).
+// Viši prag namjerno: hvata SKORO IDENTIČNE naslove, ali NE "novi razvoj iste
+// teme" (npr. rezolucija štrajka ima druge ključne riječi pa prolazi).
+export function istaTemaStrogo(a: Set<string>, b: Set<string>): boolean {
+  if (a.size === 0 || b.size === 0) return false;
+  let shared = 0;
+  for (const w of a) if (b.has(w)) shared++;
+  if (shared === 0) return false;
+  const jaccard = shared / (a.size + b.size - shared);
+  return shared >= 3 || jaccard >= 0.55;
+}
+
+// Normalizuj link za dedupe: skini query/fragment i trailing slash, mala slova.
+// Tako isti članak s različitim tracking parametrima ne prođe dvaput.
+export function normLink(link: string): string {
+  if (!link) return "";
+  try {
+    const u = new URL(link);
+    return (u.origin + u.pathname).replace(/\/+$/, "").toLowerCase();
+  } catch {
+    return link.split(/[?#]/)[0].replace(/\/+$/, "").toLowerCase();
+  }
 }
