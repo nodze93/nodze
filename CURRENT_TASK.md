@@ -80,15 +80,41 @@ cijeli tekst i piše → fact-check/jezik → draft.
   frontend očišćen. NOVI lijevak (pipeline2) je već čist. Kad se koristi lijevak,
   nesklad je nebitan. (Opcija: očistiti i stari pipeline od BiH — nije urađeno.)
 
+## 10. DODATNO (nastavak iste sesije, poslije memory-savea)
+- HeroRotator.tsx — na telefonu naslovna slika pokazuje SAMO naslov (opis/excerpt
+  sakriven klasom .hero-excerpt), da nije previše teksta na slici.
+- app/page.tsx — na telefonu poslije DE/Svijet/Sport kutija idu ODMAH Vodiči pa
+  Najpopularnije; Najnovije + Viza + Gastarbajter sakriveni na telefonu (hide-mob).
+  Desktop netaknut.
+- ⏰ ZAKAZIVANJE vraćeno u app/admin/clanci/page.tsx (bilo ispalo!): dugme na
+  draftovima (tabela + kartice), modal za vrijeme, oznaka "⏰ Zakazan". Zakazani
+  članak se MOŽE premjestiti (klik na oznaku ILI ⏰) ili "Objavi odmah". API
+  route [id] popravljen: datum_objave = termin (da iskoči na vrh kad dođe vrijeme).
+- izvori-prosireni.ts — dodani lokalni feedovi: Bayern (Merkur, radi) + Stuttgart
+  (StZ, // provjeri).
+- FACEBOOK objava — 🔵 FB dugme dodano u admin/clanci (uz OBJAVLJENE članke, tabela+
+  kartice) → poziva /api/admin/fb-share. Popravljen stari domen dijaspora.ba →
+  kodnas.de u dijeljenju na app/clanak/[slug]/page.tsx (FB/Telegram/WhatsApp).
+
+## ⏸️ STALI SMO OVDJE — FACEBOOK objava (nastaviti sljedeći put)
+Kod je GOTOV (dugme + funkcija lib/bot/facebook.ts + ruta fb-share). Čeka KORISNIKA:
+  1. Supabase: pokreni supabase/facebook.sql (kolona fb_post_id).
+  2. Meta postavka: FB stranica → developers.facebook.com app → Page Access Token
+     (pages_manage_posts + pages_read_engagement) → dugotrajni token + Page ID.
+  3. Vercel env: FB_PAGE_ID + FB_PAGE_TOKEN (token upisuje SAM korisnik).
+Kad korisnik dođe: proći kroz Graph API Explorer korak-po-korak za token (on kliktaš,
+Claude navodi; token ostaje kod korisnika). Opcija poslije: auto-objava na "Objavi".
+
 ## SLJEDEĆE (dogovoreno, nije urađeno)
-- ADUT: "Šta ovo znači za dijasporu?" okvir ispod svakog članka (ko je pogođen,
-  treba li nešto uraditi, od kada važi, važi li svuda ili samo neke pokrajine,
-  link na službeni izvor). PRVI sljedeći zadatak.
+- FACEBOOK (vidi gore) — prvo kad korisnik dođe.
+- ADUT: "Šta ovo znači za dijasporu?" okvir ispod svakog članka.
 - Trend detector (5 izvora ista tema u sat → prioritet) — poslije memorije.
 - Geo score — kasnije (treba podatke gdje su čitaoci).
-- Ostali admin ekrani (Dashboard, Pipeline, uređivanje članka, moderacijski prozor)
-  mogu imati sitnije mobilne probleme — po potrebi (screenshot).
+- Analitika (objašnjeno, nije rađeno): GA4 + Microsoft Clarity (heatmape/klikovi),
+  ali traži cookie-banner + Datenschutz. Vercel Analytics već radi (osnovno).
+- Ostali admin ekrani mogu imati sitnije mobilne probleme (po potrebi, screenshot).
 - Faza 1.5: DWD (vrijeme) + Deutsche Bahn (štrajk) preko posebnog fetchera (JSON/API).
 
 ## STATUS
-🟢 Lijevak radi i piše. Čeka Commit → Push. Sljedeće: "Šta ovo znači za dijasporu?".
+🟢 Lijevak radi i piše. ⏸️ Stali kod Facebook objave (čeka korisnikovu Meta postavku).
+Sve ostalo upisano — čeka Commit → Push.
