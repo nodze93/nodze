@@ -4,7 +4,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { osvjeziSajt } from "@/lib/revalidate";
-import { objaviNaFacebook } from "@/lib/bot/facebook";
 
 export const dynamic = "force-dynamic";
 
@@ -49,11 +48,12 @@ async function azuriraj(req: Request, { params }: Props) {
   // podrška za camelCase iz starog UI-ja
   if (body.minCitanja !== undefined) izmjene.min_citanja = body.minCitanja;
 
-  // Kad se objavljuje — upiši datum objave. Ako je članak ZAKAZAN za budućnost,
-  // datum objave = to buduće vrijeme (da pokaže tačan datum kad se pojavi).
+  // Kad se objavljuje — upiši datum objave.
+  // Ako je zakazano za BUDUĆNOST → datum_objave = to vrijeme (da članak iskoči
+  // na vrh tek kad mu dođe termin, a ne odmah).
   if (izmjene.status === "published") {
-    const z = izmjene.zakazano_za ? new Date(izmjene.zakazano_za as string) : null;
-    izmjene.datum_objave = (z && z.getTime() > Date.now() ? z : new Date()).toISOString();
+    const z = typeof izmjene.zakazano_za === "string" ? Date.parse(izmjene.zakazano_za) : NaN;
+    izmjene.datum_objave = !isNaN(z) && z > Date.now() ? izmjene.zakazano_za : new Date().toISOString();
   }
 
   try {
@@ -68,23 +68,6 @@ async function azuriraj(req: Request, { params }: Props) {
 
     // Osvježi sajt odmah da izmjena/objava odmah pređe na naslovnu/kategorije
     osvjeziSajt();
-
-    // AUTO-OBJAVA NA FACEBOOK — samo kad se članak PRVI PUT objavi I ODMAH.
-    // Ako je ZAKAZAN za budućnost, NE objavljuj na FB sada (link bi vodio na
-    // skriven članak); podijeliš ga ručno kad se pojavi, ili kasnije dodamo cron.
-    const zakazanoBuduce = izmjene.zakazano_za && new Date(izmjene.zakazano_za as string).getTime() > Date.now();
-    if (izmjene.status === "published" && data && !data.fb_post_id && !zakazanoBuduce) {
-      try {
-        const fb = await objaviNaFacebook({
-          naslov: data.naslov, slug: data.slug, slika: data.slika, excerpt: data.excerpt,
-        });
-        if (fb.ok && fb.postId) {
-          await db.from("clanci").update({ fb_post_id: fb.postId }).eq("id", id);
-        }
-      } catch {
-        /* FB objava ne smije srušiti objavu članka */
-      }
-    }
 
     return NextResponse.json({
       ok: true,
