@@ -2,15 +2,8 @@
 // PUBLISHER — upis u Supabase (SERVICE ROLE — zaobilazi RLS)
 // ============================================================
 import { createServerClient } from "../supabase";
-import type { Vijest, GeneriraniClanak, FactcheckRezultat, ContextRezultat, JezikRezultat, SlikaInfo } from "./tipovi";
-
-// Formatiraj oznaku autora slike prema izvoru (Wikimedia traži autora + licencu).
-function oznakaSlike(s: SlikaInfo): string {
-  if (s.izvor === "wikimedia") {
-    return `${s.autor} — Wikimedia Commons${s.licenca ? ` (${s.licenca})` : ""}`;
-  }
-  return `${s.autor} / Unsplash`;
-}
+import type { Vijest, GeneriraniClanak, FactcheckRezultat, ContextRezultat, JezikRezultat } from "./tipovi";
+import type { UnsplashSlika } from "./slike";
 
 // Slug: ispravno mapiranje naših slova (đ→d, ne đ→s!)
 export function napraviSlug(naslov: string): string {
@@ -37,7 +30,6 @@ export async function ucitajObradjene(): Promise<Set<string>> {
   const { data, error } = await db
     .from("obradjeni_linkovi")
     .select("link")
-    .not("link", "like", "%::%") // interni "tema::"/"nas::" redovi se čitaju posebno
     .order("created_at", { ascending: false })
     .limit(2000);
   if (error) {
@@ -47,82 +39,28 @@ export async function ucitajObradjene(): Promise<Set<string>> {
   return new Set((data || []).map((r: { link: string }) => r.link));
 }
 
-// Prefiks za "tema" redove u obradjeni_linkovi (dedupe po temi, bez nove tabele).
-const TEMA_PREFIX = "tema::";
-
-// Učitaj nedavne teme (naslove već napisanih priča) za dedupe po temi.
-export async function ucitajTeme(limit = 300): Promise<string[]> {
-  const db = createServerClient();
-  const { data, error } = await db
-    .from("obradjeni_linkovi")
-    .select("link")
-    .like("link", `${TEMA_PREFIX}%`)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (error) {
-    console.warn(`⚠️  Teme učitavanje: ${error.message}`);
-    return [];
-  }
-  return (data || []).map((r: { link: string }) => r.link.slice(TEMA_PREFIX.length));
-}
-
-// Zapamti temu (naslov IZVORA) napisanog članka — da se ista priča ne piše opet.
-export async function oznaciTema(naslov: string): Promise<void> {
-  if (!naslov) return;
-  const db = createServerClient();
-  await db
-    .from("obradjeni_linkovi")
-    .upsert({ link: TEMA_PREFIX + naslov.slice(0, 300) }, { onConflict: "link", ignoreDuplicates: true });
-}
-
-// Prefiks za GOTOVE (bosanske) naslove — jači dedupe (ista priča i kad su
-// izvorni naslovi drugačije sročeni; naš pisac generiše slične naslove).
-const NASLOV_PREFIX = "nas::";
-
-export async function ucitajNaslove(limit = 300): Promise<string[]> {
-  const db = createServerClient();
-  const { data, error } = await db
-    .from("obradjeni_linkovi")
-    .select("link")
-    .like("link", `${NASLOV_PREFIX}%`)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (error) {
-    console.warn(`⚠️  Naslovi učitavanje: ${error.message}`);
-    return [];
-  }
-  return (data || []).map((r: { link: string }) => r.link.slice(NASLOV_PREFIX.length));
-}
-
-export async function oznaciNaslov(naslov: string): Promise<void> {
-  if (!naslov) return;
-  const db = createServerClient();
-  await db
-    .from("obradjeni_linkovi")
-    .upsert({ link: NASLOV_PREFIX + naslov.slice(0, 300) }, { onConflict: "link", ignoreDuplicates: true });
-}
-
 export async function oznaciObradjen(link: string): Promise<void> {
   const db = createServerClient();
   await db.from("obradjeni_linkovi").upsert({ link });
 }
 
-/**
- * Zapamti VIŠE linkova odjednom kao "viđene" (dedupe).
- * VAŽNO za trošak: bez ovoga filter (Claude) ponovo ocjenjuje iste
- * ~140 vijesti svakih 15 min. Ovako svaki sljedeći run gleda samo
- * stvarno nove vijesti → drastično manje Claude poziva.
- */
-export async function oznaciObradjeneBatch(linkovi: string[]): Promise<void> {
-  if (linkovi.length === 0) return;
+// MEMORIJA TEMA: naslovi koje smo zadnjih par dana već obradili (draft + objavljeni).
+// Triaža ih dobije kao signal — NE da se slijepo izbaci ista tema, nego da AI
+// prepozna "ista priča bez novog" vs "novi razvoj iste teme". Ne dira članke.
+export async function ucitajNedavneNaslove(danaUnazad = 3, limit = 30): Promise<string[]> {
   const db = createServerClient();
-  const jedinstveni = Array.from(new Set(linkovi.filter(Boolean)));
-  const redovi = jedinstveni.map((link) => ({ link }));
-  const { error } = await db
-    .from("obradjeni_linkovi")
-    .upsert(redovi, { onConflict: "link", ignoreDuplicates: true });
-  if (error) console.warn(`⚠️  Batch dedupe upis: ${error.message}`);
-  else console.log(`   🔖 Zapamćeno ${jedinstveni.length} vijesti (neće se opet filtrirati)`);
+  const odKad = new Date(Date.now() - danaUnazad * 86400_000).toISOString();
+  const { data, error } = await db
+    .from("clanci")
+    .select("naslov, created_at")
+    .gte("created_at", odKad)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn(`⚠️  Memorija naslova: ${error.message}`);
+    return [];
+  }
+  return (data || []).map((r: { naslov: string }) => r.naslov).filter(Boolean);
 }
 
 /**
@@ -135,7 +73,7 @@ export async function sacuvajDraft(args: {
   context: ContextRezultat;
   jezik: JezikRezultat;
   zvanicniUrl: string | null;
-  slika: SlikaInfo | null;
+  slika: UnsplashSlika | null;
 }): Promise<string | null> {
   const { clanak, vijest, factcheck, context, jezik, zvanicniUrl, slika } = args;
   const db = createServerClient();
@@ -182,7 +120,7 @@ export async function sacuvajDraft(args: {
     tip: vijest.tip,
 
     slika: slika?.url || null,
-    slika_autor: slika ? oznakaSlike(slika) : null,
+    slika_autor: slika ? `${slika.autor} / Unsplash` : null,
   });
 
   if (error) {

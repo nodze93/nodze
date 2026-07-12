@@ -25,7 +25,7 @@ import { temaTokeni, istaTema } from "./dedupe";
 import { writeClanak } from "./agenti/writer";
 import { factcheckClanak, contextCheck } from "./agenti/factcheck";
 import { jezikCheck } from "./agenti/jezik";
-import { ucitajObradjene, sacuvajDraft, logujPipeline } from "./publisher";
+import { ucitajObradjene, ucitajNedavneNaslove, sacuvajDraft, logujPipeline } from "./publisher";
 import { nadjiSliku } from "./slike";
 import type { PipelineRezultat, FactcheckRezultat, Vijest } from "./tipovi";
 
@@ -92,7 +92,11 @@ export async function pokreniPipeline2(): Promise<PipelineRezultat> {
     const uzak = bodujKljucnim(prosle, topN);
 
     // ── 5. AI TRIAŽA (jedan poziv na naslov+opis) → pobjednici ─
-    let izabrane = await triazirajVijesti(uzak);
+    // Memorija tema: naslovi objavljeni zadnjih par dana → signal triaži
+    // (ne da izbaci istu temu, nego da prepozna "isto" vs "novi razvoj").
+    const memorija = await ucitajNedavneNaslove(3, 30);
+    if (memorija.length) console.log(`🧠 Memorija: ${memorija.length} nedavnih naslova (signal triaži)`);
+    let izabrane = await triazirajVijesti(uzak, { vecPokriveno: memorija });
 
     // ── 6. Dedupe po TEMI (ista priča iz dva izvora) ───────────
     const prijeTeme = izabrane.length;

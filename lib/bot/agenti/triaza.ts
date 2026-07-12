@@ -75,20 +75,28 @@ export interface TriazaOpcije {
   kapDijaspora?: number;
   kapSvijet?: number;
   kapSport?: number;
+  vecPokriveno?: string[]; // naslovi već objavljeni ovih dana (memorija tema)
 }
 
 // Ocijeni jednu grupu (do ~20). Vrati vijesti obogaćene triaza ocjenom.
-async function triazirajBatch(batch: Vijest[]): Promise<Vijest[]> {
+async function triazirajBatch(batch: Vijest[], vecPokriveno: string[] = []): Promise<Vijest[]> {
   const lista = batch
     .map((v, idx) => `[${idx}] (${v.izvor}${v.tier ? "/" + v.tier : ""}): "${v.naslov}" — ${(v.excerpt || "").slice(0, 150)}`)
     .join("\n");
+
+  // Memorija tema — signal, NE slijepo pravilo. AI odlučuje "isto" vs "novi razvoj".
+  const memo = vecPokriveno.length
+    ? `\n\nVEĆ SMO OBJAVILI ovih dana:\n${vecPokriveno.map((t) => "• " + t).join("\n")}\n` +
+      `→ Ako je vijest ISTA priča bez ičeg novog: vec_poznato=true (spusti je).\n` +
+      `→ Ako je NOVI razvoj iste teme (rasplet, nova odluka, nastavak) ILI potpuno druga tema: vec_poznato=false (to je nova vijest, ne kažnjavaj je).`
+    : "";
 
   let odgovor: TriazaOdgovor;
   try {
     odgovor = await pozoviSaAlatom<TriazaOdgovor>({
       model: MODEL_BRZI,
       system: TRIAZA_PROMPT,
-      user: `Ocijeni ovih ${batch.length} vijesti:\n\n${lista}`,
+      user: `Ocijeni ovih ${batch.length} vijesti:\n\n${lista}${memo}`,
       maxTokens: 3500,
       toolName: "ocijeni_vijesti",
       toolOpis: "Vrati ocjene po dimenzijama za SVAKU vijest iz liste.",
@@ -142,9 +150,10 @@ export async function triazirajVijesti(
 
   // Grupe po 20 — da odgovor nikad ne pređe limit tokena.
   const BATCH = 20;
+  const vecPokriveno = opcije.vecPokriveno ?? [];
   const ocijenjene: Vijest[] = [];
   for (let i = 0; i < vijesti.length; i += BATCH) {
-    const dio = await triazirajBatch(vijesti.slice(i, i + BATCH));
+    const dio = await triazirajBatch(vijesti.slice(i, i + BATCH), vecPokriveno);
     ocijenjene.push(...dio);
   }
 
