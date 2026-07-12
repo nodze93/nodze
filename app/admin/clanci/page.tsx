@@ -35,8 +35,6 @@ function ClanciContent() {
   const [pretrage, setPretrage] = useState("");
   const [kategorija, setKategorija] = useState("sve");
   const [akcija, setAkcija] = useState<{ id: number; tip: string } | null>(null);
-  const [zakazivan, setZakazivan] = useState<any | null>(null);
-  const [zakazVrijeme, setZakazVrijeme] = useState("");
 
   const ucitaj = useCallback(async () => {
     setLoading(true);
@@ -71,28 +69,6 @@ function ClanciContent() {
     await fetch(`/api/admin/clanci/${id}`, { method: "DELETE" });
     await ucitaj();
     setAkcija(null);
-  }
-
-  // Zakazivanje objave za određeno vrijeme
-  function otvoriZakazivanje(c: any) {
-    const d = new Date(Date.now() + 2 * 60 * 60 * 1000);
-    const p = (n: number) => String(n).padStart(2, "0");
-    setZakazVrijeme(`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`);
-    setZakazivan(c);
-  }
-
-  async function potvrdiZakazivanje() {
-    if (!zakazivan || !zakazVrijeme) return;
-    const kada = new Date(zakazVrijeme);
-    if (isNaN(kada.getTime()) || kada.getTime() <= Date.now()) { alert("Vrijeme mora biti u budućnosti."); return; }
-    await fetch(`/api/admin/clanci/${zakazivan.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "published", zakazano_za: kada.toISOString() }),
-    });
-    setZakazivan(null);
-    setZakazVrijeme("");
-    await ucitaj();
   }
 
   return (
@@ -137,7 +113,7 @@ function ClanciContent() {
       </div>
 
       {/* Filteri */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+      <div className="clanci-filteri" style={{ display: "flex", gap: 12, marginBottom: 20 }}>
         <input
           type="text"
           placeholder="🔍 Pretraži po naslovu..."
@@ -170,8 +146,8 @@ function ClanciContent() {
         </select>
       </div>
 
-      {/* Tabela */}
-      <div style={{ background: "white", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+      {/* Tabela (desktop) */}
+      <div className="clanci-tabela" style={{ background: "white", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "#f9fafb" }}>
@@ -256,15 +232,6 @@ function ClanciContent() {
                             {jeAktivan && akcija?.tip === "objava" ? "..." : "✅ Objavi"}
                           </button>
                         )}
-                        {c.status === "draft" && (
-                          <button
-                            onClick={() => otvoriZakazivanje(c)}
-                            title="Zakaži objavu za određeno vrijeme"
-                            style={{ padding: "6px 12px", background: "white", color: "#7c3aed", border: "1.5px solid #7c3aed", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
-                          >
-                            ⏰ Zakaži
-                          </button>
-                        )}
                         <Link
                           href={`/admin/clanci/${c.id}`}
                           style={{
@@ -305,40 +272,76 @@ function ClanciContent() {
         </table>
       </div>
 
-      {/* Prozor za zakazivanje objave */}
-      {zakazivan && (
-        <div
-          onClick={() => setZakazivan(null)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16 }}
-        >
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "white", borderRadius: 14, padding: 22, width: "100%", maxWidth: 420, boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}>
-            <div style={{ fontSize: 17, fontWeight: 800, color: "#111", marginBottom: 6 }}>⏰ Zakaži objavu</div>
-            <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 14, lineHeight: 1.4 }}>
-              Članak će se sam pojaviti na sajtu u zadato vrijeme (do tada je sakriven).
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 12, padding: "8px 10px", background: "#f9fafb", borderRadius: 8 }}>
-              {zakazivan.naslov}
-            </div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: "#374151", display: "block", marginBottom: 6 }}>Vrijeme objave</label>
-            <input
-              type="datetime-local"
-              value={zakazVrijeme}
-              onChange={(e) => setZakazVrijeme(e.target.value)}
-              style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #d1d5db", borderRadius: 8, fontSize: 14, marginBottom: 16 }}
-            />
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={() => setZakazivan(null)}
-                style={{ flex: 1, padding: "11px", border: "1.5px solid #d1d5db", borderRadius: 10, background: "white", fontSize: 14, fontWeight: 700, cursor: "pointer", color: "#374151" }}
-              >Otkaži</button>
-              <button
-                onClick={potvrdiZakazivanje}
-                style={{ flex: 2, padding: "11px", border: "none", borderRadius: 10, background: "#7c3aed", color: "white", fontSize: 14, fontWeight: 800, cursor: "pointer" }}
-              >⏰ Zakaži objavu</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Kartice (mobitel) */}
+      <div className="clanci-kartice" style={{ display: "none", flexDirection: "column", gap: 10 }}>
+        {loading ? (
+          <div style={{ padding: "30px 14px", textAlign: "center", color: "#9ca3af", fontSize: 14 }}>Učitavanje...</div>
+        ) : clanci.length === 0 ? (
+          <div style={{ padding: "30px 14px", textAlign: "center", color: "#9ca3af", fontSize: 14 }}>Nema članaka za ove filtere</div>
+        ) : (
+          clanci.map((c) => {
+            const jeAktivan = akcija?.id === c.id;
+            return (
+              <div key={c.id} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: 14 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#111", lineHeight: 1.35, marginBottom: 6 }}>
+                  {c.faktcheck && <span style={{ marginRight: 6 }}>{FAKTCHECK_IKONA[c.faktcheck] || ""}</span>}
+                  {c.naslov}
+                </div>
+                <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10 }}>
+                  {c.izvor || "Ručno"} · {c.minCitanja} min · {c.datum} · 👁 {c.procitano?.toLocaleString("bs-BA") || "0"}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                  <span style={{
+                    display: "inline-block", padding: "3px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700,
+                    background: `${TAG_BOJE[c.kategorija] || "#999"}18`, color: TAG_BOJE[c.kategorija] || "#999",
+                  }}>{c.kategorija}</span>
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                    background: c.status === "published" ? "#d1fae5" : "#fef3c7",
+                    color: c.status === "published" ? "#065f46" : "#92400e",
+                  }}>
+                    <span style={{ fontSize: 8 }}>●</span>
+                    {c.status === "published" ? "Objavljeno" : "Na čekanju"}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {c.status === "draft" && (
+                    <button
+                      onClick={() => objavi(c.id)}
+                      disabled={jeAktivan}
+                      style={{ flex: 1, padding: "11px 12px", background: "#1D9E75", color: "white", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: jeAktivan ? "not-allowed" : "pointer" }}
+                    >
+                      {jeAktivan && akcija?.tip === "objava" ? "..." : "✅ Objavi"}
+                    </button>
+                  )}
+                  <Link
+                    href={`/admin/clanci/${c.id}`}
+                    style={{ flex: 1, padding: "11px 12px", background: "#f3f4f6", color: "#374151", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none", textAlign: "center" }}
+                  >
+                    ✏️ Uredi
+                  </Link>
+                  <button
+                    onClick={() => obrisi(c.id, c.naslov)}
+                    disabled={jeAktivan}
+                    style={{ padding: "11px 14px", background: "#fff1f2", color: "#be123c", border: "none", borderRadius: 8, fontSize: 15, cursor: jeAktivan ? "not-allowed" : "pointer" }}
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .clanci-tabela { display: none; }
+          .clanci-kartice { display: flex !important; }
+          .clanci-filteri { flex-wrap: wrap; }
+          .clanci-filteri select { flex: 1; }
+        }
+      `}</style>
     </div>
   );
 }
