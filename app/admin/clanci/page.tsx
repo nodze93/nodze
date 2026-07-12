@@ -100,6 +100,22 @@ function ClanciContent() {
     await ucitaj();
     setAkcija(null);
   }
+  // Podijeli članak na Facebook (foto-post + link u prvi komentar)
+  async function podijeliNaFb(c: any) {
+    setAkcija({ id: c.id, tip: "fb" });
+    try {
+      const r = await fetch("/api/admin/fb-share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: c.id }),
+      });
+      const j = await r.json().catch(() => ({}));
+      alert(r.ok ? (j.poruka || "Objavljeno na Facebook! 🔵") : (j.error || "FB objava nije uspjela."));
+    } catch {
+      alert("Greška u vezi s Facebookom.");
+    }
+    setAkcija(null);
+  }
   // Oznaka statusa (draft / objavljen / zakazan u budućnosti)
   function statusOznaka(c: any): { tekst: string; bg: string; fg: string } {
     const zakazan = c.status === "published" && c.zakazanoZa && new Date(c.zakazanoZa).getTime() > Date.now();
@@ -292,6 +308,16 @@ function ClanciContent() {
                         >
                           ✏️ Uredi
                         </Link>
+                        {c.status === "published" && !jeZakazan(c) && (
+                          <button
+                            onClick={() => podijeliNaFb(c)}
+                            disabled={jeAktivan}
+                            title="Podijeli na Facebook"
+                            style={{ padding: "6px 10px", background: "#e7f0ff", color: "#1877F2", border: "none", borderRadius: 6, fontSize: 13, cursor: jeAktivan ? "not-allowed" : "pointer" }}
+                          >
+                            {jeAktivan && akcija?.tip === "fb" ? "..." : "🔵 FB"}
+                          </button>
+                        )}
                         <button
                           onClick={() => obrisi(c.id, c.naslov)}
                           disabled={jeAktivan}
@@ -378,6 +404,15 @@ function ClanciContent() {
                   >
                     ✏️ Uredi
                   </Link>
+                  {c.status === "published" && !jeZakazan(c) && (
+                    <button
+                      onClick={() => podijeliNaFb(c)}
+                      disabled={jeAktivan}
+                      style={{ padding: "11px 14px", background: "#e7f0ff", color: "#1877F2", border: "none", borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: jeAktivan ? "not-allowed" : "pointer" }}
+                    >
+                      {jeAktivan && akcija?.tip === "fb" ? "..." : "🔵 FB"}
+                    </button>
+                  )}
                   <button
                     onClick={() => obrisi(c.id, c.naslov)}
                     disabled={jeAktivan}

@@ -74,32 +74,10 @@ async function nadjiClanak(slug: string): Promise<PrikazClanak | null> {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const clanak = await nadjiClanak(slug);
-  if (!clanak) return { title: "Članak — kodnas.de" };
-
-  const url = `/clanak/${clanak.slug}`;
-  const opis = clanak.excerpt || "Vijesti i vodiči za Bosance u Njemačkoj i Austriji.";
-  // Slika članka (Unsplash URL) ako postoji, inače podrazumijevana OG slika.
-  const slika = clanak.slika || "/og-default.jpg";
-
+  if (!clanak) return { title: "Članak — Dijaspora.ba" };
   return {
-    title: `${clanak.naslov} — kodnas.de`,
-    description: opis, // za Google pretragu (SEO)
-    alternates: { canonical: url },
-    openGraph: {
-      title: clanak.naslov,
-      description: "", // bez opisa na društvenoj kartici (samo slika + naslov + kodnas.de)
-      url,
-      siteName: "kodnas.de",
-      locale: "bs_BA",
-      type: "article",
-      images: [{ url: slika, alt: clanak.naslov }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: clanak.naslov,
-      description: "",
-      images: [slika],
-    },
+    title: `${clanak.naslov} — Dijaspora.ba`,
+    description: clanak.excerpt,
   };
 }
 
@@ -159,10 +137,12 @@ export default async function ClanakPage({ params }: Props) {
           </h1>
 
           {/* Meta */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 13, color: "var(--tekst-light)", marginBottom: 24, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 16, fontSize: 13, color: "var(--tekst-light)", marginBottom: 24, alignItems: "center" }}>
             <span>📅 {clanak.datum}</span>
             <span>·</span>
             <span>⏱ {clanak.minCitanja} min čitanja</span>
+            <span>·</span>
+            <span>👁 {clanak.procitano.toLocaleString()} pročitano</span>
           </div>
 
           {/* Naslovna slika — prava fotka ako postoji, inače uredan baner */}
@@ -233,7 +213,7 @@ export default async function ClanakPage({ params }: Props) {
           </div>
 
           {/* Dijeli */}
-          <div style={{ marginTop: 24, padding: 16, background: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+          <div style={{ marginTop: 24, padding: 16, background: "var(--white)", border: "1px solid var(--border)", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 13, fontWeight: 600 }}>Podijeli ovaj članak:</span>
             <a href={`https://www.facebook.com/sharer/sharer.php?u=https://kodnas.de/clanak/${clanak.slug}`} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", background: "#1877F2", color: "white", borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none" }}>Facebook</a>
             <a href={`https://t.me/share/url?url=https://kodnas.de/clanak/${clanak.slug}`} target="_blank" rel="noopener noreferrer" style={{ padding: "6px 14px", background: "#229ED9", color: "white", borderRadius: 6, fontSize: 13, fontWeight: 500, textDecoration: "none" }}>Telegram</a>
@@ -309,26 +289,8 @@ export default async function ClanakPage({ params }: Props) {
         }
         .clanak-sadrzaj th { background: var(--bg); font-weight: 600; }
         .clanak-sadrzaj strong { font-weight: 700; color: var(--tekst); }
-        /* 📌 Podsjetnik kutija (pozadina o čemu se radi) */
-        .clanak-sadrzaj blockquote.podsjetnik {
-          background: var(--zelena-svijetla);
-          border-left: 4px solid var(--zelena);
-          border-radius: 0 10px 10px 0;
-          padding: 14px 18px;
-          margin: 0 0 22px;
-          font-size: 14.5px;
-          line-height: 1.6;
-          color: var(--tekst);
-        }
-        .clanak-sadrzaj blockquote.podsjetnik strong { color: var(--zelena-tamna); }
-        /* Ništa ne smije biti šire od ekrana (nema pomjeranja lijevo/desno) */
-        .clanak-layout > article { min-width: 0; }
-        .clanak-sadrzaj { overflow-wrap: anywhere; word-break: break-word; }
-        .clanak-sadrzaj img { max-width: 100%; height: auto; border-radius: 8px; }
-        .clanak-sadrzaj a { word-break: break-word; }
-        .clanak-sadrzaj table { display: block; max-width: 100%; overflow-x: auto; }
         @media (max-width: 768px) {
-          .clanak-layout { grid-template-columns: minmax(0, 1fr) !important; }
+          .clanak-layout { grid-template-columns: 1fr !important; }
           .clanak-layout aside { display: none !important; }
         }
       `}</style>
