@@ -71,13 +71,41 @@ async function nadjiClanak(slug: string): Promise<PrikazClanak | null> {
   return null;
 }
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const clanak = await nadjiClanak(slug);
-  if (!clanak) return { title: "Članak — Dijaspora.ba" };
+  if (!clanak) return { title: "Članak — kodnas.de" };
+
+  const opis = clanak.excerpt || "Njemačke vijesti na našem jeziku.";
+  const url = `${SITE}/clanak/${clanak.slug}`;
+  // OG slika MORA biti apsolutni URL (Facebook/WhatsApp to traže). Ako članak
+  // nema svoju sliku — tek onda generička og-default.jpg.
+  const sirovaSlika = clanak.slika || `${SITE}/og-default.jpg`;
+  const ogSlika = sirovaSlika.startsWith("http")
+    ? sirovaSlika
+    : `${SITE}${sirovaSlika.startsWith("/") ? "" : "/"}${sirovaSlika}`;
+
   return {
-    title: `${clanak.naslov} — Dijaspora.ba`,
-    description: clanak.excerpt,
+    title: `${clanak.naslov} — kodnas.de`,
+    description: opis,
+    alternates: { canonical: `/clanak/${clanak.slug}` },
+    openGraph: {
+      title: clanak.naslov,
+      description: opis,
+      url,
+      siteName: "kodnas.de",
+      type: "article",
+      locale: "bs_BA",
+      images: [{ url: ogSlika, alt: clanak.naslov }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: clanak.naslov,
+      description: opis,
+      images: [ogSlika],
+    },
   };
 }
 
