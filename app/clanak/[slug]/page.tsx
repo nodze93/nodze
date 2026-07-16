@@ -220,8 +220,8 @@ export default async function ClanakPage({ params }: Props) {
             </div>
           )}
 
-          {/* Podijeli — ispod slike, otvara telefonski meni za dijeljenje */}
-          <div style={{ marginBottom: 24 }}>
+          {/* Podijeli — ispod slike, desno poravnato; otvara telefonski meni */}
+          <div style={{ marginBottom: 24, display: "flex", justifyContent: "flex-end" }}>
             <DijeliDugme slug={clanak.slug} naslov={clanak.naslov} />
           </div>
 
