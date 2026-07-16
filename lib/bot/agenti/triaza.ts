@@ -21,7 +21,9 @@ Dobićeš listu vijesti (samo naslov i kratak opis). Za SVAKU ocijeni 4 stvari, 
 
 Takođe: vec_poznato = true ako je očito već ispričana priča; kategorija = najprikladnija rubrika.
 
-Budi STROG. Visoke ocjene čuvaj za ono što stvarno mijenja ili olakšava život našim ljudima u Njemačkoj, ili je stvarno velika priča.`;
+Budi STROG. Visoke ocjene čuvaj za ono što stvarno mijenja ili olakšava život našim ljudima u Njemačkoj, ili je stvarno velika priča.
+
+Za SPORT i SVIJET vijesti: ocijeni "klik" po jačini priče (velika utakmica, transfer, gol/pobjeda naših, veliki svjetski događaj) — "relevantnost za Njemačku" tu SMIJE biti niska, to je normalno i ne kažnjava se.`;
 
 const TRIAZA_SCHEMA = {
   type: "object" as const,
@@ -56,15 +58,17 @@ interface TriazaOdgovor {
   ocjene: StavkaOcjene[];
 }
 
-// Težine za ukupnu ocjenu — OVDJE se štima uređivačka politika.
-const T = { de: 0.30, dijaspora: 0.30, hitnost: 0.20, klik: 0.20 };
-
-function ukupnaOcjena(o: StavkaOcjene): number {
-  let u =
-    T.de * o.relevantnost_de +
-    T.dijaspora * o.relevantnost_dijaspora +
-    T.hitnost * o.hitnost +
-    T.klik * o.klik;
+// Ukupna ocjena — težine ovise o TIPU (uređivačka politika).
+function ukupnaOcjena(o: StavkaOcjene, tip: string): number {
+  let u: number;
+  if (tip === "svjetske" || tip === "sport") {
+    // Sport i svijet: bitni su KLIK i hitnost (velika priča), a NE "relevantnost
+    // za Njemačku" — inače uvijek padnu ispod praga i nikad se ne objave.
+    u = 0.60 * o.klik + 0.25 * o.hitnost + 0.15 * Math.max(o.relevantnost_de, o.relevantnost_dijaspora);
+  } else {
+    // Dijaspora (njemačke vijesti): relevantnost je najvažnija.
+    u = 0.30 * o.relevantnost_de + 0.30 * o.relevantnost_dijaspora + 0.20 * o.hitnost + 0.20 * o.klik;
+  }
   if (o.vec_poznato) u *= 0.5; // već poznato → prepolovi (izbjegni duplu priču)
   return Math.round(u);
 }
@@ -117,7 +121,7 @@ async function triazirajBatch(batch: Vijest[], vecPokriveno: string[] = []): Pro
   for (const o of odgovor.ocjene) {
     const v = batch[o.index];
     if (!v) continue;
-    const ukupno = ukupnaOcjena(o);
+    const ukupno = ukupnaOcjena(o, v.tip);
     out.push({
       ...v,
       kategorija: o.kategorija || v.kategorija,

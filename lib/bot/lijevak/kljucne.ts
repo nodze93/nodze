@@ -80,14 +80,29 @@ function bodujJednu(v: Vijest): number {
  * Svakoj upiše v.predScore da se vidi u logu i kasnijoj triaži.
  */
 export function bodujKljucnim(vijesti: Vijest[], topN = 40): Vijest[] {
-  const bodovane = vijesti
-    .map((v) => ({ ...v, predScore: bodujJednu(v) }))
-    .sort((a, b) => (b.predScore || 0) - (a.predScore || 0));
+  const bodovane = vijesti.map((v) => ({ ...v, predScore: bodujJednu(v) }));
 
-  const top = bodovane.slice(0, topN);
+  // Podijeli po TIPU pa uzmi najbolje iz svakog — inače sport/svijet izgladne
+  // jer ne mogu da se takmiče na njemačkim ključnim riječima.
+  const poTipu: Record<string, Vijest[]> = { dijaspora: [], svjetske: [], sport: [] };
+  for (const v of bodovane) (poTipu[v.tip] || poTipu.dijaspora).push(v);
+  const sortiraj = (a: Vijest[]) => a.sort((x, y) => (y.predScore || 0) - (x.predScore || 0));
+  sortiraj(poTipu.dijaspora);
+  sortiraj(poTipu.svjetske);
+  sortiraj(poTipu.sport);
+
+  // Rezervisana mjesta za ulazak u triažu (env podesivo)
+  const nSvijet = parseInt(process.env.TOP_SVIJET || "8", 10);
+  const nSport = parseInt(process.env.TOP_SPORT || "8", 10);
+  const svijet = poTipu.svjetske.slice(0, nSvijet);
+  const sport = poTipu.sport.slice(0, nSport);
+  const ostatak = Math.max(0, topN - svijet.length - sport.length);
+  const dijaspora = poTipu.dijaspora.slice(0, ostatak);
+  const top = [...dijaspora, ...svijet, ...sport];
+
   console.log(
-    `🔑 Ključne riječi: ${vijesti.length} → ${top.length} ` +
-      `(najbolji ${top[0]?.predScore ?? 0}, prag ulaza u triažu ${top[top.length - 1]?.predScore ?? 0})`
+    `🔑 Ključne riječi: ${vijesti.length} → ${top.length} za triažu ` +
+      `(${dijaspora.length} DE + ${svijet.length} svijet + ${sport.length} sport)`
   );
   return top;
 }
