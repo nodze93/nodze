@@ -16,10 +16,10 @@ export interface BotConfig {
 export const DEFAULT_CONFIG: BotConfig = {
   aktivan: true,
   vremena: ["06:00", "12:30", "20:00"],
-  kvota_de: 1,
+  kvota_de: 5,
   kvota_bih: 1,
-  kvota_svijet: 1,
-  kvota_sport: 1,
+  kvota_svijet: 3,
+  kvota_sport: 3,
   zadnji_slot: null,
 };
 
@@ -51,10 +51,10 @@ export async function dajBotConfig(): Promise<BotConfig> {
     return {
       aktivan: data.aktivan ?? true,
       vremena: vremena.length ? vremena : DEFAULT_CONFIG.vremena,
-      kvota_de: broj(data.kvota_de, 1),
+      kvota_de: broj(data.kvota_de, 5),
       kvota_bih: broj(data.kvota_bih, 1),
-      kvota_svijet: broj(data.kvota_svijet, 1),
-      kvota_sport: broj(data.kvota_sport, 1),
+      kvota_svijet: broj(data.kvota_svijet, 3),
+      kvota_sport: broj(data.kvota_sport, 3),
       zadnji_slot: data.zadnji_slot ?? null,
     };
   } catch {

@@ -26,6 +26,7 @@ import { writeClanak } from "./agenti/writer";
 import { factcheckClanak, contextCheck } from "./agenti/factcheck";
 import { jezikCheck } from "./agenti/jezik";
 import { ucitajObradjene, ucitajNedavneNaslove, sacuvajDraft, logujPipeline } from "./publisher";
+import { dajBotConfig } from "../bot-config";
 import { nadjiSliku } from "./slike";
 import type { PipelineRezultat, FactcheckRezultat, Vijest } from "./tipovi";
 
@@ -111,7 +112,21 @@ export async function pokreniPipeline2(): Promise<PipelineRezultat> {
     // (ne da izbaci istu temu, nego da prepozna "isto" vs "novi razvoj").
     const memorija = await ucitajNedavneNaslove(3, 50);
     if (memorija.length) console.log(`🧠 Memorija: ${memorija.length} nedavnih naslova (signal + dedupe)`);
-    let izabrane = await triazirajVijesti(uzak, { vecPokriveno: memorija.slice(0, 40) });
+
+    // Kvote iz ADMINA (bot_config): maksimalan broj članaka po kategoriji.
+    // MAKSIMUM, ne garancija — ako nema dovoljno dobrih priča, napiše se manje.
+    const cfg = await dajBotConfig();
+    const brojObjava = cfg.kvota_de + cfg.kvota_bih + cfg.kvota_svijet + cfg.kvota_sport;
+    console.log(
+      `🎯 Kvote (admin): DE≤${cfg.kvota_de}, svijet≤${cfg.kvota_svijet}, sport≤${cfg.kvota_sport} (ukupno ≤${brojObjava})`
+    );
+    let izabrane = await triazirajVijesti(uzak, {
+      vecPokriveno: memorija.slice(0, 40),
+      kapDijaspora: cfg.kvota_de,
+      kapSvijet: cfg.kvota_svijet,
+      kapSport: cfg.kvota_sport,
+      brojObjava,
+    });
 
     // ── 6. Dedupe po TEMI ──────────────────────────────────────
     // (a) unutar pokretanja: ista priča iz dva izvora
