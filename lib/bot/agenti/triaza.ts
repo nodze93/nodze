@@ -19,7 +19,7 @@ Dobićeš listu vijesti (samo naslov i kratak opis). Za SVAKU ocijeni 4 stvari, 
 3) hitnost — koliko je vremenski osjetljivo (štrajk sutra, upozorenje na nevrijeme, rok za prijavu). Evergreen tema = nisko.
 4) klik — hoće li naš čitalac stvarno kliknuti (jasna korist ili jaka priča), bez lažnog senzacionalizma.
 
-Takođe: vec_poznato = true ako je očito već ispričana priča; kategorija = najprikladnija rubrika.
+Takođe: vec_poznato = true ako je priča već ispričana (ili je ista tema samo drugačije sročena); kategorija = najprikladnija rubrika.
 
 Budi STROG. Visoke ocjene čuvaj za ono što stvarno mijenja ili olakšava život našim ljudima u Njemačkoj, ili je stvarno velika priča.
 
@@ -69,7 +69,7 @@ function ukupnaOcjena(o: StavkaOcjene, tip: string): number {
     // Dijaspora (njemačke vijesti): relevantnost je najvažnija.
     u = 0.30 * o.relevantnost_de + 0.30 * o.relevantnost_dijaspora + 0.20 * o.hitnost + 0.20 * o.klik;
   }
-  if (o.vec_poznato) u *= 0.5; // već poznato → prepolovi (izbjegni duplu priču)
+  if (o.vec_poznato) u *= 0.3; // već pokrivena tema → jako spusti (skoro sigurno ispada)
   return Math.round(u);
 }
 
@@ -90,9 +90,10 @@ async function triazirajBatch(batch: Vijest[], vecPokriveno: string[] = []): Pro
 
   // Memorija tema — signal, NE slijepo pravilo. AI odlučuje "isto" vs "novi razvoj".
   const memo = vecPokriveno.length
-    ? `\n\nVEĆ SMO OBJAVILI ovih dana:\n${vecPokriveno.map((t) => "• " + t).join("\n")}\n` +
-      `→ Ako je vijest ISTA priča bez ičeg novog: vec_poznato=true (spusti je).\n` +
-      `→ Ako je NOVI razvoj iste teme (rasplet, nova odluka, nastavak) ILI potpuno druga tema: vec_poznato=false (to je nova vijest, ne kažnjavaj je).`
+    ? `\n\nVEĆ SMO OBJAVILI ovih dana (NE ponavljaj iste teme drugim riječima):\n${vecPokriveno.map((t) => "• " + t).join("\n")}\n` +
+      `Za SVAKU vijest provjeri govori li o ISTOM subjektu kao nešto gore — istoj naknadi, zakonu, cijeni, ustanovi ili događaju — makar bila DRUGAČIJE SROČENA, iz drugog ugla ili s malo drugačijim brojem.\n` +
+      `→ vec_poznato=TRUE ako je ista tema samo drugačije napisana, drugi ugao ("šta to znači za nas", "evo detalja", "reformom može biti gore") ili sitna promjena broja/procenta. Naslovi ne moraju dijeliti nijednu istu riječ da bi bili ista priča — gledaj SMISAO.\n` +
+      `→ vec_poznato=FALSE samo ako se desio konkretno NOV DOGAĐAJ (zakon zaista usvojen, štrajk počeo ili završio, presuda, nov rok, nova brojka koja mijenja zaključak) — a ne samo nov tekst o već pokrivenoj temi.`
     : "";
 
   let odgovor: TriazaOdgovor;

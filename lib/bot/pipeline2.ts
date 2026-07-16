@@ -111,7 +111,7 @@ export async function pokreniPipeline2(): Promise<PipelineRezultat> {
     // (ne da izbaci istu temu, nego da prepozna "isto" vs "novi razvoj").
     const memorija = await ucitajNedavneNaslove(3, 50);
     if (memorija.length) console.log(`🧠 Memorija: ${memorija.length} nedavnih naslova (signal + dedupe)`);
-    let izabrane = await triazirajVijesti(uzak, { vecPokriveno: memorija.slice(0, 30) });
+    let izabrane = await triazirajVijesti(uzak, { vecPokriveno: memorija.slice(0, 40) });
 
     // ── 6. Dedupe po TEMI ──────────────────────────────────────
     // (a) unutar pokretanja: ista priča iz dva izvora
