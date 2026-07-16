@@ -4,14 +4,14 @@
 // DE LISTA — kartice njemačkih vijesti + "Učitaj još" dugme
 // ============================================================
 // Server (/de) dohvati SVE članke (veliki bazen), a ovdje ih
-// prikazujemo po KORAK (20) i dugmetom otkrivamo starije prema dnu.
+// prikazujemo po KORAK (10) i dugmetom otkrivamo starije prema dnu.
 // Nema mrežnog poziva na klik — sve je već tu, samo se otkriva.
 
 import { useState } from "react";
 import Link from "next/link";
 import type { KarticaVijest } from "@/lib/live";
 
-const KORAK = 20;
+const KORAK = 10;
 
 export default function DeLista({ clanci }: { clanci: KarticaVijest[] }) {
   const [prikazano, setPrikazano] = useState(KORAK);
@@ -99,7 +99,7 @@ export default function DeLista({ clanci }: { clanci: KarticaVijest[] }) {
             }}
             className="hover:bg-[#fafafa]"
           >
-            Učitaj još ({preostalo})
+            Učitaj još
           </button>
         </div>
       )}
