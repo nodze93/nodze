@@ -20,13 +20,11 @@ export function claude(): Anthropic {
 // Modeli — Haiku za sve (max ušteda)
 export const MODEL_BRZI = "claude-haiku-4-5";
 export const MODEL_PISAC = "claude-haiku-4-5";
-
-// ── ZAVRŠNI GRAMATIČKI PROLAZ (gramatika.ts) — model ──────────────────
-// Sonnet (claude-sonnet-5) jer Haiku ne zna pouzdano bosanske padeže/rod.
-// Radi SAMO na tom zadnjem prolazu (pisac i lektor ostaju Haiku — jeftino).
-// Prekidač preko env-a: natrag na Haiku radi uštede →  MODEL_GRAMATIKA=claude-haiku-4-5
-// ili potpuno isključi prolaz →  GRAMATIKA_PROLAZ=off
-export const MODEL_GRAMATIKA = process.env.MODEL_GRAMATIKA || "claude-sonnet-5";
+// Lektor ide na Sonnet — najjači za bosansku morfologiju (padeži, rod,
+// slaganje). Poziva se samo jednom po članku (~8 dnevno) pa je trošak mali.
+// VAŽNO: aktuelni API naziv je "claude-sonnet-5" (stari "claude-sonnet-4-5"
+// / "claude-3-5-sonnet" su povučeni — zato je Sonnet ranije "padao").
+export const MODEL_LEKTOR = "claude-sonnet-5";
 
 /**
  * Pozovi Claude s forsiranim tool-useom i vrati validiran JSON objekat.
@@ -65,11 +63,6 @@ export async function pozoviSaAlatom<T>(opts: {
         tool_choice: { type: "tool", name: opts.toolName },
         messages: [{ role: "user", content: opts.user }],
       });
-      // Ako je model udario u max_tokens, JSON (i sadržaj članka) može biti
-      // odsječen — upozori u logu da to primijetimo.
-      if (odgovor.stop_reason === "max_tokens") {
-        console.warn(`   ⚠️ ${opts.toolName}: odgovor dostigao max_tokens (${opts.maxTokens}) — moguć odsječen tekst.`);
-      }
       const blok = odgovor.content.find(
         (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
       );

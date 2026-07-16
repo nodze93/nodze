@@ -2,12 +2,19 @@
 // JEZIK AGENT (5/5) — lektor: bosanski jezik, gramatika, stil
 // ============================================================
 // Zadnja stanica prije baze: ispravlja kroatizme i greške.
-import { pozoviSaAlatom, MODEL_BRZI } from "./claude";
+import { pozoviSaAlatom, MODEL_LEKTOR } from "./claude";
 import type { JezikRezultat } from "../tipovi";
 
-const JEZIK_PROMPT = `Ti si lektor portala kodnas.de koji piše za bosansku dijasporu u Njemačkoj.
+const JEZIK_PROMPT = `Ti si profesionalni lektor za bosanski standardni jezik. Radiš za portal kodnas.de ("Dnevni filter njemačkih vijesti") za bosansku dijasporu u Njemačkoj.
 
-Zadatak: provjeri i ispravi tekst da bude čist bosanski standardni jezik. Vrati CIJELI ispravljeni tekst (ne samo izmjene).
+Tvoj zadatak je ISKLJUČIVO gramatička i pravopisna ispravka teksta. Vrati CIJELI ispravljeni tekst (ne samo izmjene).
+
+STROGA PRAVILA:
+1. ZADRŽI ORIGINAL: Ne prepravljaj stil. Ne mijenjaj rečenice koje su već gramatički tačne. Ne sažimaj i ne dodaji informacije. NE IZMIŠLJAJ nove riječi (npr. "nuždenome" nije riječ) — ako riječ ne postoji u standardnom bosanskom, zamijeni je stvarnom, običnom riječju.
+2. POPRAVI SAMO GREŠKE: padeže, ROD i slaganje (npr. "znatna dio" → "znatan dio", "velika broj" → "veliki broj"), slaganje vremena, interpunkciju (zarez ispred "koji/koja/što/da" gdje treba) i tipfelere. Ukloni suvišne/pogrešne akcente unutar riječi (npr. "planirȃš" → "planiraš").
+3. BEZ KREATIVNOSTI: Zabranjeno je pisati u stihovima, haiku formi ili bilo kojoj književnoj formi. Piši informativno i direktno.
+4. HTML tagovi moraju ostati NETAKNUTI i pravilno zatvoreni.
+5. Ako je rečenica gramatički toliko neispravna da joj se ne može odrediti smisao, preformuliši je tako da bude jednostavna, jasna i gramatički tačna, zadržavajući originalnu informaciju.
 
 KROATIZMI → BOSANSKI (obavezno ispravi):
 - "što" (upitno) → "šta"  (ali relativno "ono što", "sve što" OSTAVI)
@@ -17,35 +24,15 @@ KROATIZMI → BOSANSKI (obavezno ispravi):
 - "ovisi/ovise/ovisno" → "zavisi/zavise/zavisno"
 - "utječe/utjecaj" → "utiče/uticaj"
 - "financije/financijski" → "finansije/finansijski"
-- "prijevoz" → "prevoz"
+- "prijevoz" → "prevoz", "vlak" → "voz", "kolodvor" → "željeznička stanica"
 - "sudjeluje" → "učestvuje", "sudionik" → "učesnik"
 - "vezano uz" → "vezano za"
 - "tjedan" → "sedmica", "tisuća" → "hiljada"
 - "kat" → "sprat", "kruh" → "hljeb"
+- "tvrtka" → "firma", "tvornica" → "fabrika", "poduzeće" → "preduzeće"
+- "obitelj" → "porodica", "opći/općina" → "opšti/opština"
 
-GRAMATIKA (ovo su najčešće greške — traži ih posebno):
-- Padeži uz brojeve: 2/3/4 + genitiv JEDNINE (2 mjeseca, 3 eura, 4 godine);
-  5 i više + genitiv MNOŽINE (5 mjeseci, 10 eura, 20 godina).
-- SLAGANJE PRIDJEVA I IMENICE U RODU (NAJČEŠĆA GREŠKA — provjeri SVAKI pridjev uz imenicu):
-  • SREDNJI rod (imenice na -e/-o: glasanje, pravilo, pitanje, rješenje, tijelo, pravo) → pridjev na -O:
-    "presudnO glasanje", "novO pravilo", "važnO pitanje", "konačnO rješenje".
-    POGREŠNO: "presudAN glasanje", "novI pravilo" → ISPRAVI u srednji rod.
-  • ŽENSKI rod (reforma, odluka, plata, viza, dozvola) → pridjev na -A:
-    "novA reforma", "važnA odluka", "minimalnA plata".
-  • MUŠKI rod (zakon, rok, ugovor, doprinos) → pridjev na -I/-∅:
-    "novI zakon", "presudAN rok", "važAN ugovor".
-  • MNOŽINA: "novA pravilA stupajU na snagu" (ne "novi pravila stupa").
-- Slaganje subjekta i glagola u broju: "vlada je odlučila" (NE "vlada su odlučili").
-- Ispravni padeži uz prijedloge (s + instrumental, od + genitiv, prema + dativ).
-- Ijekavica dosljedno: dijete, vrijeme, prije, poslije (ne "dete, vreme").
-- Glagolska vremena dosljedna; futur "dobićeš", "stupiće na snagu".
-- Zarez ispred "koji/koja/što/da" gdje treba.
-- HTML tagovi moraju ostati netaknuti i pravilno zatvoreni.
-
-STIL:
-- Informativno, direktno, bez patetike
-- Germanizme u kontekstu OSTAVI (Finanzamt, Elterngeld, Termin, Krankenkasse...)
-- Skraćenice "mj.", "god." su OK
+GERMANIZME U KONTEKSTU OSTAVI (Finanzamt, Elterngeld, Termin, Krankenkasse, Jobcenter, Anmeldung...). Skraćenice "mj.", "god." su OK.
 
 OCJENA:
 - "cisto" = 0-2 sitne greške
@@ -85,12 +72,10 @@ export async function jezikCheck(clanak: {
   console.log(`📝 Jezik Agent: lektorišem...`);
   try {
     const rez = await pozoviSaAlatom<JezikRezultat>({
-      model: MODEL_BRZI,
+      model: MODEL_LEKTOR,
       system: JEZIK_PROMPT,
       user: `Provjeri i ispravi bosanski jezik:\n\nNASLOV:\n${clanak.naslov}\n\nEXCERPT:\n${clanak.excerpt}\n\nSADRŽAJ (HTML):\n${clanak.sadrzaj}`,
-      // 4500 (bilo 3000): lektor vraća CIJELI članak nazad, a članci su sad
-      // duži (writer do 3800) — inače bi se ispravljeni tekst odsjekao.
-      maxTokens: 4500,
+      maxTokens: 3000,
       toolName: "lektorisan_tekst",
       toolOpis: "Vrati lektorisan tekst sa spiskom ispravki.",
       schema: JEZIK_SCHEMA,
