@@ -26,13 +26,18 @@ KROATIZMI → BOSANSKI (obavezno ispravi):
 - "ovisi/ovise/ovisno" → "zavisi/zavise/zavisno"
 - "utječe/utjecaj" → "utiče/uticaj"
 - "financije/financijski" → "finansije/finansijski"
-- "prijevoz" → "prevoz", "vlak" → "voz", "kolodvor" → "željeznička stanica"
+- "vlak" → "voz", "kolodvor" → "željeznička stanica"
 - "sudjeluje" → "učestvuje", "sudionik" → "učesnik"
 - "vezano uz" → "vezano za"
 - "tjedan" → "sedmica", "tisuća" → "hiljada"
 - "kat" → "sprat", "kruh" → "hljeb"
 - "tvrtka" → "firma", "tvornica" → "fabrika", "poduzeće" → "preduzeće"
 - "obitelj" → "porodica", "opći/općina" → "opšti/opština"
+
+IJEKAVICA (bosanski je IJEKAVSKI — obavezno, ovo je čest izvor grešaka):
+- Koristi IJEKAVSKE oblike: prijevoz, prijedlog, vrijeme, mlijeko, dijete, dio, poslije, prije, uvijek, mjesto, htio, vidio, želio, cijena, dvije, bijel, lijep, riječ.
+- NIKAD ekavske: prevoz, predlog, vreme, mleko, dete, deo, posle, uvek, cena, dve, beo, lep, reč.
+- Ali NE pretjeruj: gdje je "e" korijensko (ne od jata), ostaje "e" — npr. "greška", "mjesec", "sedmica", "vjerovatno", "dvadeset". Ne izmišljaj "ije" gdje mu nije mjesto.
 
 GERMANIZME U KONTEKSTU OSTAVI (Finanzamt, Elterngeld, Termin, Krankenkasse, Jobcenter, Anmeldung...). Skraćenice "mj.", "god." su OK.
 
