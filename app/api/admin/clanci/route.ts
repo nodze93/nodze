@@ -41,21 +41,33 @@ export async function GET(req: Request) {
 
   try {
     const db = createServerClient();
-    let query = db
-      .from("clanci")
-      .select(
-        "id,slug,naslov,excerpt,kategorija,status,izvor,min_citanja,broj_pregleda,broj_dijeljenja,faktcheck_status,jezik_ocjena,auto_generisan,tip,slika,created_at,datum_objave,je_naslovna,zakazano_za,redoslijed"
-      )
-      .order("je_naslovna", { ascending: false })
-      .order("redoslijed", { ascending: true })
-      .order("created_at", { ascending: false })
-      .limit(200);
 
-    if (status) query = query.eq("status", status);
-    if (kategorija) query = query.eq("kategorija", kategorija);
-    if (q) query = query.ilike("naslov", `%${q}%`);
+    // Kolone. broj_dijeljenja je NOVO — ako kolona još ne postoji u bazi
+    // (SQL nije pokrenut), upit s njom padne. Zato prvo probamo s njom, pa
+    // ako padne, ponovimo BEZ nje — admin uvijek pokaže članke.
+    const OSNOVNE =
+      "id,slug,naslov,excerpt,kategorija,status,izvor,min_citanja,broj_pregleda,faktcheck_status,jezik_ocjena,auto_generisan,tip,slika,created_at,datum_objave,je_naslovna,zakazano_za,redoslijed";
 
-    const { data, error } = await query;
+    const izvrsi = (kolone: string) => {
+      let query = db
+        .from("clanci")
+        .select(kolone)
+        .order("je_naslovna", { ascending: false })
+        .order("redoslijed", { ascending: true })
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (status) query = query.eq("status", status);
+      if (kategorija) query = query.eq("kategorija", kategorija);
+      if (q) query = query.ilike("naslov", `%${q}%`);
+      return query;
+    };
+
+    // 1. pokušaj: s brojem dijeljenja
+    let { data, error } = await izvrsi(OSNOVNE + ",broj_dijeljenja");
+    // 2. ako kolona ne postoji → ponovi bez nje (podijeljeno ostane 0)
+    if (error) {
+      ({ data, error } = await izvrsi(OSNOVNE));
+    }
     if (error) throw new Error(error.message);
 
     // Oblik koji admin UI očekuje
