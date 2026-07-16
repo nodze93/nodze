@@ -161,8 +161,14 @@ export async function triazirajVijesti(
     ocijenjene.push(...dio);
   }
 
+  // Sport i svijet imaju NIŽI prag — inače nikad ne prođu (nisu "životna tema",
+  // ali su klikabilni). Dijaspora ostaje na strogom pragu.
+  const pragSS = parseInt(process.env.PRAG_SPORT_SVIJET || "56", 10);
   const iznadPraga = ocijenjene
-    .filter((v) => (v.triaza?.ukupno ?? 0) >= prag)
+    .filter((v) => {
+      const p = v.tip === "svjetske" || v.tip === "sport" ? pragSS : prag;
+      return (v.triaza?.ukupno ?? 0) >= p;
+    })
     .sort((a, b) => (b.triaza?.ukupno ?? 0) - (a.triaza?.ukupno ?? 0));
 
   // Blage kvote po tipu — da ne prođe sve sport/svijet
