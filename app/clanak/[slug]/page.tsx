@@ -165,13 +165,6 @@ export default async function ClanakPage({ params }: Props) {
             {clanak.naslov}
           </h1>
 
-          {/* Meta */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 13, color: "var(--tekst-light)", marginBottom: 24, alignItems: "center" }}>
-            <span>📅 {clanak.datum}</span>
-            <span>·</span>
-            <span>⏱ {clanak.minCitanja} min čitanja</span>
-          </div>
-
           {/* Naslovna slika — prava fotka ako postoji, inače uredan baner */}
           {clanak.slika ? (
             <figure style={{ margin: "0 0 24px" }}>
@@ -220,8 +213,13 @@ export default async function ClanakPage({ params }: Props) {
             </div>
           )}
 
-          {/* Podijeli — ispod slike, desno poravnato; otvara telefonski meni */}
-          <div style={{ marginBottom: 24, display: "flex", justifyContent: "flex-end" }}>
+          {/* Ispod slike, u istoj ravnini: datum + vrijeme čitanja lijevo, Podijeli desno */}
+          <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 13, color: "var(--tekst-light)", alignItems: "center" }}>
+              <span>📅 {clanak.datum}</span>
+              <span>·</span>
+              <span>⏱ {clanak.minCitanja} min čitanja</span>
+            </div>
             <DijeliDugme slug={clanak.slug} naslov={clanak.naslov} />
           </div>
 
