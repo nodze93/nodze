@@ -59,7 +59,14 @@ function StatCard({ label, value, sub, color, icon, href }: {
 }
 
 function PipelineStatus({ status }: { status: string }) {
-  const ok = status === "uspjeh";
+  // 3 stanja: uspjeh (zeleno), djelimicno = nešto napisano + poneka greška (žuto),
+  // greška = ništa napisano (crveno). Djelimično NIJE pad — članci su napisani.
+  const stil =
+    status === "uspjeh"
+      ? { background: "#d1fae5", color: "#065f46", tekst: "Uspjeh" }
+      : status === "djelimicno"
+      ? { background: "#fef3c7", color: "#92400e", tekst: "Djelimično" }
+      : { background: "#fee2e2", color: "#991b1b", tekst: "Greška" };
   return (
     <span style={{
       display: "inline-flex",
@@ -69,11 +76,11 @@ function PipelineStatus({ status }: { status: string }) {
       borderRadius: 20,
       fontSize: 12,
       fontWeight: 600,
-      background: ok ? "#d1fae5" : "#fee2e2",
-      color: ok ? "#065f46" : "#991b1b",
+      background: stil.background,
+      color: stil.color,
     }}>
       <span style={{ fontSize: 8 }}>●</span>
-      {ok ? "Uspjeh" : "Greška"}
+      {stil.tekst}
     </span>
   );
 }
