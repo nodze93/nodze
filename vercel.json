@@ -4,10 +4,6 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "regions": ["fra1"],
-  "crons": [
-    { "path": "/api/cron/daily-content", "schedule": "0 6 * * *" },
-    { "path": "/api/cron/daily-content", "schedule": "0 18 * * *" }
-  ],
   "headers": [
     {
       "source": "/(.*)",
