@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 import SearchModal from "@/components/SearchModal";
 import AdminModeracija from "@/components/admin/AdminModeracija";
-import ScrollNaVrh from "@/components/ScrollNaVrh";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de";
+
+// Google Analytics (GA4). Mjerni ID (G-XXXXXXXXXX) dobiješ u analytics.google.com
+// i upišeš u Vercel kao env varijablu NEXT_PUBLIC_GA_ID. Bez ID-a se ništa ne
+// učitava, pa sajt normalno radi i prije nego ga postaviš.
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 // Verifikacija za Google Search Console i Bing Webmaster Tools.
 // Tokene dobiješ u tim alatima i staviš kao env varijable u Vercelu:
@@ -22,13 +25,13 @@ if (process.env.BING_SITE_VERIFICATION) {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
-  title: "kodnas.de — Njemačke vijesti na našem jeziku",
+  title: "Dijaspora.ba — Tvoj vodič kroz život vani",
   description:
-    "Pratimo sve njemačke izvore iz minute u minutu i najvažnije donosimo na jedno mjesto — na našem jeziku. Plus praktični vodiči: viza, posao, stan, zdravstvo, porez.",
+    "Portal za Bosance u Njemačkoj i Austriji. Vijesti, vodiči i praktične informacije o vizi, poslu, stanu, zdravstvu, porezu i penziji.",
   keywords: [
-    "njemačke vijesti na bosanskom",
-    "vijesti Njemačka dijaspora",
+    "dijaspora",
     "Bosanci u Njemačkoj",
+    "Bosanci u Austriji",
     "radna viza",
     "Aufenthaltstitel",
     "Elterngeld",
@@ -39,19 +42,12 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Sve njemačke vijesti — na našem jeziku",
-    description: "Iz minute u minutu — sve njemačke vijesti na jednom mjestu, na našem jeziku.",
+    title: "Dijaspora.ba — Tvoj vodič kroz život vani",
+    description: "Portal za Bosance u Njemačkoj i Austriji.",
     url: SITE,
-    siteName: "kodnas.de",
+    siteName: "Dijaspora.ba",
     locale: "bs_BA",
     type: "website",
-    images: [{ url: "/og-default.jpg", width: 1200, height: 630, alt: "kodnas.de" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Sve njemačke vijesti — na našem jeziku",
-    description: "Iz minute u minutu — sve njemačke vijesti na jednom mjestu, na našem jeziku.",
-    images: ["/og-default.jpg"],
   },
   verification,
 };
@@ -64,12 +60,27 @@ export default function RootLayout({
   return (
     <html lang="bs">
       <body>
-        <ScrollNaVrh />
         {children}
         <SearchModal />
         <AdminModeracija />
-        <Analytics />
-        <SpeedInsights />
+
+        {/* Google Analytics — učita se samo ako je NEXT_PUBLIC_GA_ID postavljen */}
+        {GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_ID}');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );

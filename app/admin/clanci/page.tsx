@@ -209,14 +209,15 @@ function ClanciContent() {
               <th style={{ padding: "12px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", width: 90 }}>Datum</th>
               <th style={{ padding: "12px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", width: 100 }}>Status</th>
               <th style={{ padding: "12px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", width: 60 }}>👁</th>
+              <th style={{ padding: "12px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", width: 60 }} title="Broj dijeljenja">📤</th>
               <th style={{ padding: "12px 20px", textAlign: "right", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", width: 180 }}>Akcije</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: 14 }}>Učitavanje...</td></tr>
+              <tr><td colSpan={7} style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: 14 }}>Učitavanje...</td></tr>
             ) : clanci.length === 0 ? (
-              <tr><td colSpan={6} style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: 14 }}>Nema članaka za ove filtere</td></tr>
+              <tr><td colSpan={7} style={{ padding: "40px 20px", textAlign: "center", color: "#9ca3af", fontSize: 14 }}>Nema članaka za ove filtere</td></tr>
             ) : (
               clanci.map((c) => {
                 const jeAktivan = akcija?.id === c.id;
@@ -263,6 +264,9 @@ function ClanciContent() {
                     </td>
                     <td style={{ padding: "14px 20px", fontSize: 13, color: "#6b7280" }}>
                       {c.procitano?.toLocaleString("bs-BA") || "0"}
+                    </td>
+                    <td style={{ padding: "14px 20px", fontSize: 13, color: "#6b7280" }}>
+                      {c.podijeljeno?.toLocaleString("bs-BA") || "0"}
                     </td>
                     <td style={{ padding: "14px 20px", textAlign: "right" }}>
                       <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
@@ -360,7 +364,7 @@ function ClanciContent() {
                   {c.naslov}
                 </div>
                 <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10 }}>
-                  {c.izvor || "Ručno"} · {c.minCitanja} min · {c.datum} · 👁 {c.procitano?.toLocaleString("bs-BA") || "0"}
+                  {c.izvor || "Ručno"} · {c.minCitanja} min · {c.datum} · 👁 {c.procitano?.toLocaleString("bs-BA") || "0"} · 📤 {c.podijeljeno?.toLocaleString("bs-BA") || "0"}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
                   <span style={{

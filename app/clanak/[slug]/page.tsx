@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ocistiHtml } from "@/lib/sanitize";
+import DijeliDugme from "@/components/DijeliDugme";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -218,6 +219,11 @@ export default async function ClanakPage({ params }: Props) {
               </span>
             </div>
           )}
+
+          {/* Podijeli — ispod slike, otvara telefonski meni za dijeljenje */}
+          <div style={{ marginBottom: 24 }}>
+            <DijeliDugme slug={clanak.slug} naslov={clanak.naslov} />
+          </div>
 
           {/* Excerpt */}
           <p style={{ fontSize: 17, color: "var(--tekst-muted)", lineHeight: 1.7, marginBottom: 28, padding: "16px 20px", borderLeft: "3px solid var(--zelena)", background: "var(--zelena-svijetla)", borderRadius: "0 8px 8px 0" }}>

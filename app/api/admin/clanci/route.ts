@@ -19,6 +19,7 @@ interface DbRed {
   izvor: string | null;
   min_citanja: number;
   broj_pregleda: number;
+  broj_dijeljenja: number | null;
   faktcheck_status: string | null;
   jezik_ocjena: string | null;
   auto_generisan: boolean;
@@ -43,7 +44,7 @@ export async function GET(req: Request) {
     let query = db
       .from("clanci")
       .select(
-        "id,slug,naslov,excerpt,kategorija,status,izvor,min_citanja,broj_pregleda,faktcheck_status,jezik_ocjena,auto_generisan,tip,slika,created_at,datum_objave,je_naslovna,zakazano_za,redoslijed"
+        "id,slug,naslov,excerpt,kategorija,status,izvor,min_citanja,broj_pregleda,broj_dijeljenja,faktcheck_status,jezik_ocjena,auto_generisan,tip,slika,created_at,datum_objave,je_naslovna,zakazano_za,redoslijed"
       )
       .order("je_naslovna", { ascending: false })
       .order("redoslijed", { ascending: true })
@@ -68,6 +69,7 @@ export async function GET(req: Request) {
       izvor: c.auto_generisan ? `🤖 ${c.izvor || "Bot"}` : c.izvor || "Ručno",
       minCitanja: c.min_citanja,
       procitano: c.broj_pregleda,
+      podijeljeno: c.broj_dijeljenja || 0,
       faktcheck: c.faktcheck_status,
       jezik: c.jezik_ocjena,
       slika: c.slika,
