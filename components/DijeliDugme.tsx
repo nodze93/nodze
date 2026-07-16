@@ -62,19 +62,35 @@ export default function DijeliDugme({ slug, naslov }: { slug: string; naslov: st
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: 8,
-        padding: "8px 16px",
-        borderRadius: 8,
+        gap: 7,
+        padding: "8px 18px",
+        borderRadius: 999,
         border: "1px solid var(--border)",
         background: "var(--white)",
         color: "var(--tekst)",
         fontSize: 14,
         fontWeight: 600,
+        lineHeight: 1,
         cursor: "pointer",
       }}
       className="hover:bg-[#fafafa]"
     >
-      <span style={{ fontSize: 16 }}>📤</span>
+      {/* iOS-style share ikona (strelica iz kutije) */}
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 3v13" />
+        <path d="m7 8 5-5 5 5" />
+        <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+      </svg>
       {kopirano ? "Link kopiran!" : "Podijeli"}
     </button>
   );
