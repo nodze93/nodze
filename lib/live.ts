@@ -13,7 +13,6 @@ export interface LiveStavka {
   izvor: string;
   vrijemeAgo: string;
   datum: number; // timestamp za sortiranje
-  slika?: string | null; // naslovna slika članka (za mobilne kutije)
 }
 
 function klijent(): SupabaseClient | null {
@@ -31,24 +30,18 @@ function vrijemeAgo(ts: number): string {
   return `${Math.floor(h / 24)}d`;
 }
 
-// Bosanski izvori → rubrika "Vijesti iz BiH" (desno).
+// Izvori koje smatramo "BiH stranom" (sve ostalo ide na DE/svjetsku stranu).
+// DW Bosanski NIJE ovdje — piše o Njemačkoj, pa ide na DE stranu.
 const BIH_IZVORI = ["klix", "n1", "slobodna", "avaz", "sportsport"];
-// Njemački izvori → UVIJEK rubrika "Vijesti iz Njemačke" (lijevo), čak i ako
-// im je kategorija greškom "bih". (DW piše o Njemačkoj → njemačka strana.)
-const DE_IZVORI = ["spiegel", "tagesschau", "dw", "kicker"];
 
 function ocistiIzvor(izvor: string | null): string {
-  return (izvor || "kodnas.de").replace(/^🤖\s*/, "").trim();
+  return (izvor || "Dijaspora.ba").replace(/^🤖\s*/, "").trim();
 }
 
 function jeBih(izvor: string, kategorija: string): boolean {
+  if (kategorija === "bih") return true;
   const s = izvor.toLowerCase();
-  // Njemački izvor NIKAD ne ide na bosansku stranu (izvor pobjeđuje kategoriju).
-  if (DE_IZVORI.some((k) => s.includes(k))) return false;
-  // Bosanski izvor uvijek ide na bosansku stranu.
-  if (BIH_IZVORI.some((k) => s.includes(k))) return true;
-  // Inače se oslanjamo na kategoriju.
-  return kategorija === "bih";
+  return BIH_IZVORI.some((k) => s.includes(k));
 }
 
 interface Red {
@@ -61,23 +54,21 @@ interface Red {
   min_citanja: number | null;
   datum_objave: string | null;
   created_at: string;
-  zakazano_za: string | null;
 }
 
-async function dajObjavljene(): Promise<Red[]> {
+// limit je podesiv: widgeti/ticker traže malo (40), a stranice rubrika
+// (/de, /bih) traže veliki bazen da bi "Učitaj još" otkrio i starije članke.
+async function dajObjavljene(limit = 40): Promise<Red[]> {
   const db = klijent();
   if (!db) return [];
   const { data, error } = await db
     .from("clanci")
-    .select("slug,naslov,izvor,kategorija,tip,slika,min_citanja,datum_objave,created_at,zakazano_za")
+    .select("slug,naslov,izvor,kategorija,tip,slika,min_citanja,datum_objave,created_at")
     .eq("status", "published")
     .order("datum_objave", { ascending: false, nullsFirst: false })
-    .limit(60);
+    .limit(limit);
   if (error || !data) return [];
-  // VAŽNO: sakrij članke zakazane za budućnost (isto kao stranica članka),
-  // da zakazani ne procuri u live kutije i ne daje 404 na klik.
-  const sada = Date.now();
-  return (data as Red[]).filter((r) => !r.zakazano_za || Date.parse(r.zakazano_za) <= sada);
+  return data as Red[];
 }
 
 function uStavku(r: Red): LiveStavka {
@@ -88,7 +79,6 @@ function uStavku(r: Red): LiveStavka {
     izvor: ocistiIzvor(r.izvor),
     vrijemeAgo: vrijemeAgo(ts),
     datum: ts,
-    slika: r.slika,
   };
 }
 
@@ -114,18 +104,19 @@ function uKarticu(r: Red): KarticaVijest {
   };
 }
 
-/** 🇩🇪 Njemački članci — za /de stranicu (kartice sa slikom) */
-export async function dajDE(limit = 20): Promise<KarticaVijest[]> {
-  const svi = await dajObjavljene();
+/** 🇩🇪 Njemački članci — za /de stranicu (kartice sa slikom).
+ *  Povlači veliki bazen (400) pa filtrira, da "Učitaj još" dosegne i starije. */
+export async function dajDE(limit = 200): Promise<KarticaVijest[]> {
+  const svi = await dajObjavljene(400);
   return svi
     .filter((r) => (r.tip || "dijaspora") === "dijaspora" && !jeBih(ocistiIzvor(r.izvor), r.kategorija))
     .slice(0, limit)
     .map(uKarticu);
 }
 
-/** 🇧🇦 Bosanski članci — za /bih stranicu (kartice sa slikom) */
-export async function dajBIH(limit = 20): Promise<KarticaVijest[]> {
-  const svi = await dajObjavljene();
+/** 🇧🇦 Bosanski članci — za /bih stranicu (kartice sa slikom). */
+export async function dajBIH(limit = 200): Promise<KarticaVijest[]> {
+  const svi = await dajObjavljene(400);
   return svi
     .filter((r) => (r.tip || "dijaspora") === "dijaspora" && jeBih(ocistiIzvor(r.izvor), r.kategorija))
     .slice(0, limit)
@@ -165,37 +156,22 @@ export async function dajLiveSvijet(limit = 8): Promise<LiveStavka[]> {
     .map(uStavku);
 }
 
-/** ⚽ Naši objavljeni sportski članci (za widget na naslovnoj) */
-export async function dajLiveSport(limit = 8): Promise<LiveStavka[]> {
-  const svi = await dajObjavljene();
-  return svi
-    .filter((r) => (r.tip || "") === "sport" || r.kategorija === "sport")
-    .slice(0, limit)
-    .map(uStavku);
-}
-
 export const MOCK_SVIJET: LiveStavka[] = [
   { naslov: "Šokantan potez u Bruxellesu — EU mijenja pravila za strance", link: "/kategorija/svijet", izvor: "Svijet", vrijemeAgo: "danas", datum: 0 },
   { naslov: "Inflacija ponovo raste — šta to znači za tvoju plaću i uštedu", link: "/kategorija/svijet", izvor: "Svijet", vrijemeAgo: "danas", datum: 0 },
   { naslov: "Napetosti na Bliskom istoku — posljedice za Evropu i dijasporu", link: "/kategorija/svijet", izvor: "Svijet", vrijemeAgo: "danas", datum: 0 },
 ];
 
-export const MOCK_SPORT: LiveStavka[] = [
-  { naslov: "Džeko se vraća u Bundesligu? Glasine o transferu tresu dijasporu", link: "/kategorija/sport", izvor: "Sport", vrijemeAgo: "danas", datum: 0 },
-  { naslov: "Zmajevi saznali protivnike — evo puta do EURO-a", link: "/kategorija/sport", izvor: "Sport", vrijemeAgo: "danas", datum: 0 },
-  { naslov: "Transfer koji trese region: naš reprezentativac pred potpisom", link: "/kategorija/sport", izvor: "Sport", vrijemeAgo: "danas", datum: 0 },
-];
-
 // Fallback dok baza nema dovoljno objavljenih članaka na toj strani.
 // Linkovi vode na /vijesti (naš sajt), ne na vanjske portale.
 export const MOCK_DE: LiveStavka[] = [
-  { naslov: "Nova pravila za radnu vizu u Njemačkoj — šta se mijenja za Bosance", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
-  { naslov: "Kindergeld i Elterngeld — koliko para dobijaš u 2026.", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
-  { naslov: "Kako naći stan u Njemačkoj bez Schufe — provjeren vodič", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Nova pravila za radnu vizu u Njemačkoj — šta se mijenja za Bosance", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Kindergeld i Elterngeld — koliko para dobijaš u 2026.", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Kako naći stan u Njemačkoj bez Schufe — provjeren vodič", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
 ];
 
 export const MOCK_BIH: LiveStavka[] = [
-  { naslov: "Nostrifikacija diploma: novi sporazum BiH–Njemačka", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
-  { naslov: "Ambasada BiH: elektronski sistem zakazivanja termina", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
-  { naslov: "Sedmični pregled iz BiH — najvažnije za dijasporu", link: "/vijesti", izvor: "kodnas.de", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Nostrifikacija diploma: novi sporazum BiH–Njemačka", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Ambasada BiH: elektronski sistem zakazivanja termina", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
+  { naslov: "Sedmični pregled iz BiH — najvažnije za dijasporu", link: "/vijesti", izvor: "Dijaspora.ba", vrijemeAgo: "danas", datum: 0 },
 ];
