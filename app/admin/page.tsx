@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useIsMobile } from "@/lib/useIsMobile";
 
 interface Stats {
   ukupnoClanci: number;
@@ -80,35 +79,13 @@ function PipelineStatus({ status }: { status: string }) {
 }
 
 export default function AdminDashboard() {
-  const isMobile = useIsMobile();
   const [stats, setStats] = useState<Stats | null>(null);
-  const [pokretamPipeline, setPokretamPipeline] = useState(false);
-  const [pipelineMsg, setPipelineMsg] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/stats")
       .then(r => r.json())
       .then(setStats);
   }, []);
-
-  async function pokreniPipeline() {
-    if (!confirm("Pokrenuti pipeline odmah? Claude će napisati 3-5 novih članaka.")) return;
-    setPokretamPipeline(true);
-    setPipelineMsg("");
-    try {
-      const res = await fetch("/api/admin/pipeline", { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        setPipelineMsg(`✅ Uspješno! Napisano ${data.napisano || "?"} članaka.`);
-      } else {
-        setPipelineMsg("❌ Greška pri pokretanju. Provjeri CRON_SECRET.");
-      }
-    } catch {
-      setPipelineMsg("❌ Greška pri pokretanju pipeline-a.");
-    } finally {
-      setPokretamPipeline(false);
-    }
-  }
 
   return (
     <div>
@@ -118,7 +95,7 @@ export default function AdminDashboard() {
           Dobro jutro 👋
         </h1>
         <p style={{ fontSize: 14, color: "#6b7280" }}>
-          Pregled portala kodnas.de
+          Pregled portala dijaspora.ba
         </p>
       </div>
 
@@ -147,7 +124,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Stat kartice */}
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: isMobile ? 10 : 16, marginBottom: isMobile ? 20 : 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
         <StatCard
           label="Objavljeni članci"
           value={stats?.objavljeno ?? "—"}
@@ -180,44 +157,16 @@ export default function AdminDashboard() {
       </div>
 
       {/* Donji red */}
-      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 340px", gap: isMobile ? 16 : 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 20 }}>
 
         {/* Pipeline log */}
         <div style={{ background: "white", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "#111" }}>Pipeline historija</div>
-              <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>Automatsko pisanje članaka</div>
-            </div>
-            <button
-              onClick={pokreniPipeline}
-              disabled={pokretamPipeline}
-              style={{
-                padding: "8px 16px",
-                background: pokretamPipeline ? "#d1fae5" : "#1D9E75",
-                color: "white",
-                border: "none",
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: pokretamPipeline ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              {pokretamPipeline ? "⏳ Pokrećem..." : "⚡ Pokreni odmah"}
-            </button>
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb" }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: "#111" }}>Pipeline historija</div>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>Automatsko pisanje članaka — pokreni na Pipeline stranici</div>
           </div>
 
-          {pipelineMsg && (
-            <div style={{ padding: "12px 20px", background: pipelineMsg.startsWith("✅") ? "#d1fae5" : "#fee2e2", fontSize: 13, fontWeight: 600, color: pipelineMsg.startsWith("✅") ? "#065f46" : "#991b1b" }}>
-              {pipelineMsg}
-            </div>
-          )}
-
-          <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 520 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "#f9fafb" }}>
                 <th style={{ padding: "10px 20px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>Datum i vrijeme</th>
@@ -248,7 +197,6 @@ export default function AdminDashboard() {
               )}
             </tbody>
           </table>
-          </div>
         </div>
 
         {/* Desna kolona */}

@@ -2,10 +2,8 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import KategorijBar from "@/components/KategorijBar";
 import Ticker from "@/components/Ticker";
-import KategorijaMobilna from "@/components/KategorijaMobilna";
 import Link from "next/link";
 import { getClanciByKategorija } from "@/lib/data/clanci";
-import { getVodiciByKategorija } from "@/lib/data/vodici";
 import { dajPoKategoriji } from "@/lib/data";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -23,14 +21,11 @@ const kategorijeInfo: Record<string, { naziv: string; opis: string }> = {
   bih: { naziv: "BiH", opis: "Vijesti iz Bosne i Hercegovine važne za dijasporu" },
   vijesti: { naziv: "Vijesti", opis: "Najnovije vijesti za dijasporu u Njemačkoj i Austriji" },
   finansije: { naziv: "Finansije", opis: "Plate, štednja, porezi, povrat novca, beneficije" },
-  sport: { naziv: "Sport", opis: "Bosanski sportisti vani, reprezentacija, Bundesliga" },
+  sport: { naziv: "Sport", opis: "Bundesliga, svjetski fudbal i veliki mečevi" },
   gastarbajter: { naziv: "Gastarbajter", opis: "Stvarne priče iz dijaspore — smijeh i korisna informacija" },
   drama: { naziv: "Vijesti i drama", opis: "Priče koje se prepričavaju u dijaspori" },
   biznis: { naziv: "Biznis", opis: "Poduzetništvo, firme i biznis prilike za dijasporu" },
 };
-
-// Ove teme pokazuju SAMO vodiče (bez vijesti) — pripadaju rubrici "Vodiči".
-const SAMO_VODICI = new Set(["viza", "stan", "zdravstvo", "porodica"]);
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -39,9 +34,9 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const info = kategorijeInfo[slug];
-  if (!info) return { title: "Kategorija — kodnas.de" };
+  if (!info) return { title: "Kategorija — Dijaspora.ba" };
   return {
-    title: `${info.naziv} — kodnas.de`,
+    title: `${info.naziv} — Dijaspora.ba`,
     description: info.opis,
   };
 }
@@ -56,59 +51,6 @@ export default async function KategorijaPage({ params }: Props) {
   const { slug } = await params;
   const info = kategorijeInfo[slug];
   if (!info) notFound();
-
-  // ── SAMO VODIČI (viza/stan/zdravstvo/porodica) — bez vijesti ──────────
-  if (SAMO_VODICI.has(slug)) {
-    const listaVodica = getVodiciByKategorija(slug);
-    return (
-      <>
-        <Nav />
-        <div className="kat-tick"><Ticker /></div>
-        <KategorijBar aktivna={slug} />
-        <div className="kat-wrap" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
-          <div className="kat-header kat-pad" style={{ marginBottom: 28 }}>
-            <div style={{ fontSize: 12, color: "var(--tekst-muted)", marginBottom: 6 }}>
-              <a href="/" style={{ color: "var(--zelena)" }}>Početna</a> → <a href="/vodici" style={{ color: "var(--zelena)" }}>Vodiči</a> → {info.naziv}
-            </div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.5px" }}>📘 {info.naziv}</h1>
-            <p style={{ fontSize: 15, color: "var(--tekst-muted)" }}>{info.opis}</p>
-          </div>
-
-          {listaVodica.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 60, color: "var(--tekst-muted)" }}>
-              <div style={{ fontSize: 40, marginBottom: 16 }}>📘</div>
-              <p>Vodiči za ovu temu uskoro stižu.</p>
-            </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
-              {listaVodica.map((v) => (
-                <Link
-                  key={v.slug}
-                  href={`/vodic/${v.slug}`}
-                  style={{ display: "block", background: "var(--white)", border: "1px solid var(--border)", borderRadius: 12, padding: 18, textDecoration: "none", color: "inherit" }}
-                >
-                  <div style={{ fontSize: 30, marginBottom: 8 }}>{v.ikona}</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.35, marginBottom: 6, color: "var(--tekst)" }}>{v.naziv}</div>
-                  <div style={{ fontSize: 13, color: "var(--tekst-muted)", lineHeight: 1.45, marginBottom: 10 }}>{v.opis}</div>
-                  <div style={{ fontSize: 12, color: "var(--tekst-light)", fontWeight: 600 }}>
-                    {v.koraci.length} koraka · {v.minCitanja} min čitanja
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-        <Footer />
-        <style>{`
-          @media (max-width: 768px) {
-            .kat-wrap { padding: 12px 14px 0 !important; }
-            .kat-header h1 { font-size: 21px !important; }
-            .kat-tick { display: none !important; }
-          }
-        `}</style>
-      </>
-    );
-  }
 
   // DB članci (bot + ručno objavljeni) prvo, pa statični primjeri
   const izBaze = await dajPoKategoriji(slug, 30);
@@ -132,12 +74,12 @@ export default async function KategorijaPage({ params }: Props) {
   return (
     <>
       <Nav />
-      <div className="kat-tick"><Ticker /></div>
+      <Ticker />
       <KategorijBar aktivna={slug} />
 
-      <div className="kat-wrap" style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
         {/* Header */}
-        <div className="kat-header kat-pad" style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 12, color: "var(--tekst-muted)", marginBottom: 6 }}>
             <a href="/" style={{ color: "var(--zelena)" }}>Početna</a> → {info.naziv}
           </div>
@@ -153,7 +95,7 @@ export default async function KategorijaPage({ params }: Props) {
             <p>Nema još članaka u ovoj kategoriji. Uskoro!</p>
           </div>
         ) : (
-          <div className="kat-desktop-lista" style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--border)", border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
             {clanci.map((clanak) => (
               <Link
                 key={clanak.id}
@@ -186,30 +128,10 @@ export default async function KategorijaPage({ params }: Props) {
             ))}
           </div>
         )}
-
-        {/* MOBILNI izgled — naslovni članak + kartice (kao naslovna) */}
-        <KategorijaMobilna
-          stavke={clanci.map((c) => ({
-            slug: c.slug,
-            naslov: c.naslov,
-            slika: c.slika,
-            meta: `${c.datum} · ${c.minCitanja} min čitanja`,
-            oznaka: info.naziv,
-          }))}
-        />
       </div>
 
       <Footer />
-      <style>{`
-        .kat-red:hover { background: #fafafa !important; }
-        @media (max-width: 768px) {
-          .kat-wrap { padding: 12px 0 0 !important; }
-          .kat-pad { padding-left: 14px !important; padding-right: 14px !important; }
-          .kat-header h1 { font-size: 21px !important; }
-          .kat-desktop-lista { display: none !important; }
-          .kat-tick { display: none !important; }
-        }
-      `}</style>
+      <style>{`.kat-red:hover { background: #fafafa !important; }`}</style>
     </>
   );
 }

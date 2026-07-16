@@ -39,11 +39,6 @@ export default function ONamaPage() {
             Pored vijesti, nudimo korak-po-korak vodiče koji te vode kroz konkretne procedure — od aplikacije za vizu do povrata poreza.
           </p>
 
-          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, marginTop: 32 }}>AI asistent</h2>
-          <p style={{ marginBottom: 16 }}>
-            Portal uključuje asistenta koji može odgovoriti na tvoja specifična pitanja na bosanskom jeziku — 24/7, bez čekanja. Fokusiran je na teme o njemačkim sistemima i objašnjava kompleksne stvari jednostavnim rječnikom.
-          </p>
-
           <div style={{ background: "var(--zelena-svijetla)", border: "1px solid var(--zelena)", borderRadius: 12, padding: 24, marginTop: 32 }}>
             <h3 style={{ fontWeight: 700, marginBottom: 8, color: "var(--zelena-tamna)" }}>⚠️ Odricanje odgovornosti</h3>
             <p style={{ fontSize: 14, color: "var(--zelena-tamna)", lineHeight: 1.6 }}>
