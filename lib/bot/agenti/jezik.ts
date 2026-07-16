@@ -16,6 +16,7 @@ STROGA PRAVILA:
 4. HTML tagovi moraju ostati NETAKNUTI i pravilno zatvoreni.
 5. Ako je rečenica gramatički toliko neispravna da joj se ne može odrediti smisao, preformuliši je tako da bude jednostavna, jasna i gramatički tačna, zadržavajući originalnu informaciju.
 6. FUTUR I piši ODVOJENO (bosanski standard): "radit će", "bit će", "donosit će", "doći će", "imat će", "moći će" — NIKAD stopljeno "radiće", "biće", "donosiće", "imaće".
+7. GLAGOLI na -iti u 3. licu množine završavaju na -E, ne -U: "oni ruše" (ne "rušu"), "nose", "voze", "grade", "misle", "troše". Pazi na ovakve oblike.
 
 KROATIZMI → BOSANSKI (obavezno ispravi):
 - "istorija/istorijski/istoričar" → "historija/historijski/historičar" (bosanski H-oblik; isto: hemija, hirurg, haos, harmonija)
