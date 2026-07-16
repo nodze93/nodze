@@ -215,11 +215,7 @@ export default async function ClanakPage({ params }: Props) {
 
           {/* Ispod slike, u istoj ravnini: datum + vrijeme čitanja lijevo, Podijeli desno */}
           <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 13, color: "var(--tekst-light)", alignItems: "center" }}>
-              <span>📅 {clanak.datum}</span>
-              <span>·</span>
-              <span>⏱ {clanak.minCitanja} min čitanja</span>
-            </div>
+            <span style={{ fontSize: 13, color: "var(--tekst-light)", whiteSpace: "nowrap" }}>📅 {clanak.datum}</span>
             <DijeliDugme slug={clanak.slug} naslov={clanak.naslov} />
           </div>
 
