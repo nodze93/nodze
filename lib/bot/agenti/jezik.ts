@@ -52,23 +52,11 @@ const JEZIK_SCHEMA = {
     ispravljen_naslov: { type: "string" },
     ispravljen_excerpt: { type: "string" },
     ispravljen_sadrzaj: { type: "string", description: "Cijeli HTML sadržaj s ispravkama, tagovi netaknuti" },
-    broj_ispravki: { type: "integer" },
-    ispravke: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          original: { type: "string" },
-          ispravljeno: { type: "string" },
-          razlog: { type: "string" },
-        },
-        required: ["original", "ispravljeno", "razlog"],
-      },
-    },
+    broj_ispravki: { type: "integer", description: "Ukupan broj ispravki (samo broj, NE nabrajaj ih)" },
     ocjena: { type: "string", enum: ["cisto", "sitne_greske", "puno_gresaka"] },
-    komentar: { type: "string" },
+    komentar: { type: "string", description: "Kratka napomena uredniku (jedna rečenica), ako treba" },
   },
-  required: ["ispravljen_naslov", "ispravljen_excerpt", "ispravljen_sadrzaj", "broj_ispravki", "ispravke", "ocjena", "komentar"],
+  required: ["ispravljen_naslov", "ispravljen_excerpt", "ispravljen_sadrzaj", "broj_ispravki", "ocjena"],
 };
 
 export async function jezikCheck(clanak: {
@@ -86,7 +74,7 @@ export async function jezikCheck(clanak: {
       // odgovor odsijecao (max_tokens), pa je vraćen krnj objekat i rušio spremanje.
       maxTokens: 8000,
       toolName: "lektorisan_tekst",
-      toolOpis: "Vrati lektorisan tekst sa spiskom ispravki.",
+      toolOpis: "Vrati SAMO ispravljen tekst, naslov, excerpt, ukupan broj ispravki i ocjenu. NE nabrajaj pojedinačne ispravke.",
       schema: JEZIK_SCHEMA,
     });
 
