@@ -15,8 +15,10 @@ STROGA PRAVILA:
 3. BEZ KREATIVNOSTI: Zabranjeno je pisati u stihovima, haiku formi ili bilo kojoj književnoj formi. Piši informativno i direktno.
 4. HTML tagovi moraju ostati NETAKNUTI i pravilno zatvoreni.
 5. Ako je rečenica gramatički toliko neispravna da joj se ne može odrediti smisao, preformuliši je tako da bude jednostavna, jasna i gramatički tačna, zadržavajući originalnu informaciju.
+6. FUTUR I piši ODVOJENO (bosanski standard): "radit će", "bit će", "donosit će", "doći će", "imat će", "moći će" — NIKAD stopljeno "radiće", "biće", "donosiće", "imaće".
 
 KROATIZMI → BOSANSKI (obavezno ispravi):
+- "istorija/istorijski/istoričar" → "historija/historijski/historičar" (bosanski H-oblik; isto: hemija, hirurg, haos, harmonija)
 - "što" (upitno) → "šta"  (ali relativno "ono što", "sve što" OSTAVI)
 - "uopće" → "uopšte"
 - "liječnik/liječnica" → "doktor/doktorica"
@@ -75,11 +77,40 @@ export async function jezikCheck(clanak: {
       model: MODEL_LEKTOR,
       system: JEZIK_PROMPT,
       user: `Provjeri i ispravi bosanski jezik:\n\nNASLOV:\n${clanak.naslov}\n\nEXCERPT:\n${clanak.excerpt}\n\nSADRŽAJ (HTML):\n${clanak.sadrzaj}`,
-      maxTokens: 3000,
+      // 8000 da cijeli ispravljeni članak stane — ranije se na dužim tekstovima
+      // odgovor odsijecao (max_tokens), pa je vraćen krnj objekat i rušio spremanje.
+      maxTokens: 8000,
       toolName: "lektorisan_tekst",
       toolOpis: "Vrati lektorisan tekst sa spiskom ispravki.",
       schema: JEZIK_SCHEMA,
     });
+
+    // ZAŠTITA: ako je odgovor ipak stigao krnj (odsječen), glavna polja fale.
+    // Tada NE rušimo članak — vraćamo original (bolje neispravljen nego izgubljen).
+    if (
+      !rez ||
+      typeof rez.ispravljen_sadrzaj !== "string" || rez.ispravljen_sadrzaj.length === 0 ||
+      typeof rez.ispravljen_naslov !== "string" || rez.ispravljen_naslov.length === 0 ||
+      typeof rez.ispravljen_excerpt !== "string"
+    ) {
+      console.warn("   ⚠️ Lektor vratio nepotpun odgovor (odsječen) — koristim original.");
+      return {
+        ispravljen_naslov: clanak.naslov,
+        ispravljen_excerpt: clanak.excerpt,
+        ispravljen_sadrzaj: clanak.sadrzaj,
+        broj_ispravki: 0,
+        ispravke: [],
+        ocjena: "cisto",
+        komentar: "Lektor vratio nepotpun odgovor — tekst je original.",
+      };
+    }
+
+    // Normalizuj opciona polja koja mogu faliti (da .slice nizvodno nikad ne pukne).
+    rez.ispravke = Array.isArray(rez.ispravke) ? rez.ispravke : [];
+    rez.ocjena = rez.ocjena || "sitne_greske";
+    rez.broj_ispravki = typeof rez.broj_ispravki === "number" ? rez.broj_ispravki : rez.ispravke.length;
+    rez.komentar = rez.komentar || "";
+
     console.log(`   ✅ ${rez.broj_ispravki} ispravki (${rez.ocjena})`);
     return rez;
   } catch (err) {

@@ -79,7 +79,7 @@ export async function sacuvajDraft(args: {
   const db = createServerClient();
 
   const finalNaslov = jezik.ispravljen_naslov || clanak.naslov;
-  const finalExcerpt = (jezik.ispravljen_excerpt || clanak.excerpt).slice(0, 250);
+  const finalExcerpt = (jezik.ispravljen_excerpt || clanak.excerpt || "").slice(0, 250);
   const finalSadrzaj = jezik.ispravljen_sadrzaj || clanak.sadrzaj;
   const slug = napraviSlug(finalNaslov);
 
@@ -113,7 +113,7 @@ export async function sacuvajDraft(args: {
     faktcheck_report: factcheck,
     context_report: context,
     jezik_ocjena: jezik.ocjena,
-    jezik_report: { broj_ispravki: jezik.broj_ispravki, ispravke: jezik.ispravke.slice(0, 20), komentar: jezik.komentar },
+    jezik_report: { broj_ispravki: jezik.broj_ispravki, ispravke: (jezik.ispravke || []).slice(0, 20), komentar: jezik.komentar },
 
     originalni_link: vijest.link,
     zvanicni_izvor: zvanicniUrl,
