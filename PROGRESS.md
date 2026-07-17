@@ -39,10 +39,21 @@ Zadnji update: 2026-07-17
 - [x] Profilna "KN" + cover (novinarski stil, sužen da stane na mobilnom)
 - [x] Prvi post napisan ("Introduce yourself")
 
-### ⚠️ Ručni koraci koji čekaju: pokrenuti supabase/dijeljenja.sql; postaviti kvote u adminu;
-###    napraviti GA4 + upisati NEXT_PUBLIC_GA_ID u Vercel
+### Facebook objava iz admina — GOTOVO ✅
+- [x] 🔵 FB dugme u adminu objavljuje na stranicu (nativni foto-post: slika + naslov + link u tekstu)
+- [x] FB_PAGE_ID (1270099672843899) + FB_PAGE_TOKEN (dugotrajni) postavljeni u Vercel
+- [x] Pokrenut supabase/facebook.sql (kolona fb_post_id — dedupe)
+- [x] lib/bot/facebook.ts: link u TEKSTU posta (komentar-stil traži pages_manage_engagement
+      koju FB blokira zbog pages_read_user_content; za malu stranicu razlika u dosegu zanemarljiva)
 
-### 🎯 Sljedeći koraci: 1) Promocija + FB setup  2) Google (Analytics + Search Console)  3) Impresum i Datenschutz (prava podaci!)
+### Impressum + Datenschutz — GOTOVO ✅
+- [x] app/impressum/page.tsx + app/datenschutz/page.tsx (prava podaci: Dzen Karg, Korbinianstraße 1, 80807 München)
+- [x] Linkovi u Footer.tsx (Portal kolona + donji red)
+
+### ⚠️ Ručni korak koji čeka: napraviti GA4 + upisati NEXT_PUBLIC_GA_ID u Vercel
+###    (dijeljenja.sql, facebook.sql, kvote — sve već urađeno)
+
+### 🎯 Sljedeći koraci: 1) Promocija (FB integracija gotova)  2) Google (Analytics + Search Console)  3) ~~Impresum/Datenschutz~~ ✅
 
 ---
 
