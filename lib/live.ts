@@ -159,22 +159,37 @@ export async function dajLiveBIH(limit = 6): Promise<LiveStavka[]> {
     .map(uStavku);
 }
 
+// Povuci objavljene članke DIREKTNO iz baze filtrirano po kategoriji/tipu.
+// (Za razliku od dajObjavljene() koji uzme samo 60 najnovijih iz SVIH
+//  kategorija — zbog čega su svijet/sport znali "ispasti" iz tog prozora.)
+async function dajObjavljeneOr(orIzraz: string, limit: number): Promise<Red[]> {
+  const db = klijent();
+  if (!db) return [];
+  const { data, error } = await db
+    .from("clanci")
+    .select("slug,naslov,izvor,kategorija,tip,slika,min_citanja,datum_objave,created_at,zakazano_za")
+    .eq("status", "published")
+    .or(orIzraz)
+    .order("datum_objave", { ascending: false, nullsFirst: false })
+    .limit(limit + 10);
+  if (error || !data) return [];
+  // Sakrij članke zakazane za budućnost, pa vrati traženi limit.
+  const sada = Date.now();
+  return (data as Red[])
+    .filter((r) => !r.zakazano_za || Date.parse(r.zakazano_za) <= sada)
+    .slice(0, limit);
+}
+
 /** 🌍 Naši objavljeni svjetski članci (za widget na naslovnoj) */
 export async function dajLiveSvijet(limit = 8): Promise<LiveStavka[]> {
-  const svi = await dajObjavljene();
-  return svi
-    .filter((r) => (r.tip || "") === "svjetske" || r.kategorija === "svijet")
-    .slice(0, limit)
-    .map(uStavku);
+  const svi = await dajObjavljeneOr("kategorija.eq.svijet,tip.eq.svjetske", limit);
+  return svi.map(uStavku);
 }
 
 /** ⚽ Naši objavljeni sportski članci (za widget na naslovnoj) */
 export async function dajLiveSport(limit = 8): Promise<LiveStavka[]> {
-  const svi = await dajObjavljene();
-  return svi
-    .filter((r) => (r.tip || "") === "sport" || r.kategorija === "sport")
-    .slice(0, limit)
-    .map(uStavku);
+  const svi = await dajObjavljeneOr("kategorija.eq.sport,tip.eq.sport", limit);
+  return svi.map(uStavku);
 }
 
 export const MOCK_SVIJET: LiveStavka[] = [
