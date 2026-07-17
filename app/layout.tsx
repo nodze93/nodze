@@ -27,7 +27,7 @@ if (process.env.BING_SITE_VERIFICATION) {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
-  title: "Dijaspora.ba — Tvoj vodič kroz život vani",
+  title: "kodnas.de — Tvoj vodič kroz život vani",
   description:
     "Portal za Bosance u Njemačkoj i Austriji. Vijesti, vodiči i praktične informacije o vizi, poslu, stanu, zdravstvu, porezu i penziji.",
   keywords: [
@@ -44,10 +44,10 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Dijaspora.ba — Tvoj vodič kroz život vani",
+    title: "kodnas.de — Tvoj vodič kroz život vani",
     description: "Portal za Bosance u Njemačkoj i Austriji.",
     url: SITE,
-    siteName: "Dijaspora.ba",
+    siteName: "kodnas.de",
     locale: "bs_BA",
     type: "website",
   },
