@@ -24,6 +24,8 @@ export interface FbRezultat {
   postId?: string;
   greska?: string;
   preskoceno?: boolean;
+  komentarOk?: boolean;      // je li link uspješno objavljen u prvom komentaru
+  komentarGreska?: string;   // ako komentar nije prošao — zašto
 }
 
 /**
@@ -57,18 +59,28 @@ export async function objaviNaFacebook(clanak: FbClanak): Promise<FbRezultat> {
     // Za komentar treba post_id (feed post), ne id (fotografija).
     const postId = d1.post_id || d1.id!;
 
-    // 2) Link kao PRVI komentar (ako padne, post ostaje — nije kritično)
+    // 2) Link kao PRVI komentar. Post ostaje i ako komentar padne, ali sada
+    //    provjeravamo odgovor i javljamo je li link stvarno objavljen (da se
+    //    u adminu vidi zašto linka nema — npr. fali dozvola/token istekao).
+    let komentarOk = false;
+    let komentarGreska: string | undefined;
     try {
-      await fetch(`${GRAF}/${postId}/comments`, {
+      const r2 = await fetch(`${GRAF}/${postId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: `📎 Cijeli članak: ${link}`, access_token: TOKEN }),
       });
-    } catch {
-      /* komentar nije uspio — nije kritično */
+      const d2 = (await r2.json()) as { id?: string; error?: { message?: string } };
+      if (r2.ok && d2.id) {
+        komentarOk = true;
+      } else {
+        komentarGreska = d2.error?.message || "Komentar s linkom nije objavljen.";
+      }
+    } catch (e) {
+      komentarGreska = (e as Error).message;
     }
 
-    return { ok: true, postId };
+    return { ok: true, postId, komentarOk, komentarGreska };
   } catch (e) {
     return { ok: false, greska: (e as Error).message };
   }

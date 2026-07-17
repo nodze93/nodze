@@ -33,7 +33,10 @@ export async function POST(req: Request) {
     if (fb.postId) {
       await db.from("clanci").update({ fb_post_id: fb.postId }).eq("id", id);
     }
-    return NextResponse.json({ ok: true, postId: fb.postId, poruka: "Objavljeno na Facebook! 🔵" });
+    const poruka = fb.komentarOk
+      ? "Objavljeno na Facebook — link je u prvom komentaru! 🔵"
+      : `Objavljeno na Facebook 🔵, ALI link u komentaru nije prošao: ${fb.komentarGreska || "nepoznato"}`;
+    return NextResponse.json({ ok: true, postId: fb.postId, komentarOk: fb.komentarOk, poruka });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
