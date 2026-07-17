@@ -1,189 +1,133 @@
 # PROGRESS LOG — KODNAS.DE
 
-## STATUS: LIVE + bogat feature set (izmjene čekaju push/merge na preview)
-Zadnji update: 2026-07-12
+## STATUS: LIVE + bot 2.0 (lijevak) radi; sve pushovano
+Zadnji update: 2026-07-17
 
-## 🆕 SESIJA 2026-07-12 (audit, novi logo, kompletni vodiči, BOT 2.0 "lijevak", memorija, admin mobilni)
+## ✅ SESIJA 2026-07-17 (veliki set popravki — SVE PUSHOVANO)
 
-### Audit sajta + čišćenje (frontend)
-- [x] Footer: rebrand, izbačena Austrija/Švicarska, izbačeni mrtvi linkovi
-      (/newsletter, /oglasavanje → /vijesti, /vodici).
-- [x] "Uvijek mrtvi" linkovi: Hero bočne kartice + NajcitanijeBox sad vuku PRAVE
-      članke iz baze (fallback = pravi vodiči). Nema više izmišljenih /clanak/.
-- [x] Izbačeni BiH-mock fallbackovi (page.tsx, NajnovijeSection, NajpopularnijeSection)
-      — prazna sekcija se sakrije umjesto lažnih linkova.
-- [x] Rebrand + de-Austrija: o-nama, vijesti, vodici, FaqBox, ai-chat.
-- [x] Newsletter forma SPOJENA na /api/newsletter (prije "TODO", nije snimala).
+### Bot — lektor (gramatika)
+- [x] Lektor prebačen na **claude-sonnet-5** (MODEL_LEKTOR u lib/bot/agenti/claude.ts); ostatak Haiku
+- [x] maxTokens lektora 3000→8000 + zaštita (krnj odgovor → sačuvaj original, ne ruši)
+      → RIJEŠEN pravi uzrok "greška u obradi" za njemačke članke (bio krah lektora, NE dedup)
+- [x] Izbačena lista ispravki iz lektorovog odgovora → jeftiniji Sonnet + rjeđe se siječe
+- [x] Jezik: istorija→historija, ijekavica (prijevoz ne prevoz), futur odvojeno (donosit će),
+      glagoli -iti 3.l.mn. -e (ruše ne rušu)
 
-### Logo — novi wordmark "Dnevni filter njemačkih vijesti"
-- [x] Varijanta D (verzal): "DNEVNI FILTER" + sitnije "NJEMAČKIH VIJESTI".
-      Nav.tsx (header+drawer) + Footer.tsx. Staro "Kod nas u…" izbačeno.
+### Bot — kvote + duplikati
+- [x] Kvote iz admina STVARNO rade (pipeline2 čita dajBotConfig → kapDijaspora/svijet/sport + brojObjava)
+- [x] Podrazumijevano: DE 5, svijet 3, sport 3 (lib/bot-config.ts)
+- [x] Triaža stroža protiv duplikata (vec_poznato *0.3 + oštriji prompt za istu temu drugačije sročenu)
 
-### Vodiči — sve grupe kompletirane (17 → 31)
-- [x] Stan 1→8, Zdravstvo 1→8, Porodica 1→8. (viza 7, posao 3, +1 ostale.)
-- [x] Provjerene brojke 2026: Kindergeld 259€, Rundfunkbeitrag 18,36€,
-      Mietpreisbremse do 2029, Pflegegeld PG2~347/PG3~599/PG4~800/PG5~990€.
-- [x] Popravljena 2 ćirilična slova (jedno staro u Westbalkan vodiču).
+### Admin
+- [x] Uklonjeno duplo "Pokreni odmah" dugme (Dashboard) — ostaje na Pipeline stranici
+- [x] Status runa "Djelimično" (žuto) umjesto crvene "Greška" kad je nešto napisano
+- [x] Kolona 📤 broj dijeljenja; API ruta otporna ako kolona ne postoji
 
-### BOT 2.0 — "LIJEVAK" (pipeline2), pali se prekidačem
-- [x] Tok: ~1500 RSS → dedupe → PRAVILA (bez AI) → KLJUČNE RIJEČI+tier (bez AI, top 40)
-      → AI TRIAŽA (JEDAN poziv, naslov+opis) → dedupe tema → pobjednici: writer
-      čita cijeli tekst → fact-check/jezik → draft. AI skupo radi ~8 članaka/dan.
-- [x] NOVO: izvori-prosireni.ts (tier), lijevak/pravila.ts, lijevak/kljucne.ts,
-      agenti/triaza.ts, pipeline2.ts. + BOT-LIJEVAK.md.
-- [x] rss.ts (fetchIzvore), pipeline.ts (NOVI_PIPELINE prekidač), run-bot.ts
-      (lijevak PODRAZUMIJEVAN; stari = NOVI_PIPELINE=off), tipovi.ts.
-- [x] Env štimanje: PRAG_TRIAZA=68, BROJ_OBJAVA=8, TOP_ZA_TRIAZU=40, MAX_STAROST_SATI=36.
-- [x] Popravke: triaža u grupama po 20 + izbačen "razlog" + zaštita (bio max_tokens crash);
-      izbačena 3 mrtva feeda (Bundesregierung/Focus/Köln). PRVI TEST (run #33) → piše draftove. ✅
+### Dijeljenje (share) članaka
+- [x] components/DijeliDugme.tsx (Web Share API, klix stil), app/api/clanak/[slug]/dijeli/route.ts
+- [x] supabase/dijeljenja.sql (kolona broj_dijeljenja + RPC increment_dijeljenja) — ČEKA da se pokrene
+- [x] Datum + "Podijeli" u redu ispod slike (bez "min čitanja")
 
-### Memorija tema + tvrđa dedupe (protiv ponavljanja) — BEZ diranja starih članaka
-- [x] publisher.ts ucitajNedavneNaslove() → signal triaži ("vec_poznato" spusti duplikat,
-      ali "novi razvoj iste teme" prolazi kao nova vijest).
-- [x] ODLUKA: NE ažurirati stare članke. Rezolucija štrajka = nova vijest, ne dodatak.
-- [x] dedupe.ts: normLink() + istaTemaStrogo() (≥3 iste riječi ILI jaccard ≥0.55);
-      pipeline2.ts normalizovan link-dedupe + izbaciVecObjavljene() preko dana.
+### Frontend
+- [x] /de "Učitaj još" (components/DeLista.tsx) + popravljen limit (lib/live.ts — vide se stariji članci)
+- [x] Izbačena "AI asistent" sekcija (/o-nama)
+- [x] Sport podnaslov: "Bundesliga, svjetski fudbal i veliki mečevi" (naslovna + /kategorija/sport)
+- [x] Uklonjen Vercel cron (vercel.json) → nema više "c is not iterable"
+- [x] Google Analytics spreman: app/layout.tsx čita NEXT_PUBLIC_GA_ID (čeka ID u Vercelu)
 
-### Scroll fix + Admin za telefon (ponovo — prošli put nije stvarno radilo)
-- [x] ScrollNaVrh.tsx — pravi uzrok = browser scroll restoration; sad na reload
-      isključi pa forsira vrh, "nazad" i dalje pamti poziciju.
-- [x] app/admin/layout.tsx — sidebar je bio uvijek vidljiv (jeo pola ekrana!);
-      sad fioka na ☰ + sadržaj cijela širina. Logo "kodnas.de".
-- [x] app/admin/clanci/page.tsx — tabela → KARTICE na telefonu (velika dugmad). Desktop = tabela.
+### Facebook (brend)
+- [x] Profilna "KN" + cover (novinarski stil, sužen da stane na mobilnom)
+- [x] Prvi post napisan ("Introduce yourself")
 
-### VAŽNO — nesklad
-- Bot-BACKEND (izvori.ts, filter.ts, publisher.ts, pipeline.ts) JOŠ IMA BiH,
-  iako je frontend očišćen. NOVI lijevak (pipeline2) je čist. Nebitno kad se koristi lijevak.
+### ⚠️ Ručni koraci koji čekaju: pokrenuti supabase/dijeljenja.sql; postaviti kvote u adminu;
+###    napraviti GA4 + upisati NEXT_PUBLIC_GA_ID u Vercel
 
-## 🆕 SESIJA 2026-07-10 (gramatika, Wikimedia slike, kategorije na telefonu, marketing)
+### 🎯 Sljedeći koraci: 1) Promocija + FB setup  2) Google (Analytics + Search Console)  3) Impresum i Datenschutz (prava podaci!)
 
-### Gramatika — završni prolaz (odvojen od lektora)
-- [x] NOVO lib/bot/agenti/gramatika.ts — zaseban ZADNJI poziv, radi SAMO
-      gramatiku (padeži, rod, slaganje, ijekavica), ne dira stil/HTML.
-- [x] PREKIDAČ env: MODEL_GRAMATIKA (default Haiku → postavi "claude-sonnet-4-5"
-      za bolju gramatiku bez izmjene koda). GRAMATIKA_PROLAZ=off isključi.
-- [x] claude.ts (MODEL_GRAMATIKA), pipeline.ts (poziv poslije lektora).
-- Razlog: Haiku slabiji za bosansku gramatiku; besplatna pravila već iscrpljena.
+---
 
-### Slike — Wikimedia IMPLEMENTIRANO (Unsplash pao na rezervu)
-- [x] NOVO lib/bot/slike-wikimedia.ts — izvuče vlastita IMENA iz naslova
-      (Merz, Washington, Džeko, Bundestag...) → Wikipedia (de/en) glavna slika
-      (~1200px, oštro+brzo) → licenca s Commons; rezerva Commons full-text.
-      Za apstraktne naslove bez imena → null (članak zadrži staru sliku).
-- [x] pipeline.ts: Wikimedia PRVO, Unsplash rezerva. tipovi.ts (SlikaInfo),
-      publisher.ts (oznaka slike = autor + Wikimedia Commons + licenca).
-- [x] ADMIN dugme za STARE članke: app/admin/slike/page.tsx (pregled sa
-      staro→novo, odznači šta ne želiš, pa primijeni) + 
-      app/api/admin/slike-wikimedia/route.ts (preview/apply, batch po 8) +
-      link "🖼️ Slike" u app/admin/layout.tsx.
-- Napomena: og:image iz izvora ostaje ODBAČEN (Abmahnung rizik). Pexels nije rađen.
+## ✅ URAĐENO (ranije)
 
-### Kategorije na telefonu — izgled kao naslovna (desktop netaknut)
-- [x] NOVO components/KategorijaMobilna.tsx — naslovni članak (velika slika +
-      naslov + datum) + ostali kao kartice sa slikama, do ivica ekrana.
-- [x] app/kategorija/[slug]/page.tsx, app/de/page.tsx, app/bih/page.tsx —
-      mobilni blok (.kat-mob) + desktop lista sakrivena na telefonu (.kat-desktop-lista),
-      Ticker sakriven na telefonu. Desktop identičan kao prije.
+### Osnova (ranije)
+- [x] Domena kodnas.de (Namecheap A/CNAME), Vercel, Supabase, GitHub
+- [x] Portal LIVE na kodnas.de
+- [x] Supabase URL/ključevi popravljeni (sb_publishable_ / sb_secret_)
+- [x] Bot prebačen na GitHub Actions (Node 22, npm install, npx tsx scripts/run-bot.ts)
 
-### Marketing — slika i tekst za dijeljenje linka
-- [x] /public/og-default.jpg regenerisan (PIL): naslov "Sve njemačke vijesti
-      na našem jeziku" (bijelo), podnaslov "Aktuelne vijesti iz Njemačke —
-      svaki dan", čipovi BEZ Austrije, čist zeleni dizajn s logom.
-- [x] app/layout.tsx — title/description/OG/twitter na novo pozicioniranje
-      (njemačke vijesti na bosanskom), Austrija maknuta iz vidljivog teksta.
+### MOST DO KOMPJUTERA (najvažnija promjena u workflow-u!)
+- [x] Claude piše fajlove DIREKTNO u C:\Users\dzena\Documents\GitHub\nodze preko mosta
+- [x] Korisnik samo commit + push u GitHub Desktop (nema više copy-paste)
+- [x] IZUZETAK: .github/workflows/*.yml su ZAŠTIĆENI — most ih ne može pisati.
+      Taj jedan fajl (bot-cron.yml) korisnik MORA ručno kopirati.
 
-### SEO — provjereno (već dobro postavljeno)
-- [x] sitemap.ts dinamičan (statične + kategorije + SVI objavljeni članci iz
-      baze + svi vodiči), robots.ts (dozvoli sve, blokiraj admin/api, sitemap).
-      Oba na kodnas.de. GSC verifikacija ide preko GOOGLE_SITE_VERIFICATION env.
+### Sigurnosni audit
+- [x] Cron endpoint zatvoren (zahtijeva CRON_SECRET, timing-safe)
+- [x] /api/ai-chat rate limit + validacija (zaštita budžeta)
+- [x] Rate limiting na newsletter/kontakt
+- [x] Admin login: timing-safe + hash token u cookie (ne sirova lozinka)
+- [x] XSS sanitizacija članaka (lib/sanitize.ts)
+- [x] Validacija javnih formi
+- Novi fajlovi: lib/security.ts, lib/rate-limit.ts, lib/sanitize.ts
 
-### Odluke/strategija
-- Pozicioniranje: NJEMAČKE vijesti na bosanskom (ne takmičiti se s klixom na
-  bh. vijestima). Cilj ~20 članaka/dan (~€25/mj). Realan trošak ~4 EUR centa/članak
-  (NE 0.5 — ranija procjena bila pogrešna). Kapaljka + auto-objava = dogovoreno, TODO.
+### Bot optimizacija (cilj < €12-15/mj)
+- [x] Oba modela Haiku 4.5 (MODEL_PISAC bio Sonnet)
+- [x] Prompt caching (cache_control ephemeral) u lib/bot/agenti/claude.ts
+- [x] Max tokens sniženi: writer 2500, factcheck 1500, jezik 3000
+- [x] Skip fact-check za sport i svijet (samo dijaspora ide kroz fact-check)
+- [x] Cijene (Haiku 4.5): input $1/M, output $5/M, cache read $0.10/M
 
-## 🆕 SESIJA 2026-07-09 (bot, mobilna verzija, vodiči)
+### Bot kvote + raspored
+- [x] DE i BiH ODVOJENE kvote (BiH više ne ostaje prazan) — filter dijeli po jeziku izvora
+- [x] 3x dnevno: 06:00 / 12:30 / 20:00 (Berlin) → cron UTC: "0 4", "30 10", "0 18"
+- [x] Sport samo ujutro (06:00) i navečer (20:00), ne u podne
+- [x] Kvote (env): CLANCI_DE=1, CLANCI_BIH=1, CLANCI_SVIJET=1, CLANCI_SPORT (uslovno)
+- [x] Procjena troška: ~€13/mj
 
-### Bot — jeftinije, tačnije, bolja gramatika
-- [x] DEDUPE popravka (glavna ušteda): bot je pamtio samo OBJAVLJENE linkove,
-      pa je filter (Claude) svakih 15 min ponovo ocjenjivao istih ~140 vijesti.
-      Sad se pamte SVE vijesti koje prođu kroz filter (oznaciObradjeneBatch u
-      publisher.ts + poziv u pipeline.ts) → ~85-90% manje Claude poziva.
-- [x] Context agent ISKLJUČEN (vraćao samo true/false kućice koje se ne koriste)
-      → jedan Claude poziv manje po svakom članku.
-- [x] Writer maxTokens 2500 → 3800 (članak se sjekao prije poente).
-- [x] Jezik/lektor maxTokens 3000 → 4500 (vraća cijeli članak, ne smije se sjeći).
-- [x] Bosanska gramatička pravila (padeži uz brojeve, slaganje roda/broja,
-      ijekavica, bosanski oblici) dodana i piscu (writer.ts ZAJEDNICKA_PRAVILA)
-      i lektoru (jezik.ts).
-- [x] Pravilo "ako naslov/uvod nešto obeća, tekst to MORA razriješiti" (writer).
-- [x] Bolje čitanje izvora (fetchIzvor): hvata i <li>/<h2>/<h3> + rezerva na
-      ogoljeni tekst (prije samo <p>, pa su detalji promicali).
-- [x] Upozorenje u logu kad odgovor udari u max_tokens (claude.ts).
-- Klikabilnost i selekcija vijesti NISU dirane (filter.ts netaknut).
+### Admin "Pokreni odmah"
+- [x] Sada pali GitHub Actions (ne piše na Vercelu — 60s limit ubijao bota)
+- [x] Treba env GITHUB_TOKEN u Vercelu (repo scope dovoljan)
 
-### Admin za telefon (mobilna verzija) — desktop netaknut
-- [x] NOVO lib/useIsMobile.ts — hook za detekciju telefona.
-- [x] app/admin/layout.tsx — hamburger meni + off-canvas sidebar na telefonu.
-- [x] components/admin/AdminModeracija.tsx — kartice umjesto stisnutih redova,
-      velika dugmad, filter po statusu ("Na čekanju") za brzo odobravanje.
-- [x] app/admin/clanci/page.tsx — tabela → kartice na telefonu (veliko "🚀 Objavi").
-- [x] app/admin/page.tsx — grid kartica se slaže 2×2, tabela horizontalni scroll.
+### Moderacija na stranici (in-place)
+- [x] DB migracija: supabase/moderacija.sql (redoslijed, je_naslovna, zakazano_za)
+- [x] Admin traka na svim stranicama (samo za ulogovanog admina)
+- [x] "Uredi članke" (Article Manager): reorder (▲▼/drag), pin naslovna, uredi, zakaži, obriši, dodaj
+- [x] Filter po kategoriji (u Vizi vidiš samo Viza, itd.)
+- [x] Javne liste poštuju redoslijed + skrivaju zakazane (lib/data.ts, otporno prije migracije)
+- Fajlovi: components/admin/AdminModeracija.tsx, app/api/admin/{me,redoslijed,naslovna}/route.ts
 
-### Naslovna za telefon — desktop netaknut
-- [x] NOVO components/MobilnaNaslovna.tsx — 4 JEDNAKE kutije do ivica ekrana
-      (🇩🇪 Njemačka, 🇧🇦 BiH, 🌍 Svijet, ⚽ Sport), sve sa slikama (klix stil).
-      Kutije vuku NAŠE objavljene članke (imaju slike; siva kutija ako nema).
-- [x] lib/live.ts — slika dodata u LiveStavka; nove funkcije dajLiveSport + MOCK_SPORT.
-- [x] app/page.tsx — hide-mob/samo-mob obrazac; Ticker "Uživo" sakriven na telefonu;
-      traka kategorija prebačena IZNAD slike na telefonu (Sport ispod Svijeta).
-- [x] components/HeroRotator.tsx — na telefonu samo naslov + datum (opis sakriven).
-- [x] components/KategorijBar.tsx — momentum swipe (klizi prstom), skriven scrollbar.
+### SEO
+- [x] app/sitemap.ts (dinamički: članci + vodiči + kategorije + statične)
+- [x] app/robots.ts
+- [x] Verifikacioni meta tagovi (GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION env)
+- [ ] GSC + Bing verifikacija + submit sitemap (ručno, čeka korisnika)
+- [ ] Google Indexing API + IndexNow (poslije GSC verifikacije)
 
-### Stranica članka — popravljen horizontalni scroll
-- [x] app/clanak/[slug]/page.tsx — više se ne pomjera lijevo/desno na telefonu:
-      flexWrap na redu meta i redu za dijeljenje, prelamanje dugih linkova,
-      slike max-width:100%, tabele skrolaju unutar sebe, grid minmax(0,1fr).
+### Vodiči (hard-kodirani, lib/data/vodici.ts)
+- [x] Postojeći: radna viza, Krankenkasse, trudnoća, stan, povrat poreza, povratak BiH, Anmeldung, njemački jezik
+- [x] NOVI (vize, 2026 podaci): Chancenkarte, EU Plava karta (Blue Card), Westbalkan regulacija, Spajanje porodice
 
-### Vodiči — 12 → 17, svi provjereni (fact-check 2026)
-- [x] 5 NOVIH vodiča: zamjena vozačke, priznavanje diplome (Anerkennung),
-      njemačko državljanstvo (Einbürgerung), Kindergeld+poreske klase, Ausbildung+njega.
-- [x] Fact-check svih 17 (3 subagenta, aktuelni njemački izvori). Ispravljeno:
-      Krankenkasse prag 66.600→77.400€; Familienversicherung 505→565€ (603 mini-job);
-      Kindergeld 255→259€ (od 2026); "dijete u BiH dobija Kindergeld" ispravljeno
-      (varljivo — samo mali iznos pod uslovima); Elterngeld granica 175.000€;
-      Integrationskurs 1.95→2.29€/sat; Goethe B2 ~289€ (+ telc/VHS jeftinije);
-      Beibehaltungsgenehmigung (bio pogrešan pojam za boravak); vozačka (rok=vožnja,
-      zamjena može i kasnije + ispravljen netačan dio o ispitu); Chancenkarte iskustvo
-      5→3 god; Westbalkan kvota napomena.
-- [x] Dodati "hackovi" kroz vodiče (kaucija na 3 rate, mini-job čuva osiguranje,
-      termini rano ujutro, homeoffice+kilometraža isti dan, itd.).
+### Layout / dizajn
+- [x] Kategorijske stranice (Viza/Stan...) = card-lista (thumbnail + tag + naslov + meta)
+- [x] /de i /bih = ISTI stil kao kategorije (thumbnail + BADGE IZVORA + naslov + meta); bez LIVE badge/info kutije
+- [x] Naslovni widget "Vijesti iz Njemačke" = SAMO njemački portali (svjetski izbačeni)
+- [x] Naslovna: "Iz svijeta" na vrhu (pokazuje izvor umjesto SVIJET), "Najnovije" ispod
+- [x] Thumbnail kutija se UVIJEK prikazuje (siva dok nema slike)
 
-## ✅ URAĐENO RANIJE (do 2026-07-06)
-- Domena, Vercel, Supabase, GitHub; portal LIVE na kodnas.de
-- Bot na GitHub Actions (Node 22, npx tsx scripts/run-bot.ts)
-- MOST do kompjutera (Claude piše direktno u folder)
-- Sigurnosni audit (rate limit, XSS, admin login timing-safe, cron secret)
-- Bot optimizacija (Haiku, prompt caching, skip fact-check sport/svijet)
-- DE/BiH odvojene kvote + 3x dnevno raspored; "Pokreni odmah" preko GitHub Actions
-- Moderacija na stranici (Article Manager: reorder, pin, uredi, zakaži, obriši, dodaj)
-- SEO (sitemap, robots, verifikacioni tagovi)
-- Layout: kategorijske stranice, /de i /bih stil, naslovni widgeti
-- Očišćen tekst koji odaje automatizaciju
+### Čišćenje teksta (da ne odaje automatizaciju / ne zvuči neozbiljno)
+- [x] Izbačeno "klikabilno", "Naš AI bot", "automatski sistem", "prati izvore"
+- [x] Interni kod-komentari i sistemski promptovi ostavljeni (čitalac ih ne vidi)
 
-## 🚧 ČEKA MENE (ručni koraci)
-1. Push svih ovih izmjena na PREVIEW → testirati na telefonu → merge u main
-2. (Ranije) bot-cron.yml ručno kopirati; GITHUB_TOKEN u Vercel; moderacija.sql u Supabase
+## 🚧 U TOKU / ČEKA KORISNIKA (ručni koraci)
+1. Ručno kopirati `.github/workflows/bot-cron.yml` (zaštićen fajl) → za 3x/dnevno raspored
+2. Dodati `GITHUB_TOKEN` u Vercel env → za "Pokreni odmah" dugme
+3. Pokrenuti `supabase/moderacija.sql` u Supabase (ako nije) → za moderaciju
+4. Commit + push sve na preview, testirati, pa merge u main
 
-## 📋 TODO / SLJEDEĆE
-- [x] SLIKE: Wikimedia implementiran (bot + admin dugme). Unsplash = rezerva.
-- [ ] KAPALJKA: postepeno objavljivanje kroz dan (zakazano_za) + AUTO-OBJAVA
-      (kad se gramatika potvrdi). Dizanje kvota na ~20/dan (iz admina bot_config).
-- [ ] Impressum + Datenschutz stranice (pravno obavezno, čeka prave podatke korisnika).
-- [ ] Ako Haiku gramatika slaba → MODEL_GRAMATIKA=claude-sonnet-4-5 (env u Vercelu).
-- [ ] Nova serija vodiča: Bürgergeld, Wohngeld, penzija BiH–Njemačka, otvaranje firme, Minijob
-- [ ] Uskladiti stari vodič "trudnoća" ako još negdje spominje Kindergeld za dijete u BiH
-- [ ] GSC: dodaj property + submit sitemap (GOOGLE_SITE_VERIFICATION env). Bing opciono.
+## 📋 TODO (opciono, sljedeće)
+- [ ] Unsplash ključ → prave slike uz članke (sad su sive kutije)
+- [ ] Veliki hero na naslovnoj → dinamički (da pin-naslovna radi na njemu)
+- [ ] GSC/Bing verifikacija + Indexing API
+- [ ] Više vodiča (Anerkennung, stalni boravak, državljanstvo)
 
 ## 💡 ZA POSLIJE
 - Ispovijesti sekcija, Telegram kanal, TikTok video
