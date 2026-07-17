@@ -21,6 +21,8 @@ const portal = [
   { label: "Kontakt", href: "/kontakt" },
   { label: "Sve vijesti", href: "/vijesti" },
   { label: "Vodiči", href: "/vodici" },
+  { label: "Impressum", href: "/impressum" },
+  { label: "Datenschutz", href: "/datenschutz" },
 ];
 
 export default function Footer() {
@@ -83,30 +85,9 @@ export default function Footer() {
 
         {/* Kategorije */}
         <div>
-          <h4
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              marginBottom: 12,
-              color: "var(--tekst-muted)",
-            }}
-          >
-            Kategorije
-          </h4>
+          <h4 style={h4}>Kategorije</h4>
           {kategorije.map((k) => (
-            <Link
-              key={k.href}
-              href={k.href}
-              style={{
-                display: "block",
-                fontSize: 13,
-                color: "var(--tekst-muted)",
-                marginBottom: 6,
-              }}
-              className="hover:text-zelena"
-            >
+            <Link key={k.href} href={k.href} style={linkStyle} className="hover:text-zelena">
               {k.label}
             </Link>
           ))}
@@ -114,30 +95,9 @@ export default function Footer() {
 
         {/* Vodiči */}
         <div>
-          <h4
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              marginBottom: 12,
-              color: "var(--tekst-muted)",
-            }}
-          >
-            Vodiči
-          </h4>
+          <h4 style={h4}>Vodiči</h4>
           {vodici.map((v) => (
-            <Link
-              key={v.href}
-              href={v.href}
-              style={{
-                display: "block",
-                fontSize: 13,
-                color: "var(--tekst-muted)",
-                marginBottom: 6,
-              }}
-              className="hover:text-zelena"
-            >
+            <Link key={v.href} href={v.href} style={linkStyle} className="hover:text-zelena">
               {v.label}
             </Link>
           ))}
@@ -145,30 +105,9 @@ export default function Footer() {
 
         {/* Portal */}
         <div>
-          <h4
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              marginBottom: 12,
-              color: "var(--tekst-muted)",
-            }}
-          >
-            Portal
-          </h4>
+          <h4 style={h4}>Portal</h4>
           {portal.map((p) => (
-            <Link
-              key={p.href}
-              href={p.href}
-              style={{
-                display: "block",
-                fontSize: 13,
-                color: "var(--tekst-muted)",
-                marginBottom: 6,
-              }}
-              className="hover:text-zelena"
-            >
+            <Link key={p.href} href={p.href} style={linkStyle} className="hover:text-zelena">
               {p.label}
             </Link>
           ))}
@@ -183,13 +122,23 @@ export default function Footer() {
           paddingTop: 20,
           borderTop: "1px solid var(--border)",
           display: "flex",
+          alignItems: "center",
           justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 10,
           fontSize: 12,
           color: "var(--tekst-light)",
         }}
       >
         <span>© 2026 kodnas.de — Sva prava zadržana</span>
-        <span>Njemačke vijesti na našem jeziku</span>
+        <div style={{ display: "flex", gap: 18 }}>
+          <Link href="/impressum" style={{ color: "var(--tekst-light)" }} className="hover:text-zelena">
+            Impressum
+          </Link>
+          <Link href="/datenschutz" style={{ color: "var(--tekst-light)" }} className="hover:text-zelena">
+            Datenschutz
+          </Link>
+        </div>
       </div>
 
       <style>{`
@@ -202,3 +151,19 @@ export default function Footer() {
     </footer>
   );
 }
+
+const h4: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+  marginBottom: 12,
+  color: "var(--tekst-muted)",
+};
+
+const linkStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: 13,
+  color: "var(--tekst-muted)",
+  marginBottom: 6,
+};
