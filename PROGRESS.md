@@ -1,7 +1,39 @@
 # PROGRESS LOG — KODNAS.DE
 
-## STATUS: LIVE + bot 2.0 (lijevak) radi; sve pushovano
-Zadnji update: 2026-07-17
+## STATUS: LIVE + bot 2.0 (lijevak) radi
+Zadnji update: 2026-07-17 (druga sesija)
+
+## ✅ SESIJA 2026-07-17 (druga — 5 popravki; ⚠️ ČEKA COMMIT + PUSH)
+
+### Mobilna naslovna — Svijet/Sport
+- [x] dajLiveSvijet/dajLiveSport (lib/live.ts) sada čitaju DIREKTNO iz baze po kategoriji
+      (nova dajObjavljeneOr) umjesto iz prozora "60 najnovijih iz svih kategorija"
+      → prije pokazivali 1, sad do 5. (dajLiveDE/BIH ostavljeni.)
+
+### Bot — triaža (nije pisao, "lutrija")
+- [x] Uzrok: AI triaža bez temperature = nasumično + "već poznato" ×0.3 ubija skoro sve.
+      Auto i ručno su INAČE identičan kod (oba dispatchBot → isti workflow → pipeline2).
+- [x] temperature: 0 na triažu (claude.ts dobio opcioni param) → dosljedno
+- [x] prag 68→61, sport/svijet 56→50, "već poznato" 0.3→0.35 (blago, ~10%)
+- [x] Memorija (3 dana) + tema-dedup NETAKNUTI (štit protiv duplikata)
+- Fajlovi: lib/bot/agenti/claude.ts, lib/bot/agenti/triaza.ts
+
+### Vercel Analytics
+- [x] Paketi bili instalirani ali komponente nikad montirane → dodani <Analytics /> +
+      <SpeedInsights /> u app/layout.tsx. (Ručno: Enable Web Analytics u Vercel dashboardu.)
+
+### Brend ime
+- [x] "Dijaspora.ba" → "kodnas.de" u tab naslovu i open graph-u (app/layout.tsx)
+
+### Facebook — token + komentar
+- [x] Napravljen NOVI TRAJNI Page token, upisan u Vercel (FB_PAGE_TOKEN), Redeploy urađen
+- [x] FB_PAGE_ID potvrđen = 1270099672843899
+- [x] facebook.ts: provjerava i vraća je li link-komentar prošao (prije tiho padalo)
+- [x] fb-share ruta: jasna poruka (uspjeh / razlog zašto komentar nije prošao)
+
+### ⚠️ Ručno što čeka: COMMIT + PUSH (6 fajlova); Vercel Enable Analytics; test bota; test FB objave
+
+---
 
 ## ✅ SESIJA 2026-07-17 (veliki set popravki — SVE PUSHOVANO)
 

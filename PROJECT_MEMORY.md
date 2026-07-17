@@ -76,13 +76,25 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 - Filter po kategoriji automatski (gdje si, to uređuješ)
 - Mockup primjeri (u kodu) se NE mogu moderirati; samo pravi članci (bot/ručno)
 
-## AKTUELNO (2026-07-17)
-- Bot 2.0 "lijevak" (pipeline2) je aktivan i radi; lektor na Sonnet — gramatika čista.
-- Kvote se postavljaju u ADMINU (Pipeline stranica) i bot ih poštuje.
-- Dijeljenje članaka radi (dugme + brojač 📤); ČEKA da se pokrene supabase/dijeljenja.sql.
-- Google Analytics spreman (treba NEXT_PUBLIC_GA_ID u Vercelu).
+## AKTUELNO (2026-07-17, druga sesija) — ⚠️ 6 fajlova ČEKA COMMIT + PUSH
+- Bot 2.0 "lijevak" (pipeline2) aktivan; lektor na Sonnet — gramatika čista.
+- Triaža popravljena: temperature 0 (dosljedno, nema više "lutrije") + blago olakšani
+  pragovi (68→61, sport/svijet 56→50, "već poznato" 0.3→0.35). Zaštita od duplikata ostaje.
+- Mobilna naslovna: Svijet/Sport sad čitaju direktno po kategoriji (prije pokazivali 1).
+- Vercel Analytics: komponente dodane u layout (ručno: Enable u Vercel dashboardu).
+- Brend ime svuda "kodnas.de" (bio "Dijaspora.ba" u tab/OG).
+- Facebook: NOVI TRAJNI token u Vercelu (FB_PAGE_TOKEN), FB_PAGE_ID=1270099672843899;
+  objava = slika+naslov + link u PRVOM KOMENTARU; admin javlja je li komentar prošao.
+- ⚠️ Ako FB token ikad opet istekne: Graph API Explorer → produži token → me/accounts →
+  kopiraj page access_token → Vercel FB_PAGE_TOKEN → Redeploy.
+- Kvote bota se postavljaju u ADMINU (Pipeline). Dijeljenje članaka (📤) ČEKA supabase/dijeljenja.sql.
+- Google Analytics (odvojeno od Vercel): treba NEXT_PUBLIC_GA_ID u Vercelu.
 - SLJEDEĆI KORACI (redom): 1) Promocija + Facebook setup  2) Google (Analytics + Search Console)
   3) Impresum i Datenschutz — OBAVEZNO prava podaci, NIKAD placeholderi.
+
+## RADNI DOGOVOR
+- Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.
+- Korisnik radi Commit + Push čim se izmjena napravi (da se verzije ne razilaze).
 
 ## KADA POČNEŠ NOVI CHAT
 1. Pročitaj PROJECT_MEMORY.md, PROGRESS.md, CURRENT_TASK.md
