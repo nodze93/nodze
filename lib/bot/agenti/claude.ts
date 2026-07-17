@@ -38,6 +38,7 @@ export async function pozoviSaAlatom<T>(opts: {
   toolName: string;
   toolOpis: string;
   schema: Anthropic.Tool.InputSchema;
+  temperature?: number; // 0 = dosljedno (isti ulaz → isti rezultat), za triažu
 }): Promise<T> {
   const tool: Anthropic.Tool = {
     name: opts.toolName,
@@ -54,6 +55,8 @@ export async function pozoviSaAlatom<T>(opts: {
       const odgovor = await claude().messages.create({
         model: opts.model,
         max_tokens: opts.maxTokens,
+        // Ako je zadana temperatura (npr. 0 za triažu) — pošalji je.
+        ...(opts.temperature !== undefined ? { temperature: opts.temperature } : {}),
         // Sistem prompt kao keširani blok (ephemeral, ~5 min TTL).
         // Aktivira se tek iznad min. dužine — inače je bez efekta i troška.
         system: [

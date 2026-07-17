@@ -69,7 +69,7 @@ function ukupnaOcjena(o: StavkaOcjene, tip: string): number {
     // Dijaspora (njemačke vijesti): relevantnost je najvažnija.
     u = 0.30 * o.relevantnost_de + 0.30 * o.relevantnost_dijaspora + 0.20 * o.hitnost + 0.20 * o.klik;
   }
-  if (o.vec_poznato) u *= 0.3; // već pokrivena tema → jako spusti (skoro sigurno ispada)
+  if (o.vec_poznato) u *= 0.35; // već pokrivena tema → jako spusti (skoro sigurno ispada)
   return Math.round(u);
 }
 
@@ -103,6 +103,10 @@ async function triazirajBatch(batch: Vijest[], vecPokriveno: string[] = []): Pro
       system: TRIAZA_PROMPT,
       user: `Ocijeni ovih ${batch.length} vijesti:\n\n${lista}${memo}`,
       maxTokens: 3500,
+      // temperature 0 → dosljedno: isti ulaz uvijek daje isti rezultat.
+      // (Ranije bez temperature = nasumično: ista vijest znala proći ili pasti
+      //  ovisno od pokretanja — otud "2x ništa, 3. put par članaka".)
+      temperature: 0,
       toolName: "ocijeni_vijesti",
       toolOpis: "Vrati ocjene po dimenzijama za SVAKU vijest iz liste.",
       schema: TRIAZA_SCHEMA,
@@ -143,7 +147,7 @@ export async function triazirajVijesti(
 ): Promise<Vijest[]> {
   if (vijesti.length === 0) return [];
 
-  const prag = opcije.prag ?? parseInt(process.env.PRAG_TRIAZA || "68", 10);
+  const prag = opcije.prag ?? parseInt(process.env.PRAG_TRIAZA || "61", 10);
   const brojObjava = opcije.brojObjava ?? parseInt(process.env.BROJ_OBJAVA || "8", 10);
   const kap = {
     dijaspora: opcije.kapDijaspora ?? 5,
@@ -164,7 +168,7 @@ export async function triazirajVijesti(
 
   // Sport i svijet imaju NIŽI prag — inače nikad ne prođu (nisu "životna tema",
   // ali su klikabilni). Dijaspora ostaje na strogom pragu.
-  const pragSS = parseInt(process.env.PRAG_SPORT_SVIJET || "56", 10);
+  const pragSS = parseInt(process.env.PRAG_SPORT_SVIJET || "50", 10);
   const iznadPraga = ocijenjene
     .filter((v) => {
       const p = v.tip === "svjetske" || v.tip === "sport" ? pragSS : prag;
