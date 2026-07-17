@@ -1,9 +1,9 @@
 // ============================================================
-// FACEBOOK AUTO-OBJAVA — nativni foto-post + link u prvom komentaru
+// FACEBOOK AUTO-OBJAVA — nativni foto-post sa linkom u tekstu
 // ============================================================
-// Taktika koja daje BOLJI doseg: objavi sliku + udarnu rečenicu direktno
-// na FB stranicu, a link stavi u prvi KOMENTAR (FB manje koči takve postove
-// nego gole linkove).
+// Objavljuje sliku + naslov + link na članak direktno u tekstu posta.
+// (Ne koristi komentar — za to Facebook traži posebnu dozvolu
+//  pages_manage_engagement koju nemamo; ovako radi sa pages_manage_posts.)
 //
 // Radi samo ako su postavljene env varijable:
 //   FB_PAGE_ID     — ID tvoje Facebook stranice
@@ -27,7 +27,7 @@ export interface FbRezultat {
 }
 
 /**
- * Objavi članak na Facebook stranicu (foto-post + link u komentaru).
+ * Objavi članak na Facebook stranicu (nativni foto-post sa linkom u tekstu).
  */
 export async function objaviNaFacebook(clanak: FbClanak): Promise<FbRezultat> {
   const PAGE = process.env.FB_PAGE_ID;
@@ -40,11 +40,11 @@ export async function objaviNaFacebook(clanak: FbClanak): Promise<FbRezultat> {
 
   const link = `${SITE}/clanak/${clanak.slug}`;
   const slika = clanak.slika || `${SITE}/og-default.jpg`;
-  // Udarni tekst = naslov (već je klikabilan). Link NE ide u tekst nego u komentar.
-  const tekst = `${clanak.naslov}\n\n👇 Cijeli članak u prvom komentaru.`;
+  // Naslov + link direktno u tekstu posta (klikabilan).
+  const tekst = `${clanak.naslov}\n\n📎 Cijeli članak 👉 ${link}`;
 
   try {
-    // 1) Nativni foto-post sa tekstom
+    // Nativni foto-post sa tekstom i linkom
     const r1 = await fetch(`${GRAF}/${PAGE}/photos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -54,19 +54,7 @@ export async function objaviNaFacebook(clanak: FbClanak): Promise<FbRezultat> {
     if (!r1.ok || (!d1.post_id && !d1.id)) {
       return { ok: false, greska: d1.error?.message || "Greška pri objavi slike na FB" };
     }
-    // Za komentar treba post_id (feed post), ne id (fotografija).
     const postId = d1.post_id || d1.id!;
-
-    // 2) Link kao PRVI komentar (ako padne, post ostaje — nije kritično)
-    try {
-      await fetch(`${GRAF}/${postId}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: `📎 Cijeli članak: ${link}`, access_token: TOKEN }),
-      });
-    } catch {
-      /* komentar nije uspio — nije kritično */
-    }
 
     return { ok: true, postId };
   } catch (e) {
