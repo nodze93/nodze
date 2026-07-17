@@ -46,8 +46,7 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 - NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 - ANTHROPIC_API_KEY, CRON_SECRET, ADMIN_SECRET, NEXT_PUBLIC_SITE_URL=https://kodnas.de
 - GITHUB_TOKEN (za "Pokreni odmah" dugme — repo scope)
-- FB_PAGE_ID=1270099672843899, FB_PAGE_TOKEN (dugotrajni Page token — za 🔵 FB objavu)
-- (opciono) NEXT_PUBLIC_GA_ID (Google Analytics), GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION, UNSPLASH_ACCESS_KEY
+- (opciono) GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION, UNSPLASH_ACCESS_KEY
 ### GitHub Actions Secrets (za bota):
 - ANTHROPIC_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, (UNSPLASH_ACCESS_KEY)
 
@@ -80,14 +79,10 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 ## AKTUELNO (2026-07-17)
 - Bot 2.0 "lijevak" (pipeline2) je aktivan i radi; lektor na Sonnet — gramatika čista.
 - Kvote se postavljaju u ADMINU (Pipeline stranica) i bot ih poštuje.
-- Dijeljenje članaka radi (dugme + brojač 📤); supabase/dijeljenja.sql POKRENUT ✅.
-- Facebook objava iz admina RADI ✅: 🔵 FB dugme → nativni foto-post (slika+naslov+link u tekstu).
-  ENV u Vercelu: FB_PAGE_ID=1270099672843899, FB_PAGE_TOKEN (dugotrajni). supabase/facebook.sql POKRENUT.
-  NAPOMENA: link je u TEKSTU posta (ne komentar) — komentar-stil traži pages_manage_engagement,
-  a FB je blokira zbog pages_read_user_content (ne ide bez revizije). Za malu stranicu OK.
-- Impressum + Datenschutz GOTOVI ✅ (app/impressum, app/datenschutz, linkovi u Footer.tsx).
-- Google Analytics spreman (treba još samo NEXT_PUBLIC_GA_ID u Vercelu).
-- SLJEDEĆI KORACI (redom): 1) Promocija (FB gotov)  2) Google (Analytics + Search Console).
+- Dijeljenje članaka radi (dugme + brojač 📤); ČEKA da se pokrene supabase/dijeljenja.sql.
+- Google Analytics spreman (treba NEXT_PUBLIC_GA_ID u Vercelu).
+- SLJEDEĆI KORACI (redom): 1) Promocija + Facebook setup  2) Google (Analytics + Search Console)
+  3) Impresum i Datenschutz — OBAVEZNO prava podaci, NIKAD placeholderi.
 
 ## KADA POČNEŠ NOVI CHAT
 1. Pročitaj PROJECT_MEMORY.md, PROGRESS.md, CURRENT_TASK.md

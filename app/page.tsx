@@ -3,7 +3,6 @@ import Ticker from "@/components/Ticker";
 import Hero from "@/components/Hero";
 import KategorijBar from "@/components/KategorijBar";
 import LiveVijesti from "@/components/LiveVijesti";
-import MobilnaNaslovna from "@/components/MobilnaNaslovna";
 import NajnovijeSection from "@/components/sections/NajnovijeSection";
 import KategorijaSekcija from "@/components/sections/KategorijaSekcija";
 import NajpopularnijeSection from "@/components/sections/NajpopularnijeSection";
@@ -47,95 +46,83 @@ export default function HomePage() {
     <>
       <Nav />
       <Ticker />
-
-      {/* Hero — samo desktop */}
-      <div className="samo-desktop">
-        <Hero />
-      </div>
-
-      {/* Kategorijska traka — vidljiva i na telefonu i na desktopu */}
+      <Hero />
       <KategorijBar aktivna="sve" />
 
-      {/* ── MOBILNA naslovna: kutije sa slikama (🇩🇪 → 🌍 → ⚽) — SAMO telefon ── */}
-      <MobilnaNaslovna />
+      {/* Live vijesti — dvije kutije (v19) */}
+      <LiveVijesti />
 
-      {/* ── DESKTOP sadržaj — sakriven na telefonu ── */}
-      <div className="samo-desktop">
-        {/* Live vijesti — dvije kutije (v19) */}
-        <LiveVijesti />
+      {/* Main content */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "24px 24px",
+          display: "grid",
+          gridTemplateColumns: "1fr 300px",
+          gap: 24,
+        }}
+        className="main-layout"
+      >
+        {/* Left column — v19 redoslijed sekcija */}
+        <main>
+          {/* Iz svijeta — sada na vrhu (forma ista kao prije) */}
+          <KategorijaSekcija
+            naslov="🌍 Iz svijeta"
+            podnaslov="Najvažnije svjetske vijesti — politika, ekonomija i krize koje utiču na nas"
+            kategorija="svijet"
+            fallback={FALLBACK_SVIJET}
+            prikaziIzvor
+            samoTip="svjetske"
+          />
+          {/* Najnovije — pomjereno ispod svijeta (forma ista) */}
+          <NajnovijeSection />
+          <VodiciSection />
+          <KategorijaSekcija
+            naslov="Viza i ulazak"
+            podnaslov="Chancenkarte, radna viza, Plava karta, porodično spajanje"
+            kategorija="viza"
+            fallback={FALLBACK_VIZA}
+          />
+          <KategorijaSekcija
+            naslov="Gastarbajter"
+            podnaslov="Priče iz dijaspore — život, iskustva i korisni savjeti"
+            kategorija="gastarbajter"
+            fallback={FALLBACK_GASTARBAJTER}
+          />
+          <KategorijaSekcija
+            naslov="⚽ Sport"
+            podnaslov="Bundesliga, svjetski fudbal i veliki mečevi"
+            kategorija="sport"
+            fallback={FALLBACK_SPORT}
+          />
+          <NajpopularnijeSection />
+        </main>
 
-        {/* Main content */}
-        <div
+        {/* Sidebar */}
+        <aside
           style={{
-            maxWidth: 1100,
-            margin: "0 auto",
-            padding: "24px 24px",
-            display: "grid",
-            gridTemplateColumns: "1fr 300px",
-            gap: 24,
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
           }}
-          className="main-layout"
         >
-          {/* Left column — v19 redoslijed sekcija */}
-          <main>
-            {/* Iz svijeta — sada na vrhu (forma ista kao prije) */}
-            <KategorijaSekcija
-              naslov="🌍 Iz svijeta"
-              podnaslov="Najvažnije svjetske vijesti — politika, ekonomija i krize koje utiču na nas"
-              kategorija="svijet"
-              fallback={FALLBACK_SVIJET}
-              prikaziIzvor
-              samoTip="svjetske"
-            />
-            {/* Najnovije — pomjereno ispod svijeta (forma ista) */}
-            <NajnovijeSection />
-            <VodiciSection />
-            <KategorijaSekcija
-              naslov="Viza i ulazak"
-              podnaslov="Chancenkarte, radna viza, Plava karta, porodično spajanje"
-              kategorija="viza"
-              fallback={FALLBACK_VIZA}
-            />
-            <KategorijaSekcija
-              naslov="Gastarbajter"
-              podnaslov="Priče iz dijaspore — život, iskustva i korisni savjeti"
-              kategorija="gastarbajter"
-              fallback={FALLBACK_GASTARBAJTER}
-            />
-            <KategorijaSekcija
-              naslov="⚽ Sport"
-              podnaslov="Bundesliga, svjetski fudbal i veliki mečevi"
-              kategorija="sport"
-              fallback={FALLBACK_SPORT}
-            />
-            <NajpopularnijeSection />
-          </main>
-
-          {/* Sidebar */}
-          <aside
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
-            <NewsletterBox />
-            <NajcitanijeBox />
-            <FaqBox />
-          </aside>
-        </div>
+          <NewsletterBox />
+          <NajcitanijeBox />
+          <FaqBox />
+        </aside>
       </div>
 
       <Footer />
 
       <style>{`
-        /* Podrazumijevano (desktop): mobilna naslovna skrivena, desktop vidljiv */
-        .samo-mob { display: none; }
-        .samo-desktop { display: block; }
-
         @media (max-width: 768px) {
-          .samo-mob { display: flex; }
-          .samo-desktop { display: none !important; }
+          .main-layout {
+            grid-template-columns: 1fr !important;
+          }
+          .main-layout aside {
+            display: none !important;
+          }
         }
       `}</style>
     </>
