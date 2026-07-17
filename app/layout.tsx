@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import SearchModal from "@/components/SearchModal";
 import AdminModeracija from "@/components/admin/AdminModeracija";
@@ -63,6 +65,12 @@ export default function RootLayout({
         {children}
         <SearchModal />
         <AdminModeracija />
+
+        {/* Vercel Web Analytics + Speed Insights (posjete i brzina stranice).
+            Paketi su bili instalirani ali komponente nikad montirane — zato
+            Vercel Analytics nije prikazivao podatke. Sada rade automatski. */}
+        <Analytics />
+        <SpeedInsights />
 
         {/* Google Analytics — učita se samo ako je NEXT_PUBLIC_GA_ID postavljen */}
         {GA_ID && (
