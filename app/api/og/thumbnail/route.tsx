@@ -153,10 +153,10 @@ export async function GET(req: NextRequest) {
                 justifyContent: "center",
                 color: "white",
                 fontWeight: 900,
-                fontSize: 22,
+                fontSize: 16,
               }}
             >
-              K
+              KN
             </div>
             <span
               style={{
