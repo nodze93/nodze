@@ -147,7 +147,7 @@ export async function triazirajVijesti(
 ): Promise<Vijest[]> {
   if (vijesti.length === 0) return [];
 
-  const prag = opcije.prag ?? parseInt(process.env.PRAG_TRIAZA || "58", 10);
+  const prag = opcije.prag ?? parseInt(process.env.PRAG_TRIAZA || "52", 10);
   const brojObjava = opcije.brojObjava ?? parseInt(process.env.BROJ_OBJAVA || "8", 10);
   const kap = {
     dijaspora: opcije.kapDijaspora ?? 5,
@@ -168,7 +168,7 @@ export async function triazirajVijesti(
 
   // Sport i svijet imaju NIŽI prag — inače nikad ne prođu (nisu "životna tema",
   // ali su klikabilni). Dijaspora ostaje na strogom pragu.
-  const pragSS = parseInt(process.env.PRAG_SPORT_SVIJET || "44", 10);
+  const pragSS = parseInt(process.env.PRAG_SPORT_SVIJET || "36", 10);
   const iznadPraga = ocijenjene
     .filter((v) => {
       const p = v.tip === "svjetske" || v.tip === "sport" ? pragSS : prag;
