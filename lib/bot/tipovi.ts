@@ -74,6 +74,13 @@ export interface GeneriraniClanak {
   min_citanja: number;
   izvori: string[];
   slika_pojmovi?: string; // engleski pojmovi za Unsplash pretragu
+  pozadina?: string;      // kratki "Podsjetnik" box (samo ako je u izvoru)
+  // ── FACEBOOK SOCIAL MEDIA (generirano u ISTOM AI pozivu — bez extra troška) ──
+  fb_tekst_news?: string;       // vijesti post koji tjera na klik (300-500 znakova)
+  fb_tekst_engage?: string;     // engagement post koji tjera na komentare (150-300 znakova)
+  fb_thumbnail_r1?: string;     // kratki naslov za branded thumbnail overlay (max ~8 rijeci)
+  fb_thumbnail_r2?: string;     // kratki podnaslov za thumbnail (max ~5 rijeci)
+  fb_ide_na_facebook?: boolean; // AI filter: treba li ovaj clanak ici na Facebook
 }
 
 // Rezultat Fact-check agenta

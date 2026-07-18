@@ -17,6 +17,11 @@ export interface FbClanak {
   slug: string;
   slika?: string | null;
   excerpt?: string | null;
+  // ── SOCIAL MEDIA POLJA (opcionalna — nazad-kompatibilno) ──
+  fb_tekst_news?: string | null;    // generirani vijesti post
+  fb_tekst_engage?: string | null;  // generirani engagement post
+  thumbnail_url?: string | null;    // pre-generisani thumbnail URL (/api/og/thumbnail?...)
+  tip?: "news" | "engage" | "original"; // tip posta koji admin odabrao
 }
 
 export interface FbRezultat {
@@ -30,6 +35,16 @@ export interface FbRezultat {
 
 /**
  * Objavi članak na Facebook stranicu (foto-post + link u komentaru).
+ *
+ * Redoslijed odabira teksta posta:
+ *  - tip='news'    → fb_tekst_news (AI generirani vijesti post)
+ *  - tip='engage'  → fb_tekst_engage (AI generirani engagement post)
+ *  - tip='original'→ fallback na naslov (bez thumbnailа, originalna slika)
+ *  - nije zadano   → fallback na naslov (nazad-kompatibilno)
+ *
+ * Redoslijed odabira slike:
+ *  - tip != 'original' i thumbnail_url postoji → branded thumbnail
+ *  - inače → originalna slika clanka (slika) ili og-default.jpg
  */
 export async function objaviNaFacebook(clanak: FbClanak): Promise<FbRezultat> {
   const PAGE = process.env.FB_PAGE_ID;
@@ -41,9 +56,23 @@ export async function objaviNaFacebook(clanak: FbClanak): Promise<FbRezultat> {
   }
 
   const link = `${SITE}/clanak/${clanak.slug}`;
-  const slika = clanak.slika || `${SITE}/og-default.jpg`;
-  // Udarni tekst = naslov (već je klikabilan). Link NE ide u tekst nego u komentar.
-  const tekst = `${clanak.naslov}\n\n👇 Cijeli članak u prvom komentaru.`;
+
+  // Odaberi tekst posta
+  let tekst: string;
+  if (clanak.tip === "news" && clanak.fb_tekst_news) {
+    tekst = clanak.fb_tekst_news;
+  } else if (clanak.tip === "engage" && clanak.fb_tekst_engage) {
+    tekst = clanak.fb_tekst_engage;
+  } else {
+    // Fallback — originalni način (nazad-kompatibilno)
+    tekst = `${clanak.naslov}\n\n👇 Cijeli članak u prvom komentaru.`;
+  }
+
+  // Odaberi sliku: branded thumbnail ili originalna slika
+  const koristiThumbnail = clanak.tip !== "original" && clanak.thumbnail_url;
+  const slika = koristiThumbnail
+    ? clanak.thumbnail_url!
+    : (clanak.slika || `${SITE}/og-default.jpg`);
 
   try {
     // 1) Nativni foto-post sa tekstom

@@ -100,7 +100,49 @@ PODSJETNIK (polje "pozadina") — prosudi pametno:
 - Piši ISKLJUČIVO iz onoga što stoji u izvoru. NE piši iz svog znanja i NE
   izmišljaj konkretne brojke ni odredbe.
 - Ako pozadine nema u izvoru, ili je članak već sve objasnio, ili nisi siguran —
-  ostavi "pozadina" PRAZNO ("").`;
+  ostavi "pozadina" PRAZNO ("").
+
+═══ FACEBOOK SOCIAL MEDIA — generiši U ISTOM POZIVU, bez extra troška ═══
+
+Uz članak generiši i dva Facebook posta i thumbnail tekst.
+Piši kao marketing menadžer portala kodnas.de koji VOLI svoju dijasporu —
+ne kao robot. Varij ton, pitanja i fraze — čitaoci primijete ako je uvijek ista rečenica.
+
+fb_tekst_news (VIJESTI post — tjera na KLIK na članak):
+- Svrha: što više klikova na članak (traffic)
+- Dužina: 300-500 znakova
+- Struktura: udarno otvaranje → 2-3 ključne činjenice iz članka → poziv na akciju
+- OBAVEZNO završi s: "👇 Cijeli članak u prvom komentaru."
+- Emoji: 1-3 na strateška mjesta (početak ili kraj rečenice, NE u svakom redu)
+- Bez hashtaga. Bez linkova (link ide u komentar).
+- Varij otvaranje: "Novo pravilo od [datum]...", "Pažnja!", "Važno za sve nas...",
+  "Ovo se mijenja...", "Znate li da...", "Upravo objavljeno:"
+
+fb_tekst_engage (ENGAGEMENT post — tjera na KOMENTARE):
+- Svrha: što više komentara i dijeljenja (Facebook algoritam to voli)
+- Dužina: 150-300 znakova
+- Oblik: PITANJE čitaocu, mini-anketa ili provokacija vezana za temu
+- NIKAD ista fraza/rečenica svaki put — varij između:
+  "A vi šta mislite?", "Jeste li znali?", "Jeste li se susreli s ovim?",
+  "Slagate li se?", "Šta bi vi uradili na mjestu...?",
+  "Kako vam je iskustvo s ovim?", "Pišite ispod 👇"
+- Osoban, topao ton — kao pitanje prijatelju, ne korporativna komunikacija
+- Može biti i blag humor ako tema dozvoljava
+- Završi pitanjem ili pozivom da pišu u komentare
+
+fb_thumbnail_r1 (NASLOV na thumbnail slici):
+- Udarnih 4-8 kratkih BOSANSKIH rijeci — ono što prvu sekundu zapne za oko
+- Konkretan podatak ili pitanje (NE generičko)
+- Primjer: "NOVO PRAVILO OD JANUARA", "5.000€ KINDERGELD?", "ŠTA SE MIJENJA?"
+
+fb_thumbnail_r2 (PODNASLOV na thumbnail slici):
+- Max 4-5 rijeci — kategorija/kontekst
+- Primjeri: "Vijesti iz Njemačke", "VAŽNO ZA NAS", "Za sve u dijaspori"
+
+fb_ide_na_facebook (boolean — AI filter):
+- false SAMO za: lične tragedije/pogrebne vijesti, ekstremno lokalne vijesti
+  bez veze s Njemačkom/dijasporom, ili vijesti koje bi mogle uvrijediti publiku
+- true za sve ostalo — čak i manje važne vijesti imaju vrijednost na FB`;
 
 const CLANAK_SCHEMA = {
   type: "object" as const,
@@ -127,6 +169,32 @@ const CLANAK_SCHEMA = {
       type: "string",
       description:
         "Opcionalno. Kratak 'Podsjetnik' (1-2 rečenice) koji čitaocu objašnjava pozadinu — o čemu se npr. predloženi zakon/reforma zapravo radi — ALI samo ako to piše u fetchovanom izvoru. Prazan string \"\" ako pozadina nije u izvoru, ako je članak već objasnio, ili ako nisi siguran. NIKAD iz svog znanja.",
+    },
+    // ── FACEBOOK POLJA (opcionalna — ne u required, ne ruše stari pipeline) ──
+    fb_tekst_news: {
+      type: "string",
+      description:
+        "Facebook VIJESTI post koji tjera na klik. 300-500 znakova. Emoji na strateškim mjestima (ne svaki red). Završi UVIJEK s: '👇 Cijeli članak u prvom komentaru.' Bez hashtaga, bez linkova. Varij otvaranje svaki put.",
+    },
+    fb_tekst_engage: {
+      type: "string",
+      description:
+        "Facebook ENGAGEMENT post koji tjera na komentare. 150-300 znakova. Pitanje, mini-anketa ili blaga provokacija. Osoban, topao ton kao prijatelju. NIKAD ista fraza. Završi pozivom da pišu u komentare.",
+    },
+    fb_thumbnail_r1: {
+      type: "string",
+      description:
+        "Kratki udari naslov za thumbnail overlay (max 4-8 BOSANSKIH rijeci, specifičan podatak ili pitanje). Primjeri: 'NOVO PRAVILO OD JANUARA', '5.000€ KINDERGELD?', 'ŠTA SE MIJENJA U 2025?'",
+    },
+    fb_thumbnail_r2: {
+      type: "string",
+      description:
+        "Kratki podnaslov za thumbnail overlay (max 4-5 rijeci, kategorija ili kontekst). Primjeri: 'Vijesti iz Njemačke', 'VAŽNO ZA NAS', 'Za sve u dijaspori'",
+    },
+    fb_ide_na_facebook: {
+      type: "boolean",
+      description:
+        "false SAMO za: lične tragedije, pogrebne vijesti, ekstremno lokalne vijesti bez veze s Njemačkom/dijasporom. Za sve ostalo: true.",
     },
   },
   required: ["naslov", "excerpt", "kategorija", "sadrzaj", "min_citanja", "izvori", "slika_pojmovi"],
@@ -218,8 +286,8 @@ ${zvanicniUrl ? `ZVANIČNI IZVOR (${zvanicniUrl}):\n${zvanicniTekst || "(nije do
         : vijest.tip === "sport" ? WRITER_SPORT_PROMPT
         : WRITER_DIJASPORA_PROMPT) + ZAJEDNICKA_PRAVILA,
       user: kontekst,
-      // 3800 (bilo 2500): sprječava da se članak odsiječe prije poente.
-      maxTokens: 3800,
+      // 4200 (dodano za FB polja): sprječava odsijecanje prije FB teksta.
+      maxTokens: 4200,
       toolName: "sacuvaj_clanak",
       toolOpis: "Sačuvaj napisani članak u strukturiranom formatu.",
       schema: CLANAK_SCHEMA,
@@ -233,7 +301,10 @@ ${zvanicniUrl ? `ZVANIČNI IZVOR (${zvanicniUrl}):\n${zvanicniTekst || "(nije do
         clanak.sadrzaj;
     }
 
-    console.log(`   ✅ Napisan: "${clanak.naslov.slice(0, 50)}"${poz.length > 20 ? " (+podsjetnik)" : ""}`);
+    const fbLog = clanak.fb_tekst_news
+      ? ` | 📱 FB: ${clanak.fb_ide_na_facebook !== false ? "✅" : "⏭️"}`
+      : "";
+    console.log(`   ✅ Napisan: "${clanak.naslov.slice(0, 50)}"${poz.length > 20 ? " (+podsjetnik)" : ""}${fbLog}`);
     return { clanak, izvorniTekst, zvanicniUrl };
   } catch (err) {
     console.error(`   ❌ Writer greška: ${(err as Error).message}`);

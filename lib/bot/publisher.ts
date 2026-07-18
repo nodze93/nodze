@@ -98,6 +98,10 @@ export async function sacuvajDraft(args: {
     : piscevaKat === "svijet" ? "vijesti"
     : piscevaKat;
 
+  // ── FB social status: AI može već reći "ne idi na FB" ──
+  const fbIde = clanak.fb_ide_na_facebook !== false; // default true
+  const fbStatus = fbIde && clanak.fb_tekst_news ? "ceka" : "preskoceno";
+
   const { error } = await db.from("clanci").insert({
     slug,
     naslov: finalNaslov,
@@ -121,6 +125,15 @@ export async function sacuvajDraft(args: {
 
     slika: slika?.url || null,
     slika_autor: slika ? `${slika.autor} / Unsplash` : null,
+
+    // ── FACEBOOK SOCIAL MEDIA POLJA ──
+    fb_tekst_news:       clanak.fb_tekst_news    || null,
+    fb_tekst_engage:     clanak.fb_tekst_engage  || null,
+    fb_thumbnail_r1:     clanak.fb_thumbnail_r1  || null,
+    fb_thumbnail_r2:     clanak.fb_thumbnail_r2  || null,
+    fb_ide_na_facebook:  fbIde,
+    fb_social_status:    fbStatus,
+    fb_tip:              null, // admin bira (news/engage/original) u admin panelu
   });
 
   if (error) {
@@ -128,7 +141,7 @@ export async function sacuvajDraft(args: {
     return null;
   }
   await oznaciObradjen(vijest.link);
-  console.log(`   💾 Draft: ${slug}`);
+  console.log(`   💾 Draft: ${slug}${clanak.fb_tekst_news ? ` | 📱 FB: ${fbStatus}` : ""}`);
   return slug;
 }
 
