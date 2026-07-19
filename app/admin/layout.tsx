@@ -8,7 +8,8 @@ const navItems = [
   { href: "/admin/clanci", label: "Članci", icon: "📰" },
   { href: "/admin/pipeline", label: "Pipeline", icon: "⚡" },
   { href: "/admin/newsletter", label: "Newsletter", icon: "📧" },
-  { href: "/admin/social-media", label: "Facebook", icon: "📱" },
+  { href: "/admin/social-media", label: "Facebook", icon: "📘" },
+  { href: "/admin/vodici", label: "Vodiči", icon: "🗺️" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
