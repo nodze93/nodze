@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const { data, error } = await db
       .from("clanci")
       .select(`
-        id, slug, naslov, slika, excerpt,
+        id, slug, naslov, slika, excerpt, fb_slika_url,
         fb_tekst_news, fb_tekst_engage,
         fb_thumbnail_r1, fb_thumbnail_r2,
         fb_tip, fb_social_status
@@ -43,6 +43,9 @@ export async function POST(req: Request) {
 
     const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de";
 
+    // Pozadinska slika: ručno dodani URL ima prednost, inače slika članka.
+    const pozadina = data.fb_slika_url || data.slika;
+
     // Generiši thumbnail URL ako je tip news/engage i postoji thumbnail tekst
     let thumbnail_url: string | null = null;
     const tip = (data.fb_tip || "news") as "news" | "engage" | "original";
@@ -54,7 +57,7 @@ export async function POST(req: Request) {
         r1: data.fb_thumbnail_r1,
         r2: data.fb_thumbnail_r2 || "",
       });
-      if (data.slika) params.set("slika", data.slika);
+      if (pozadina) params.set("slika", pozadina);
       thumbnail_url = `${SITE}/api/og/thumbnail?${params.toString()}`;
     }
 
@@ -62,7 +65,7 @@ export async function POST(req: Request) {
     const fb = await objaviNaFacebook({
       naslov:          data.naslov,
       slug:            data.slug,
-      slika:           data.slika,
+      slika:           pozadina,
       excerpt:         data.excerpt,
       fb_tekst_news:   data.fb_tekst_news,
       fb_tekst_engage: data.fb_tekst_engage,

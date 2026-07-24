@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 // Kolone koje vraćamo (ne šaljemo sve)
 const KOLONE = [
   "id", "slug", "naslov", "excerpt", "kategorija", "status",
-  "slika", "slika_autor",
+  "slika", "slika_autor", "fb_slika_url",
   "fb_tekst_news", "fb_tekst_engage",
   "fb_thumbnail_r1", "fb_thumbnail_r2",
   "fb_social_status", "fb_tip", "fb_ide_na_facebook", "fb_zakazano_za",
@@ -60,6 +60,7 @@ export async function PATCH(req: Request) {
       fb_tekst_engage?: string;
       fb_thumbnail_r1?: string;
       fb_thumbnail_r2?: string;
+      fb_slika_url?: string | null;
       fb_zakazano_za?: string | null;
     };
 
@@ -70,6 +71,7 @@ export async function PATCH(req: Request) {
       "fb_social_status", "fb_tip",
       "fb_tekst_news", "fb_tekst_engage",
       "fb_thumbnail_r1", "fb_thumbnail_r2",
+      "fb_slika_url",
       "fb_zakazano_za",
     ];
     const update: Record<string, unknown> = {};
