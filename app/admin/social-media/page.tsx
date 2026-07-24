@@ -44,9 +44,18 @@ const STATUSI: { value: FbStatus | "sve"; label: string; boja: string }[] = [
   { value: "preskoceno", label: "Preskoceno", boja: "#6B7280" },
 ];
 
+// Stare auto-labele koje NE želimo na slici — tretiramo ih kao prazno.
+function jeAutoLabel(s: string): boolean {
+  const v = (s || "").trim().toLowerCase();
+  return v === "" || v === "kodnas.de" || v === "iz svijeta" || v === "sport"
+    || v.startsWith("vijesti iz");
+}
+
 // ── HELPER: default izvor (R2) — "Izvor: {izvor}" po defaultu ─
+// Pravi ručni override pobjeđuje; stare labele (Vijesti iz Njemačke...) se ignorišu.
 function defaultR2(post: FbPost): string {
-  if (post.fb_thumbnail_r2) return post.fb_thumbnail_r2;
+  const r2 = (post.fb_thumbnail_r2 || "").trim();
+  if (r2 && !jeAutoLabel(r2)) return r2;
   return post.izvor ? `Izvor: ${post.izvor}` : "kodnas.de";
 }
 
@@ -106,7 +115,11 @@ function PostKartica({
   const [tekstNews, setTekstNews]         = useState(post.fb_tekst_news || "");
   const [tekstEngage, setTekstEngage]     = useState(post.fb_tekst_engage || "");
   const [r1, setR1]                       = useState(post.fb_thumbnail_r1 || "");
-  const [r2, setR2]                       = useState(post.fb_thumbnail_r2 || (post.izvor ? `Izvor: ${post.izvor}` : ""));
+  const [r2, setR2]                       = useState(() => {
+    const v = (post.fb_thumbnail_r2 || "").trim();
+    if (v && !jeAutoLabel(v)) return v;
+    return post.izvor ? `Izvor: ${post.izvor}` : "";
+  });
   const [slikaUrl, setSlikaUrl]           = useState(post.fb_slika_url || "");
   const [objavljivanje, setObjavljivanje]  = useState(false);
   const [poruka, setPoruka]               = useState<{ tip: "ok" | "greska"; tekst: string } | null>(null);
@@ -191,18 +204,20 @@ function PostKartica({
       </div>
 
       {/* ── THUMBNAIL + TEKST ── */}
-      <div style={{ display: "flex", gap: 0, flexWrap: "wrap" }}>
+      <div className="fb-kartica-body" style={{ display: "flex", gap: 0, flexWrap: "wrap" }}>
         {/* Thumbnail (lijevo) */}
-        <div style={{ width: 280, flexShrink: 0, padding: 16, borderRight: "1px solid #f3f4f6" }}>
-          <ThumbnailPregled
-            post={{
-              ...post,
-              fb_thumbnail_r1: r1 || post.fb_thumbnail_r1,
-              fb_thumbnail_r2: r2 || post.fb_thumbnail_r2,
-              fb_slika_url: slikaUrl.trim() || post.fb_slika_url,
-            }}
-            tip={tip}
-          />
+        <div className="fb-thumb-col" style={{ width: 280, flexShrink: 0, padding: 16, borderRight: "1px solid #f3f4f6" }}>
+          <div className="fb-thumb-preview">
+            <ThumbnailPregled
+              post={{
+                ...post,
+                fb_thumbnail_r1: r1 || post.fb_thumbnail_r1,
+                fb_thumbnail_r2: r2 || post.fb_thumbnail_r2,
+                fb_slika_url: slikaUrl.trim() || post.fb_slika_url,
+              }}
+              tip={tip}
+            />
+          </div>
 
           {/* Thumbnail tekst polja (samo u mode uredivanja) */}
           {uredi && tip !== "original" && (
@@ -255,7 +270,7 @@ function PostKartica({
         </div>
 
         {/* Desna strana: tip selector + tekst */}
-        <div style={{ flex: 1, minWidth: 0, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="fb-content-col" style={{ flex: 1, minWidth: 0, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           {/* Tip selector */}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {TIPOVI.map((t) => (
@@ -263,6 +278,7 @@ function PostKartica({
                 key={t.value}
                 onClick={() => promijeniTip(t.value)}
                 disabled={jeObjavljeno}
+                className="fb-tip-btn"
                 style={{
                   padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer",
                   border: tip === t.value ? "2px solid #1D9E75" : "2px solid #e5e7eb",
@@ -350,7 +366,7 @@ function PostKartica({
 
           {/* ── AKCIJE ── */}
           {!jeObjavljeno && !jePreskoceno && (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", borderTop: "1px solid #f3f4f6", paddingTop: 12 }}>
+            <div className="fb-akcije" style={{ display: "flex", gap: 8, flexWrap: "wrap", borderTop: "1px solid #f3f4f6", paddingTop: 12 }}>
               {uredi ? (
                 <>
                   <button
@@ -519,6 +535,23 @@ export default function SocialMediaPage() {
 
   return (
     <div>
+      {/* Responsivni stilovi (phone-friendly) */}
+      <style>{`
+        @media (max-width: 640px) {
+          .fb-kartica-body { flex-direction: column !important; }
+          .fb-thumb-col {
+            width: 100% !important;
+            border-right: none !important;
+            border-bottom: 1px solid #f3f4f6;
+          }
+          .fb-thumb-preview { max-width: 240px; margin: 0 auto; }
+          .fb-content-col { width: 100% !important; }
+          .fb-tip-btn { flex: 1 1 calc(50% - 6px) !important; text-align: center; }
+          .fb-akcije { flex-direction: column; }
+          .fb-akcije button { width: 100%; }
+        }
+      `}</style>
+
       {/* ── HEADER ── */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>

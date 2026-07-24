@@ -52,7 +52,10 @@ export async function POST(req: Request) {
 
     if (tip !== "original" && data.fb_thumbnail_r1) {
       const predlozak = tip === "engage" ? "engagement" : "informative";
-      const r2 = data.fb_thumbnail_r2 || (data.izvor ? `Izvor: ${data.izvor}` : "");
+      // Stare auto-labele (Vijesti iz Njemačke...) tretiramo kao prazno → "Izvor: {izvor}".
+      const spremljenR2 = (data.fb_thumbnail_r2 || "").trim();
+      const jeAutoLabel = spremljenR2 === "" || ["kodnas.de", "iz svijeta", "sport"].includes(spremljenR2.toLowerCase()) || spremljenR2.toLowerCase().startsWith("vijesti iz");
+      const r2 = (!jeAutoLabel ? spremljenR2 : (data.izvor ? `Izvor: ${data.izvor}` : ""));
       const params = new URLSearchParams({
         t: predlozak,
         r1: data.fb_thumbnail_r1,
