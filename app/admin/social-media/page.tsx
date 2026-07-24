@@ -16,6 +16,7 @@ interface FbPost {
   excerpt: string | null;
   kategorija: string;
   status: string;
+  izvor: string | null;
   slika: string | null;
   fb_slika_url: string | null;
   fb_tekst_news: string | null;
@@ -43,6 +44,12 @@ const STATUSI: { value: FbStatus | "sve"; label: string; boja: string }[] = [
   { value: "preskoceno", label: "Preskoceno", boja: "#6B7280" },
 ];
 
+// ── HELPER: default izvor (R2) — "Izvor: {izvor}" po defaultu ─
+function defaultR2(post: FbPost): string {
+  if (post.fb_thumbnail_r2) return post.fb_thumbnail_r2;
+  return post.izvor ? `Izvor: ${post.izvor}` : "kodnas.de";
+}
+
 // ── HELPER: generiši thumbnail URL ───────────────────────────
 function thumbnailUrl(post: FbPost, tip?: FbTip): string {
   const t = tip || post.fb_tip || "news";
@@ -53,7 +60,7 @@ function thumbnailUrl(post: FbPost, tip?: FbTip): string {
   const params = new URLSearchParams({
     t: predlozak,
     r1: post.fb_thumbnail_r1 || post.naslov.slice(0, 50),
-    r2: post.fb_thumbnail_r2 || "kodnas.de",
+    r2: defaultR2(post),
   });
   if (pozadina) params.set("slika", pozadina);
   return `/api/og/thumbnail?${params.toString()}`;
@@ -99,7 +106,7 @@ function PostKartica({
   const [tekstNews, setTekstNews]         = useState(post.fb_tekst_news || "");
   const [tekstEngage, setTekstEngage]     = useState(post.fb_tekst_engage || "");
   const [r1, setR1]                       = useState(post.fb_thumbnail_r1 || "");
-  const [r2, setR2]                       = useState(post.fb_thumbnail_r2 || "");
+  const [r2, setR2]                       = useState(post.fb_thumbnail_r2 || (post.izvor ? `Izvor: ${post.izvor}` : ""));
   const [slikaUrl, setSlikaUrl]           = useState(post.fb_slika_url || "");
   const [objavljivanje, setObjavljivanje]  = useState(false);
   const [poruka, setPoruka]               = useState<{ tip: "ok" | "greska"; tekst: string } | null>(null);

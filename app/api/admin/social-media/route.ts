@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 // Kolone koje vraćamo (ne šaljemo sve)
 const KOLONE = [
-  "id", "slug", "naslov", "excerpt", "kategorija", "status",
+  "id", "slug", "naslov", "excerpt", "kategorija", "status", "izvor",
   "slika", "slika_autor", "fb_slika_url",
   "fb_tekst_news", "fb_tekst_engage",
   "fb_thumbnail_r1", "fb_thumbnail_r2",

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const { data, error } = await db
       .from("clanci")
       .select(`
-        id, slug, naslov, slika, excerpt, fb_slika_url,
+        id, slug, naslov, slika, excerpt, izvor, fb_slika_url,
         fb_tekst_news, fb_tekst_engage,
         fb_thumbnail_r1, fb_thumbnail_r2,
         fb_tip, fb_social_status
@@ -52,10 +52,11 @@ export async function POST(req: Request) {
 
     if (tip !== "original" && data.fb_thumbnail_r1) {
       const predlozak = tip === "engage" ? "engagement" : "informative";
+      const r2 = data.fb_thumbnail_r2 || (data.izvor ? `Izvor: ${data.izvor}` : "");
       const params = new URLSearchParams({
         t: predlozak,
         r1: data.fb_thumbnail_r1,
-        r2: data.fb_thumbnail_r2 || "",
+        r2,
       });
       if (pozadina) params.set("slika", pozadina);
       thumbnail_url = `${SITE}/api/og/thumbnail?${params.toString()}`;
