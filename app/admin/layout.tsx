@@ -3,12 +3,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-const navItems = [
+const navItems: { href: string; label: string; icon: string; exact?: boolean; external?: boolean }[] = [
   { href: "/admin", label: "Dashboard", icon: "📊", exact: true },
   { href: "/admin/clanci", label: "Članci", icon: "📰" },
   { href: "/admin/pipeline", label: "Pipeline", icon: "⚡" },
   { href: "/admin/newsletter", label: "Newsletter", icon: "📧" },
   { href: "/admin/social-media", label: "Facebook", icon: "📘" },
+  // Kalkulator (Brutto-Netto) — vanjska statična stranica s vlastitom prijavom.
+  { href: "/kalkulator-app/admin.html", label: "Kalkulator", icon: "🧮", external: true },
   { href: "/admin/vodici", label: "Vodiči", icon: "🗺️" },
 ];
 
@@ -71,24 +73,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             Navigacija
           </div>
           {navItems.map(item => {
-            const active = item.exact
+            const active = !item.external && (item.exact
               ? pathname === item.href
-              : pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={zatvori}
-                style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  padding: "12px 12px", borderRadius: 8, textDecoration: "none", marginBottom: 2,
-                  background: active ? "rgba(29,158,117,0.15)" : "transparent",
-                  color: active ? "#1D9E75" : "#9ca3af",
-                  fontSize: 14, fontWeight: active ? 600 : 400, transition: "all 0.15s",
-                }}
-              >
+              : pathname.startsWith(item.href));
+            const stil = {
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "12px 12px", borderRadius: 8, textDecoration: "none", marginBottom: 2,
+              background: active ? "rgba(29,158,117,0.15)" : "transparent",
+              color: active ? "#1D9E75" : "#9ca3af",
+              fontSize: 14, fontWeight: active ? 600 : 400, transition: "all 0.15s",
+            } as const;
+            const sadrzaj = (
+              <>
                 <span style={{ fontSize: 16 }}>{item.icon}</span>
                 {item.label}
+              </>
+            );
+            // Vanjska statična stranica (kalkulator-admin) → obični link u novom tabu.
+            if (item.external) {
+              return (
+                <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer" onClick={zatvori} style={stil}>
+                  {sadrzaj}
+                </a>
+              );
+            }
+            return (
+              <Link key={item.href} href={item.href} onClick={zatvori} style={stil}>
+                {sadrzaj}
               </Link>
             );
           })}

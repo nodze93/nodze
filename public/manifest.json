@@ -1,0 +1,17 @@
+{
+  "name": "kodnas.de — Vijesti, vodiči i kalkulator za dijasporu",
+  "short_name": "kodnas.de",
+  "description": "Vijesti, praktični vodiči i Brutto-Netto kalkulator za Bosance u Njemačkoj i Austriji.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1a8a4a",
+  "lang": "bs",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

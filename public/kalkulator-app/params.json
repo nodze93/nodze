@@ -1,0 +1,49 @@
+{
+  "_info": "Jaehrlich aktualisierbare Werte fuer den Brutto-Netto-Rechner. Quelle: BMF-Programmablaufplan. Ueber admin.html bearbeiten, dann diese Datei ins Web-Root hochladen.",
+  "defaultYear": "2026",
+  "rates": {
+    "rvRate": 0.093,
+    "avRate": 0.013,
+    "kvRateAN": 0.073,
+    "pvRateAN": 0.018,
+    "pvChildless": 0.006,
+    "pvSachsen": 0.005,
+    "kvRateVSP": 0.070,
+    "mvspRate": 0.12,
+    "soliRate": 0.055,
+    "soliPhaseIn": 0.119,
+    "kircheLow": 0.08,
+    "kircheHigh": 0.09,
+    "arbn": 1230,
+    "sonder": 36,
+    "entlastung2": 4260
+  },
+  "years": {
+    "2026": {
+      "gfb": 12348, "gfbSplit": 24696,
+      "z2end": 17799, "z3end": 69878, "z4end": 277825,
+      "z2a": 914.51, "z2b": 1400,
+      "z3a": 181.19, "z3b": 2397, "z3c": 1025.38,
+      "z4m": 0.42, "z4s": 10637.32,
+      "z5m": 0.45, "z5s": 18971.07,
+      "bbgRV": 101400, "bbgKV": 69750,
+      "kinderfreibetrag": 4878,
+      "soliFreigrenze": 20350,
+      "mvspCapNormal": 1900, "mvspCapSK3": 3000,
+      "zusatzAvg": 2.9
+    },
+    "2025": {
+      "gfb": 12096, "gfbSplit": 24192,
+      "z2end": 17443, "z3end": 68480, "z4end": 277825,
+      "z2a": 932.30, "z2b": 1400,
+      "z3a": 176.64, "z3b": 2397, "z3c": 1015.13,
+      "z4m": 0.42, "z4s": 10911.92,
+      "z5m": 0.45, "z5s": 19246.67,
+      "bbgRV": 96600, "bbgKV": 66150,
+      "kinderfreibetrag": 4800,
+      "soliFreigrenze": 19950,
+      "mvspCapNormal": 1900, "mvspCapSK3": 3000,
+      "zusatzAvg": 2.5
+    }
+  }
+}

@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import SearchModal from "@/components/SearchModal";
 import AdminModeracija from "@/components/admin/AdminModeracija";
+import BottomNav from "@/components/BottomNav";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de";
 
@@ -43,6 +44,20 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  // PWA — omogućava "Dodaj na početni ekran" i app-izgled.
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "kodnas.de",
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   openGraph: {
     title: "kodnas.de — Tvoj vodič kroz život vani",
     description: "Portal za Bosance u Njemačkoj i Austriji.",
@@ -52,6 +67,11 @@ export const metadata: Metadata = {
     type: "website",
   },
   verification,
+};
+
+// theme-color (boja gornje trake u PWA/na mobilnom)
+export const viewport: Viewport = {
+  themeColor: "#1a8a4a",
 };
 
 export default function RootLayout({
@@ -65,6 +85,18 @@ export default function RootLayout({
         {children}
         <SearchModal />
         <AdminModeracija />
+
+        {/* Donja nav traka (mobilni): Vijesti · Vodiči · Brutto-Netto */}
+        <BottomNav />
+
+        {/* PWA — registruj service worker (bez keširanja, samo za instalabilnost) */}
+        <Script id="sw-register" strategy="afterInteractive">
+          {`if ("serviceWorker" in navigator) {
+              window.addEventListener("load", function () {
+                navigator.serviceWorker.register("/sw.js").catch(function(){});
+              });
+            }`}
+        </Script>
 
         {/* Vercel Web Analytics + Speed Insights (posjete i brzina stranice).
             Paketi su bili instalirani ali komponente nikad montirane — zato

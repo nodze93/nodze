@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bruto-neto kalkulator</title>
+<meta name="description" content="Izračunaj svoju neto platu brzo, jednostavno i pouzdano.">
+<meta name="keywords" content="brutto netto rechner, gehaltsrechner 2026, nettolohn berechnen, lohnrechner, steuerklasse, netto gehalt, lohnsteuer rechner 2026, gehalt berechnen">
+<meta name="robots" content="index, follow">
+<meta name="author" content="Brutto Netto Rechner">
+<meta name="theme-color" content="#1a8a4a">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { overflow-x: clip; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #F0F4FF;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    overflow-x: clip; /* Off-Canvas-Menü darf kein seitliches Scrollen/Verrutschen erzeugen */
+  }
+  .app {
+    width: 100%;
+    max-width: 430px;
+    background: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 12px 16px 0;
+  }
+  /* (legacy header styles, unused) */
+  .header {
+    background: #fff;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+  }
+  .logo-icon {
+    width: 40px; height: 40px;
+    background: #1B4FD8;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { color: #fff; }
+  .logo-text { display: flex; flex-direction: column; line-height: 1.05; }
+  .logo-brutto { font-size: 19px; font-weight: 900; color: #111827; letter-spacing: 0.5px; }
+  .logo-brutto span { color: #1B4FD8; }
+  .logo-rechner { font-size: 9px; color: #9CA3AF; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-top: 1px; }
+  .menu-btn { background: none; border: none; cursor: pointer; padding: 8px; border-radius: 8px; }
+  .menu-btn:hover { background: #F3F4F6; }
+
+  /* STEPPER */
+  .stepper {
+    padding: 16px 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    max-width: 120px;
+  }
+  .step-circle {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    background: #E5E7EB;
+    color: #9CA3AF;
+    border: 2px solid #E5E7EB;
+    transition: all 0.3s;
+  }
+  .step-circle.active {
+    background: #1B4FD8; color: #fff; border-color: #1B4FD8;
+  }
+  .step-circle.done {
+    background: #22C55E; color: #fff; border-color: #22C55E;
+  }
+  .step-label {
+    font-size: 9px; font-weight: 600; color: #9CA3AF;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .step-label.active { color: #1B4FD8; }
+  .step-label.done { color: #22C55E; }
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: #E5E7EB;
+    margin-bottom: 20px;
+    transition: background 0.3s;
+    max-width: 80px;
+  }
+  .step-line.done { background: #22C55E; }
+
+  /* PAGE 1 */
+  #page1 {
+    padding: 18px 18px 92px; /* Platz für die fixe CTA-Leiste */
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100dvh - 20px);
+  }
+  .page-title {
+    text-align: center;
+    margin: 6px 0 10px;
+    position: relative;
+  }
+  .page-title .menu-btn {
+    position: absolute;
+    right: 0;
+    top: 34px;
+    transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    padding: 8px; border-radius: 8px;
+  }
+  .page-title .menu-btn:hover { background: #F3F4F6; }
+  .page-title .globe-btn {
+    position: absolute;
+    left: 0;
+    top: 34px;
+    transform: translateY(-50%);
+    background: none; border: none; cursor: pointer;
+    padding: 6px 8px; border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+  }
+  .page-title .globe-btn:hover { background: #F3F4F6; }
+  .globe-code { font-size: 9px; font-weight: 800; color: #374151; letter-spacing: 0.5px; }
+
+  /* Language grid in drawer */
+  .lang-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    padding: 4px 16px 6px;
+  }
+  .lang-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 9px 10px; border: 1.5px solid #E5E7EB; border-radius: 9px;
+    background: #fff; cursor: pointer; font-size: 13px; font-weight: 600;
+    color: #374151; text-align: left; transition: all 0.15s;
+  }
+  .lang-btn:hover { border-color: #1B4FD8; background: #F0F4FF; }
+  .lang-btn.active { border-color: #1B4FD8; background: #EEF2FF; color: #1B4FD8; }
+  /* RTL support */
+  html[dir="rtl"] .page-title .globe-btn { left: auto; right: 0; }
+  html[dir="rtl"] .page-title .menu-btn { right: auto; left: 0; }
+  html[dir="rtl"] .currency-badge { right: auto; left: 12px; }
+  html[dir="rtl"] .input-wrap input { padding: 10px 14px 10px 34px; text-align: right; }
+  html[dir="rtl"] select { text-align: right; }
+  html[dir="rtl"] .drawer { left: 0; right: auto; transform: translateX(-100%); box-shadow: 8px 0 30px rgba(0,0,0,0.15); }
+  html[dir="rtl"] .drawer.open { transform: translateX(0); }
+  html[dir="rtl"] .lang-btn, html[dir="rtl"] .drawer-link { text-align: right; }
+  .page-title h1 {
+    font-size: 30px; font-weight: 900; line-height: 1.05;
+    color: #111827;
+  }
+  .page-title h1 span { color: #1B4FD8; }
+  .page-title p {
+    font-size: 13px; color: #6B7280; margin-top: 6px; line-height: 1.35;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 11px;
+    margin-top: 12px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label {
+    font-size: 10px; font-weight: 700; color: #6B7280;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .info-icon {
+    width: 14px; height: 14px;
+    border: 1.5px solid #9CA3AF;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; color: #9CA3AF; cursor: pointer;
+    font-style: italic; font-weight: 700;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .input-wrap input {
+    width: 100%;
+    padding: 9px 36px 9px 14px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    font-size: 16px; /* >=16px verhindert iOS-Zoom beim Fokus */
+    font-weight: 600;
+    color: #111827;
+    background: #F9FAFB;
+    outline: none;
+    transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+  .input-wrap input:focus { border-color: #1B4FD8; background: #fff; }
+  .input-wrap input::-webkit-outer-spin-button,
+  .input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .currency-badge {
+    position: absolute; right: 12px;
+    font-size: 14px; font-weight: 700; color: #6B7280;
+    pointer-events: none;
+  }
+
+  select {
+    width: 100%;
+    padding: 9px 32px 9px 14px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    font-size: 16px; /* >=16px verhindert iOS-Zoom beim Fokus */
+    font-weight: 600;
+    color: #111827;
+    background: #F9FAFB url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  select:focus { border-color: #1B4FD8; background-color: #fff; }
+
+  /* KINDER COUNTER */
+  .counter {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    background: #F9FAFB;
+    overflow: hidden;
+    height: 43px;
+  }
+  .counter-btn {
+    width: 40px; height: 100%;
+    border: none; background: none; cursor: pointer;
+    font-size: 18px; font-weight: 400; color: #374151;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .counter-btn:hover { background: #E5E7EB; }
+  .counter-val {
+    flex: 1; text-align: center;
+    font-size: 16px; font-weight: 700; color: #111827;
+  }
+
+  /* CHECKBOXES */
+  .section-title {
+    font-size: 10px; font-weight: 700; color: #6B7280;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    margin-top: 12px; margin-bottom: 8px;
+  }
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 9px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: #F9FAFB;
+    min-width: 0; /* erlaubt Schrumpfen statt Überlauf */
+  }
+  .checkbox-item.checked {
+    border-color: #1B4FD8;
+    background: #EEF2FF;
+  }
+  .checkbox-item input[type=checkbox] { display: none; }
+  .custom-checkbox {
+    width: 18px; height: 18px; min-width: 18px;
+    border: 2px solid #D1D5DB;
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .checked .custom-checkbox {
+    background: #1B4FD8; border-color: #1B4FD8;
+  }
+  .custom-checkbox svg { display: none; }
+  .checked .custom-checkbox svg { display: block; }
+  .cb-text { display: flex; flex-direction: column; min-width: 0; }
+  .cb-name { font-size: 11px; font-weight: 600; color: #111827; line-height: 1.2; overflow-wrap: break-word; }
+  .cb-sub { display: block; font-size: 9px; color: #9CA3AF; margin-top: 1px; }
+
+  /* BUTTON — fixe CTA-Leiste, immer sichtbar am unteren Rand */
+  .cta-bar {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    width: 100%;
+    max-width: 430px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid #EEF0F4;
+    z-index: 45;
+    transition: transform 0.28s ease;
+  }
+  .cta-bar.cta-hidden { transform: translateX(-50%) translateY(130%); }
+  .calc-btn {
+    width: 100%;
+    padding: 14px;
+    background: #1B4FD8;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 6px 18px rgba(27,79,216,0.4);
+  }
+  .calc-btn:hover { background: #1540B0; }
+  .calc-btn:active { transform: scale(0.98); }
+  .privacy-note {
+    text-align: center;
+    font-size: 10px; color: #9CA3AF;
+    margin-top: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+
+  /* PAGE 2 — App-Stil Ergebnis */
+  #page2 { display: none; background: #F7F7F5; padding-bottom: 20px; }
+
+  .res-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; background: #fff; border-bottom: 1px solid #ECECEC;
+  }
+  .res-back {
+    width: 34px; height: 34px; border: none; background: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; border-radius: 8px;
+  }
+  .res-back:hover { background: #F3F4F6; }
+  .res-back svg { width: 20px; height: 20px; stroke: #111; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .res-nav-brand { font-size: 15px; font-weight: 900; color: #111827; letter-spacing: .3px; }
+  .res-nav-brand span { color: #1B4FD8; }
+  .res-nav-spacer { width: 34px; }
+
+  .res-wrap { padding: 14px 16px 0; }
+
+  .result-hero {
+    background: linear-gradient(135deg, #167a42 0%, #1a8a4a 100%);
+    padding: 20px 24px 26px; text-align: center; color: #fff;
+    border-radius: 16px;
+  }
+  .result-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.82); margin-bottom: 5px; }
+  .result-amount { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; margin-bottom: 3px; }
+  .result-interval { font-size: 13px; color: rgba(255,255,255,0.8); font-weight: 500; }
+
+  .result-body { padding: 0; }
+
+  .section-card {
+    background: #fff; border: 1px solid #EAEAEA; border-radius: 16px;
+    overflow: hidden; margin-bottom: 12px;
+  }
+  .result-body .section-card:first-child { margin-top: -14px; position: relative; z-index: 2; }
+  .section-card-title {
+    padding: 12px 16px 8px; display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .section-card-title span:first-child { font-size: 11px; font-weight: 700; color: #444; letter-spacing: .6px; text-transform: uppercase; }
+  .section-card-title .interval-tag { font-size: 11px; font-weight: 600; color: #888; background: none; padding: 0; }
+
+  .breakdown-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 16px; border-bottom: 1px solid #F5F5F5;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-row.total {
+    background: #fff; border-top: 1.5px solid #222; border-bottom: none;
+    padding: 12px 16px; margin-top: 2px;
+  }
+  .row-left { display: flex; align-items: center; gap: 10px; }
+  .row-icon {
+    width: 20px; height: 20px; background: none !important; border-radius: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+  }
+  .row-icon svg { width: 17px; height: 17px; stroke: #6b6b6b; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .breakdown-row.total .row-icon svg { stroke: #1a8a4a; }
+  .row-name { font-size: 13.5px; font-weight: 500; color: #333; }
+  .row-name.total-name { font-size: 14px; font-weight: 700; color: #1a8a4a; letter-spacing: .3px; }
+  .row-amount { font-size: 13.5px; font-weight: 500; color: #333; }
+  .row-amount.deduction { color: #c0392b; }
+  .row-amount.brutto-amount { color: #333; }
+  .row-amount.total-amount { font-size: 14px; font-weight: 700; color: #1a8a4a; }
+
+  /* DONUT / Raspored */
+  .chart-wrap { display: flex; align-items: center; gap: 20px; padding: 12px 16px 16px; }
+  .donut-container { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
+  .donut-container svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+  .donut-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .donut-center .pct { font-size: 16px; font-weight: 800; color: #1a8a4a; }
+  .donut-center .lbl { font-size: 8px; color: #888; font-weight: 600; }
+  .chart-legend { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-info { flex: 1; }
+  .legend-name { font-size: 12px; color: #555; }
+  .legend-val { font-size: 13px; font-weight: 600; color: #222; }
+  .legend-pct { font-size: 11px; color: #888; }
+
+  /* BUTTONS */
+  .bottom-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 2px 0 0; }
+  .btn-back {
+    padding: 13px; border: 1.5px solid #1a8a4a; border-radius: 10px; background: #fff;
+    font-size: 13px; font-weight: 600; color: #1a8a4a; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px; letter-spacing: 0;
+  }
+  .btn-back:hover { background: #F0FAF4; }
+  .btn-pdf {
+    padding: 13px; background: #1a8a4a; border: none; border-radius: 10px;
+    font-size: 13px; font-weight: 600; color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px; letter-spacing: 0;
+  }
+  .btn-pdf:hover { background: #167a42; }
+  .disclaimer {
+    text-align: center; font-size: 10px; color: #aaa;
+    padding: 12px 20px 6px;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+
+  /* Slide animation */
+  .page { transition: opacity 0.25s; }
+  .page.hidden { display: none; }
+
+  /* ─── HAMBURGER DRAWER ────────────────────────────────────── */
+  .menu-btn { position: relative; z-index: 60; }
+  .drawer-overlay {
+    position: fixed; inset: 0;
+    background: rgba(17,24,39,0.5);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.25s, visibility 0.25s;
+    z-index: 70;
+  }
+  .drawer-overlay.open { opacity: 1; visibility: visible; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 82%; max-width: 340px;
+    background: #fff;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    z-index: 80;
+    display: flex; flex-direction: column;
+    box-shadow: -8px 0 30px rgba(0,0,0,0.15);
+    overflow-y: auto;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px; border-bottom: 1px solid #F0F0F0;
+  }
+  .drawer-title { font-size: 15px; font-weight: 800; color: #111827; letter-spacing: 0.5px; }
+  .drawer-close {
+    background: none; border: none; cursor: pointer;
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #6B7280; font-size: 22px;
+  }
+  .drawer-close:hover { background: #F3F4F6; }
+  .drawer-nav { padding: 8px 0 20px; }
+  .drawer-group-title {
+    font-size: 10px; font-weight: 700; color: #9CA3AF;
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 16px 20px 6px;
+  }
+  .drawer-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    font-size: 15px; font-weight: 500; color: #374151;
+    text-decoration: none; cursor: pointer;
+    transition: background 0.15s;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .drawer-link:hover { background: #F0F4FF; color: #1B4FD8; }
+  .drawer-link .dl-icon { font-size: 18px; width: 24px; text-align: center; }
+  .drawer-link.active { background: #EEF2FF; color: #1B4FD8; font-weight: 700; }
+
+  /* ─── VERWANDTE RECHNER CARDS ─────────────────────────────── */
+  .related {
+    max-width: 760px; margin: 0 auto; padding: 8px 20px 40px;
+  }
+  .related h2 {
+    font-size: 21px; font-weight: 800; color: #111827;
+    margin: 12px 0 14px; line-height: 1.25;
+  }
+  .related-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .related-card {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 16px; border: 1px solid #E5E7EB; border-radius: 14px;
+    background: #fff; text-decoration: none; cursor: pointer;
+    transition: border-color 0.2s, transform 0.1s, box-shadow 0.2s;
+  }
+  .related-card:hover {
+    border-color: #1B4FD8; transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(27,79,216,0.12);
+  }
+  .related-card:active { transform: translateY(0); }
+  .rc-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: #EEF2FF; display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .rc-title { font-size: 14px; font-weight: 700; color: #111827; line-height: 1.3; }
+  .rc-desc { font-size: 12px; color: #9CA3AF; line-height: 1.35; }
+
+  /* ─── SEO CONTENT ─────────────────────────────────────────── */
+  .seo {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 8px 20px 60px;
+    color: #374151;
+    line-height: 1.65;
+    font-size: 15px;
+  }
+  .seo h2 {
+    font-size: 21px; font-weight: 800; color: #111827;
+    margin: 32px 0 10px; line-height: 1.25;
+  }
+  .seo h2:first-child { margin-top: 8px; }
+  .seo-h1 { font-size: 25px; font-weight: 900; color: #111827; margin: 8px 0 12px; line-height: 1.2; }
+  .seo p { margin-bottom: 12px; }
+  .seo .intro { font-size: 16px; color: #4B5563; }
+  .seo strong { color: #111827; }
+  .seo a { color: #1B4FD8; text-decoration: none; }
+  .seo a:hover { text-decoration: underline; }
+
+  /* Rates table */
+  .rate-table {
+    width: 100%; border-collapse: collapse; margin: 8px 0 16px;
+    font-size: 14px; background: #fff;
+    border-radius: 10px; overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .rate-table th, .rate-table td {
+    padding: 10px 14px; text-align: left; border-bottom: 1px solid #F0F0F0;
+  }
+  .rate-table th { background: #F0F4FF; font-weight: 700; color: #1B4FD8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .rate-table td:last-child, .rate-table th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  .rate-table tr:last-child td { border-bottom: none; }
+
+  /* Accordion */
+  .accordion { margin: 8px 0; }
+  .acc-item {
+    border: 1px solid #E5E7EB; border-radius: 12px;
+    margin-bottom: 10px; overflow: hidden; background: #fff;
+  }
+  .acc-head {
+    width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+    padding: 16px 18px; font-size: 15px; font-weight: 700; color: #111827;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .acc-head:hover { background: #F9FAFB; }
+  .acc-icon { font-size: 20px; color: #1B4FD8; transition: transform 0.25s; flex-shrink: 0; line-height: 1; }
+  .acc-item.open .acc-icon { transform: rotate(45deg); }
+  .acc-body {
+    max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+    padding: 0 18px;
+  }
+  .acc-item.open .acc-body { max-height: 800px; padding-bottom: 16px; }
+  .acc-body p { margin-bottom: 10px; font-size: 14.5px; }
+  .seo-footer {
+    max-width: 760px; margin: 0 auto; padding: 0 20px 40px;
+    font-size: 12px; color: #9CA3AF; text-align: center; line-height: 1.6;
+  }
+  .seo-footer strong { color: #6B7280; }
+
+  /* ─── PWA INSTALL BANNER ──────────────────────────────────── */
+  .install-banner {
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    transform: translate(-50%, 160%);
+    width: calc(100% - 24px);
+    max-width: 410px;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(17,24,39,0.22);
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 200;
+    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  }
+  .install-banner.show { transform: translate(-50%, 0); }
+  .install-icon {
+    width: 46px; height: 46px; min-width: 46px;
+    background: #1B4FD8; border-radius: 12px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 9px;
+  }
+  .install-icon i { background: #fff; border-radius: 3px; }
+  .install-icon i:nth-child(2), .install-icon i:nth-child(3) { opacity: 0.55; }
+  .install-icon i:nth-child(4) { background: #22C55E; }
+  .install-txt { flex: 1; min-width: 0; }
+  .install-title { font-size: 14px; font-weight: 800; color: #111827; line-height: 1.2; }
+  .install-sub { font-size: 12px; color: #6B7280; margin-top: 2px; line-height: 1.3; }
+  .install-actions { display: flex; flex-direction: column; gap: 6px; }
+  .install-yes {
+    background: #1B4FD8; color: #fff; border: none; border-radius: 9px;
+    padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
+  .install-yes:hover { background: #1540B0; }
+  .install-no {
+    background: none; border: none; color: #9CA3AF; font-size: 11px; cursor: pointer; padding: 2px;
+  }
+  html[dir="rtl"] .install-banner { flex-direction: row-reverse; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- PAGE 1: INPUT -->
+  <div id="page1" class="page">
+    <div class="page-title">
+      <h1>BRUTTO <span>NETTO</span><br>RECHNER</h1>
+      <p data-i18n-html="subtitle">Berechne dein Nettogehalt schnell,<br>einfach und zuverlässig.</p>
+    </div>
+
+    <div class="form-row">
+      <!-- Intervall (L) -->
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="lbl_intervall">Intervall</span></label>
+        <select id="intervall">
+          <option value="monatlich" selected>Monatlich</option>
+          <option value="jaehrlich">Jährlich</option>
+          <option value="halbjaehrlich">Halbjährlich</option>
+          <option value="vierteljaehrlich">Vierteljährlich</option>
+          <option value="woechentlich">Wöchentlich</option>
+          <option value="taeglich">Täglich</option>
+          <option value="stuendlich">Stündlich</option>
+        </select>
+      </div>
+      <!-- Bruttoeinkommen (R) -->
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="lbl_brutto">Bruttoeinkommen</span></label>
+        <div class="input-wrap">
+          <input type="number" id="brutto" value="3500" min="0" max="999999" step="100">
+          <span class="currency-badge">€</span>
+        </div>
+      </div>
+      <!-- KV-Zusatzbeitrag (L) -->
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="lbl_zusatz">KV-Zusatzbeitrag</span> <span class="info-icon" data-i18n-title="ti_zusatz" title="Der kassenindividuelle Zusatzbeitrag zur Krankenversicherung. Durchschnitt 2026: 2,9 %. Deine Krankenkasse kann abweichen.">i</span></label>
+        <div class="input-wrap">
+          <input type="number" id="zusatz" value="2.9" min="0" max="5" step="0.1">
+          <span class="currency-badge">%</span>
+        </div>
+      </div>
+      <!-- Steuerklasse (R) -->
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="lbl_steuerklasse">Steuerklasse</span> <span class="info-icon" data-i18n-title="ti_steuerklasse" title="Steuerklasse 1: ledig/getrennt ▪ 2: alleinerziehend ▪ 3: verheiratet (höheres Einkommen) ▪ 4: verheiratet (ähnliches Einkommen) ▪ 5: verheiratet (niedrigeres Einkommen) ▪ 6: Zweitjob">i</span></label>
+        <select id="steuerklasse">
+          <option value="1" selected>1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+      <!-- Geldwerter Vorteil (L) -->
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="lbl_gwv">Geldw. Vorteil</span> <span class="info-icon" data-i18n-title="ti_gwv" title="Monatlicher geldwerter Vorteil, z. B. Dienstwagen oder Sachbezug. Wird versteuert und verbeitragt, aber nicht bar ausgezahlt.">i</span></label>
+        <div class="input-wrap">
+          <input type="number" id="gwv" value="0" min="0" max="99999" step="10">
+          <span class="currency-badge">€</span>
+        </div>
+      </div>
+      <!-- Kinderfreibeträge (R) -->
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="lbl_kinder">Kinderfreibeträge</span> <span class="info-icon" data-i18n-title="ti_kinder" title="Anzahl der Kinder mit Kinderfreibetrag. Wirkt sich auf Kirchensteuer und Solidaritätszuschlag aus.">i</span></label>
+        <div class="counter">
+          <button class="counter-btn" onclick="changeKinder(-1)">−</button>
+          <span class="counter-val" id="kinderVal">0</span>
+          <button class="counter-btn" onclick="changeKinder(1)">+</button>
+        </div>
+      </div>
+      <!-- Steuerfreibetrag (L) -->
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="lbl_freibetrag">Steuerfreibetrag</span> <span class="info-icon" data-i18n-title="ti_freibetrag" title="Jährlicher Lohnsteuer-Freibetrag aus den ELStAM (z. B. für Fahrtkosten, Werbungskosten). Mindert das zu versteuernde Einkommen.">i</span></label>
+        <div class="input-wrap">
+          <input type="number" id="freibetrag" value="0" min="0" max="999999" step="100">
+          <span class="currency-badge">€/J</span>
+        </div>
+      </div>
+      <!-- Bundesland (R) -->
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="lbl_bundesland">Bundesland</span></label>
+        <select id="bundesland">
+          <option value="bw">Baden-Württemberg</option>
+          <option value="by" selected>Bayern</option>
+          <option value="be">Berlin</option>
+          <option value="bb">Brandenburg</option>
+          <option value="hb">Bremen</option>
+          <option value="hh">Hamburg</option>
+          <option value="he">Hessen</option>
+          <option value="mv">Mecklenburg-Vorpommern</option>
+          <option value="ni">Niedersachsen</option>
+          <option value="nw">Nordrhein-Westfalen</option>
+          <option value="rp">Rheinland-Pfalz</option>
+          <option value="sl">Saarland</option>
+          <option value="sn">Sachsen</option>
+          <option value="st">Sachsen-Anhalt</option>
+          <option value="sh">Schleswig-Holstein</option>
+          <option value="th">Thüringen</option>
+        </select>
+      </div>
+      <!-- Kirchensteuer (L) -->
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="lbl_kirche">Kirchensteuer</span> <span class="info-icon" data-i18n-title="ti_kirche" title="Bayern und Baden-Württemberg: 8% der Einkommensteuer. Alle anderen Bundesländer: 9% der Einkommensteuer.">i</span></label>
+        <select id="kirchensteuer">
+          <option value="ja" selected>Ja</option>
+          <option value="nein">Nein</option>
+        </select>
+      </div>
+      <!-- Alter (R) -->
+      <div class="form-group">
+        <label class="form-label"><span data-i18n="lbl_alter">Alter (Jahre)</span> <span class="info-icon" data-i18n-title="ti_alter" title="Ab 23 Jahren zahlen Kinderlose einen Zuschlag von 0,6 % zur Pflegeversicherung.">i</span></label>
+        <div class="input-wrap">
+          <input type="number" id="alter" value="30" min="16" max="99" step="1">
+          <span class="currency-badge" data-i18n="unit_year">J</span>
+        </div>
+      </div>
+      <!-- Abrechnungsjahr: fest 2026 (Feld entfernt) -->
+      <input type="hidden" id="jahr" value="2026">
+      <!-- Krankenversicherung Typ -->
+      <div class="form-group full">
+        <label class="form-label"><span data-i18n="lbl_kvtyp">Krankenversicherung</span> <span class="info-icon" data-i18n-title="ti_kvtyp" title="Gesetzlich (pflicht/freiwillig) oder privat versichert. Bei privater KV gib deinen Beitrag separat an.">i</span></label>
+        <select id="kvtyp" onchange="togglePKV()">
+          <option value="gesetzlich" selected>Gesetzlich versichert</option>
+          <option value="freiwillig">Freiwillig gesetzlich versichert</option>
+          <option value="privat">Privat versichert (PKV)</option>
+        </select>
+      </div>
+      <!-- PKV Felder (conditional) -->
+      <div class="form-group" id="pkv-beitrag-group" style="display:none">
+        <label class="form-label"><span data-i18n="lbl_pkvbeitrag">PKV-Beitrag / Monat</span> <span class="info-icon" data-i18n-title="ti_pkvbeitrag" title="Dein monatlicher Beitrag zur privaten Kranken- und Pflegeversicherung.">i</span></label>
+        <div class="input-wrap">
+          <input type="number" id="pkvBeitrag" value="0" min="0" max="9999" step="10">
+          <span class="currency-badge">€</span>
+        </div>
+      </div>
+      <div class="form-group" id="pkv-zuschuss-group" style="display:none">
+        <label class="form-label"><span data-i18n="lbl_agzuschuss">AG-Zuschuss PKV</span> <span class="info-icon" data-i18n-title="ti_agzuschuss" title="Zahlt dein Arbeitgeber einen Zuschuss zur privaten KV? Meist ja (bis zur Hälfte des Höchstbeitrags).">i</span></label>
+        <select id="pkvZuschuss">
+          <option value="ja" selected>Ja</option>
+          <option value="nein">Nein</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Weitere Abzüge -->
+    <div class="section-title" data-i18n="weitere_abzuege">Weitere Abzüge (optional)</div>
+    <div class="checkbox-grid">
+      <label class="checkbox-item checked" onclick="toggleCB(this, 'cb-rv')">
+        <input type="checkbox" id="cb-rv" checked>
+        <div class="custom-checkbox">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="cb-text">
+          <span class="cb-name" data-i18n="cb_rente">Rentenversicherung</span>
+          <span class="cb-sub" data-i18n="pflicht">pflichtlich</span>
+        </div>
+      </label>
+      <label class="checkbox-item checked" onclick="toggleCB(this, 'cb-av')">
+        <input type="checkbox" id="cb-av" checked>
+        <div class="custom-checkbox">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="cb-text">
+          <span class="cb-name" data-i18n="cb_arbeitslos">Arbeitslosenvers.</span>
+          <span class="cb-sub" data-i18n="pflicht">pflichtlich</span>
+        </div>
+      </label>
+      <label class="checkbox-item checked" onclick="toggleCB(this, 'cb-kv')">
+        <input type="checkbox" id="cb-kv" checked>
+        <div class="custom-checkbox">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="cb-text">
+          <span class="cb-name" data-i18n="cb_kranken">Krankenversicherung</span>
+          <span class="cb-sub" data-i18n="pflicht">pflichtlich</span>
+        </div>
+      </label>
+      <label class="checkbox-item checked" onclick="toggleCB(this, 'cb-pv')">
+        <input type="checkbox" id="cb-pv" checked>
+        <div class="custom-checkbox">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="cb-text">
+          <span class="cb-name" data-i18n="cb_pflege">Pflegeversicherung</span>
+          <span class="cb-sub" data-i18n="pflicht">pflichtlich</span>
+        </div>
+      </label>
+    </div>
+
+    <p class="privacy-note">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6l-8-4z" stroke="#9CA3AF" stroke-width="2" fill="none"/></svg>
+      <span data-i18n="privacy">Deine Daten bleiben privat und werden nicht gespeichert.</span>
+    </p>
+
+    <div class="cta-bar">
+      <button class="calc-btn" onclick="calculate()">
+        <span data-i18n="btn_berechnen">NETTO BERECHNEN</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12h14M14 7l5 5-5 5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- PAGE 2: RESULT -->
+  <div id="page2" class="page hidden">
+    <div class="res-nav">
+      <button class="res-back" onclick="goBack()" aria-label="Zurück">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="res-nav-brand">BRUTTO <span>NETTO</span></span>
+      <span class="res-nav-spacer"></span>
+    </div>
+    <div class="res-wrap">
+    <div class="result-hero">
+      <div class="result-label" data-i18n="res_netto_label">Nettoeinkommen</div>
+      <div class="result-amount" id="res-netto">0,00 €</div>
+      <div class="result-interval" id="res-interval">monatlich</div>
+    </div>
+
+    <div class="result-body">
+      <!-- Breakdown -->
+      <div class="section-card">
+        <div class="section-card-title">
+          <span data-i18n="uebersicht">Übersicht</span>
+          <span class="interval-tag" id="res-interval-tag">Monatlich</span>
+        </div>
+
+        <div class="breakdown-row">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
+            <span class="row-name" data-i18n="lbl_brutto">Bruttoeinkommen</span>
+          </div>
+          <span class="row-amount brutto-amount" id="res-brutto-row">0,00 €</span>
+        </div>
+        <div class="breakdown-row" id="row-lohnsteuer">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><path d="M12 2 3 7l9 5 9-5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg></div>
+            <span class="row-name" data-i18n="r_lohnsteuer">Lohnsteuer</span>
+          </div>
+          <span class="row-amount deduction" id="res-lohnsteuer">0,00 €</span>
+        </div>
+        <div class="breakdown-row" id="row-soli">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <span class="row-name" data-i18n="r_soli">Solidaritätszuschlag</span>
+          </div>
+          <span class="row-amount deduction" id="res-soli">0,00 €</span>
+        </div>
+        <div class="breakdown-row" id="row-kirche" style="display:none">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V10M9 21V10M15 21V10M19 21V10"/><path d="M3 10l9-6 9 6z"/></svg></div>
+            <span class="row-name" data-i18n="lbl_kirche">Kirchensteuer</span>
+          </div>
+          <span class="row-amount deduction" id="res-kirche">0,00 €</span>
+        </div>
+        <div class="breakdown-row" id="row-rv" style="display:none">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><path d="M20.8 5.6a4.9 4.9 0 0 0-7 0l-.8.8-.8-.8a4.9 4.9 0 1 0-7 7l.8.8 7 7 7-7 .8-.8a4.9 4.9 0 0 0 0-7z"/></svg></div>
+            <span class="row-name" data-i18n="cb_rente">Rentenversicherung</span>
+          </div>
+          <span class="row-amount deduction" id="res-rv">0,00 €</span>
+        </div>
+        <div class="breakdown-row" id="row-av" style="display:none">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="7.5" x2="12.01" y2="7.5"/></svg></div>
+            <span class="row-name" data-i18n="r_arbeitslos">Arbeitslosenversicherung</span>
+          </div>
+          <span class="row-amount deduction" id="res-av">0,00 €</span>
+        </div>
+        <div class="breakdown-row" id="row-kv" style="display:none">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+            <span class="row-name" data-i18n="cb_kranken">Krankenversicherung</span>
+          </div>
+          <span class="row-amount deduction" id="res-kv">0,00 €</span>
+        </div>
+        <div class="breakdown-row" id="row-pv" style="display:none">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-6h6v6"/></svg></div>
+            <span class="row-name" data-i18n="cb_pflege">Pflegeversicherung</span>
+          </div>
+          <span class="row-amount deduction" id="res-pv">0,00 €</span>
+        </div>
+        <div class="breakdown-row" id="row-pkv" style="display:none">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+            <span class="row-name" data-i18n="r_pkv">Private KV/PV (netto)</span>
+          </div>
+          <span class="row-amount deduction" id="res-pkv">0,00 €</span>
+        </div>
+        <div class="breakdown-row" id="row-gwv" style="display:none">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><path d="M5 13l1.6-4.8A2 2 0 0 1 8.5 7h7a2 2 0 0 1 1.9 1.2L19 13"/><path d="M3 13h18v4h-2.2a2 2 0 1 1-3.9 0H9.1a2 2 0 1 1-3.9 0H3z"/></svg></div>
+            <span class="row-name" data-i18n="r_gwv">Geldwerter Vorteil</span>
+          </div>
+          <span class="row-amount deduction" id="res-gwv">0,00 €</span>
+        </div>
+        <div class="breakdown-row total">
+          <div class="row-left">
+            <div class="row-icon"><svg viewBox="0 0 24 24"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4 12 14l-3-3"/></svg></div>
+            <span class="row-name total-name" data-i18n="res_netto_label">Nettoeinkommen</span>
+          </div>
+          <span class="row-amount total-amount" id="res-netto-row">0,00 €</span>
+        </div>
+      </div>
+
+      <!-- Donut Chart -->
+      <div class="section-card">
+        <div class="section-card-title">
+          <span data-i18n="aufteilung">Aufteilung</span>
+          <span class="interval-tag" id="res-brutto-tag">von 0,00 € Brutto</span>
+        </div>
+        <div class="chart-wrap">
+          <div class="donut-container">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#EDEDED" stroke-width="14"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#1a8a4a" stroke-width="14"
+                stroke-dasharray="239" stroke-dashoffset="239"
+                id="donut-netto-arc" stroke-linecap="round"/>
+            </svg>
+            <div class="donut-center">
+              <div class="pct" id="donut-pct">0%</div>
+              <div class="lbl" data-i18n="netto_short">Netto</div>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#1a8a4a"></div>
+              <div class="legend-info">
+                <div class="legend-name" data-i18n="res_netto_label">Nettoeinkommen</div>
+                <div class="legend-val" id="legend-netto">0,00 €</div>
+                <div class="legend-pct" id="legend-netto-pct">(0%)</div>
+              </div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#e74c3c"></div>
+              <div class="legend-info">
+                <div class="legend-name" data-i18n="abzuege">Abzüge</div>
+                <div class="legend-val" id="legend-abzuege">0,00 €</div>
+                <div class="legend-pct" id="legend-abzuege-pct">(0%)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="bottom-btns">
+      <button class="btn-back" onclick="goBack()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M19 12H5M10 7l-5 5 5 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span data-i18n="btn_neu">NEUE BERECHNUNG</span>
+      </button>
+      <button class="btn-pdf" onclick="printResult()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M12 16l-4-4h3V4h2v8h3l-4 4zM4 20h16v-4h2v6H2v-6h2v4z" fill="white"/>
+        </svg>
+        <span data-i18n="btn_pdf">PDF HERUNTERLADEN</span>
+      </button>
+    </div>
+    <div class="disclaimer">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6l-8-4z" stroke="#9CA3AF" stroke-width="2" fill="none"/></svg>
+      <span data-i18n="disclaimer">Berechnet nach BMF-Programmablaufplan 2025 & 2026 – ohne Gewähr.</span>
+    </div>
+    </div><!-- /res-wrap -->
+  </div>
+
+</div>
+
+<script>
+// ═══════════════ i18n ═══════════════
+const I18N = {
+  de: {
+    menu:'MENÜ', language:'Sprache', group_rechner:'Rechner', group_steuerklassen:'Steuerklassen', group_themen:'Themen',
+    subtitle:'Berechne dein Nettogehalt schnell,<br>einfach und zuverlässig.',
+    lbl_intervall:'Intervall', lbl_brutto:'Bruttoeinkommen', lbl_zusatz:'KV-Zusatzbeitrag', lbl_steuerklasse:'Steuerklasse',
+    lbl_gwv:'Geldw. Vorteil', lbl_kinder:'Kinderfreibeträge', lbl_freibetrag:'Steuerfreibetrag', lbl_bundesland:'Bundesland',
+    lbl_kirche:'Kirchensteuer', lbl_alter:'Alter (Jahre)', lbl_kvtyp:'Krankenversicherung', lbl_pkvbeitrag:'PKV-Beitrag / Monat', lbl_agzuschuss:'AG-Zuschuss PKV',
+    unit_year:'J', weitere_abzuege:'Weitere Abzüge (optional)', pflicht:'pflichtlich',
+    cb_rente:'Rentenversicherung', cb_arbeitslos:'Arbeitslosenvers.', cb_kranken:'Krankenversicherung', cb_pflege:'Pflegeversicherung',
+    privacy:'Deine Daten bleiben privat und werden nicht gespeichert.', btn_berechnen:'NETTO BERECHNEN',
+    ti_zusatz:'Kassenindividueller Zusatzbeitrag zur Krankenversicherung. Durchschnitt 2026: 2,9 %.',
+    ti_steuerklasse:'1: ledig · 2: alleinerziehend · 3/5: verheiratet (unterschiedl. Einkommen) · 4: verheiratet · 6: Zweitjob',
+    ti_gwv:'Monatlicher geldwerter Vorteil, z. B. Dienstwagen. Wird versteuert, aber nicht bar ausgezahlt.',
+    ti_kinder:'Anzahl der Kinderfreibeträge. Wirkt sich auf Kirchensteuer und Soli aus.',
+    ti_freibetrag:'Jährlicher Lohnsteuer-Freibetrag aus den ELStAM. Mindert das zu versteuernde Einkommen.',
+    ti_kirche:'Bayern und Baden-Württemberg: 8 %, andere Bundesländer: 9 % der Lohnsteuer.',
+    ti_alter:'Ab 23 Jahren zahlen Kinderlose 0,6 % Zuschlag zur Pflegeversicherung.',
+    ti_kvtyp:'Gesetzlich, freiwillig oder privat versichert.',
+    ti_pkvbeitrag:'Dein monatlicher Beitrag zur privaten Kranken- und Pflegeversicherung.',
+    ti_agzuschuss:'Zahlt dein Arbeitgeber einen Zuschuss zur PKV? Meist ja.',
+    res_netto_label:'Nettoeinkommen', uebersicht:'Übersicht', r_lohnsteuer:'Lohnsteuer', r_soli:'Solidaritätszuschlag',
+    r_arbeitslos:'Arbeitslosenversicherung', r_pkv:'Private KV/PV (netto)', r_gwv:'Geldwerter Vorteil',
+    aufteilung:'Aufteilung', netto_short:'Netto', abzuege:'Abzüge', btn_neu:'NEUE BERECHNUNG', btn_pdf:'PDF HERUNTERLADEN',
+    disclaimer:'Berechnet nach BMF-Programmablaufplan 2025 & 2026 – ohne Gewähr.',
+    of_brutto:'von {v} Brutto',
+    iv:['monatlich','jährlich','halbjährlich','vierteljährlich','wöchentlich','täglich','stündlich'],
+    opt_ja:'Ja', opt_nein:'Nein', opt_kv_ges:'Gesetzlich versichert', opt_kv_frei:'Freiwillig gesetzlich versichert', opt_kv_priv:'Privat versichert (PKV)',
+    seo_h1:'Brutto Netto Rechner 2026 – Nettogehalt einfach berechnen',
+    seo_intro:'Mit unserem kostenlosen <strong>Brutto-Netto-Rechner</strong> ermittelst du in Sekunden dein Nettogehalt – exakt nach dem <strong>Programmablaufplan (PAP) 2026 des Bundesfinanzministeriums</strong>, inklusive Steuerklasse, Bundesland, Kirchensteuer, PKV und geldwertem Vorteil.',
+    seo_h2_was:'Was bedeutet Brutto und Netto?',
+    seo_p_was:'Das <strong>Bruttogehalt</strong> ist der Lohn <em>vor</em> Abzügen. Das <strong>Nettogehalt</strong> bleibt nach Lohnsteuer, Soli, Kirchensteuer und den Sozialversicherungsbeiträgen übrig.',
+    seo_h2_sozial:'Sozialversicherungsbeiträge 2026 im Überblick',
+    seo_h2_steuerklassen:'Die 6 Steuerklassen kurz erklärt', seo_h2_faq:'Häufige Fragen (FAQ)',
+    faq_q1:'Wann zahle ich Solidaritätszuschlag?', faq_a1:'Seit 2021 zahlen rund 90 % keinen Soli mehr. Er fällt erst an, wenn die Jahres-Lohnsteuer über <strong>20.350 €</strong> liegt.',
+    faq_q2:'Wie viel Kirchensteuer wird abgezogen?', faq_a2:'<strong>8 %</strong> in Bayern und Baden-Württemberg, <strong>9 %</strong> in allen anderen Bundesländern.',
+    faq_q3:'Was ist ein geldwerter Vorteil?', faq_a3:'Eine Sachleistung wie ein Dienstwagen. Sie wird versteuert und verbeitragt, aber nicht bar ausgezahlt.',
+    faq_q4:'Gesetzlich oder privat krankenversichert?', faq_a4:'Über 77.400 € brutto/Jahr ist die private KV (PKV) möglich. Gib deinen PKV-Beitrag direkt im Rechner ein.',
+    faq_q5:'Ist die Berechnung genau?', faq_a5:'Ja – nach dem offiziellen <strong>Programmablaufplan des BMF</strong> für 2025 und 2026.',
+    related_title:'Verwandte Rechner',
+    nav_bnr:'Brutto-Netto-Rechner', nav_dienstwagen:'Dienstwagen-Rechner', nav_teilzeit:'Teilzeit-Rechner', nav_elterngeld:'Elterngeld-Rechner', nav_minijob:'Minijob-Rechner', nav_sk:'Steuerklasse', nav_sozial:'Sozialabgaben 2026',
+    rc_sk35:'Steuerklasse 3 & 5', rc_d_dienstwagen:'Geldwerten Vorteil & Netto mit Firmenwagen berechnen', rc_d_kirche:'8 % oder 9 % – so viel zahlst du in deinem Bundesland', rc_d_sk35:'Netto für Ehepaare mit unterschiedlichem Einkommen', rc_d_teilzeit:'Nettogehalt bei reduzierter Stundenzahl', rc_d_elterngeld:'Elterngeld aus deinem Nettoeinkommen schätzen', rc_d_minijob:'520-Euro-Job: Abgaben & Auszahlung im Überblick',
+    seo_p_sozial:'Die Sozialabgaben werden in der Regel je zur Hälfte von Arbeitnehmer und Arbeitgeber getragen. Der Arbeitnehmeranteil beträgt 2026:', th_versicherung:'Versicherung', th_gesamt:'Gesamt', th_an:'AN-Anteil',
+    seo_note:'*Kinderlose ab 23 Jahren zahlen 0,6 % Zuschlag. In Sachsen trägt der Arbeitnehmer 0,5 % mehr. Beitragsbemessungsgrenzen 2026: 8.450 €/Monat (Rente/Arbeitslos), 5.812,50 €/Monat (Kranken/Pflege).',
+    sk_h1:'Steuerklasse 1 & 2 – Ledige & Alleinerziehende', sk_b1:'<strong>Klasse 1</strong> gilt für Ledige ohne Kinder. <strong>Klasse 2</strong> ist für Alleinerziehende und enthält den Entlastungsbetrag von 4.260 € pro Jahr.',
+    sk_h2:'Steuerklasse 3, 4 & 5 – Verheiratete', sk_b2:'<strong>Klasse 3/5</strong> lohnt sich bei stark unterschiedlichem Einkommen. <strong>Klasse 4</strong> ist ideal bei ähnlichem Einkommen.',
+    sk_h3:'Steuerklasse 6 – Zweitjob', sk_b3:'<strong>Klasse 6</strong> gilt für einen Zweitjob und hat keine Freibeträge – die Abzüge sind am höchsten.',
+    footer:'<strong>Brutto Netto Rechner 2026</strong> · Berechnung nach dem Programmablaufplan (PAP) des Bundesfinanzministeriums.<br>Zuletzt aktualisiert: Juli 2026 · Ohne Gewähr. Keine Steuerberatung.',
+  },
+  en: {
+    menu:'MENU', language:'Language', group_rechner:'Calculators', group_steuerklassen:'Tax classes', group_themen:'Topics',
+    subtitle:'Calculate your net salary fast,<br>simple and reliable.',
+    lbl_intervall:'Interval', lbl_brutto:'Gross income', lbl_zusatz:'Health add-on rate', lbl_steuerklasse:'Tax class',
+    lbl_gwv:'Benefit in kind', lbl_kinder:'Child allowances', lbl_freibetrag:'Tax allowance', lbl_bundesland:'State',
+    lbl_kirche:'Church tax', lbl_alter:'Age (years)', lbl_kvtyp:'Health insurance', lbl_pkvbeitrag:'Private HI / month', lbl_agzuschuss:'Employer subsidy',
+    unit_year:'Y', weitere_abzuege:'Further deductions (optional)', pflicht:'mandatory',
+    cb_rente:'Pension insurance', cb_arbeitslos:'Unemployment', cb_kranken:'Health insurance', cb_pflege:'Long-term care',
+    privacy:'Your data stays private and is not stored.', btn_berechnen:'CALCULATE NET',
+    ti_zusatz:'Health-fund individual add-on rate. Average 2026: 2.9 %.',
+    ti_steuerklasse:'1: single · 2: single parent · 3/5: married (unequal income) · 4: married · 6: second job',
+    ti_gwv:'Monthly benefit in kind, e.g. a company car. Taxed but not paid in cash.',
+    ti_kinder:'Number of child allowances. Affects church tax and solidarity surcharge.',
+    ti_freibetrag:'Annual tax-free allowance from your tax records. Lowers taxable income.',
+    ti_kirche:'Bavaria & Baden-Württemberg: 8 %, other states: 9 % of income tax.',
+    ti_alter:'From age 23, childless employees pay a 0.6 % care-insurance surcharge.',
+    ti_kvtyp:'Statutory, voluntary or private insurance.',
+    ti_pkvbeitrag:'Your monthly private health and care insurance premium.',
+    ti_agzuschuss:'Does your employer contribute to private insurance? Usually yes.',
+    res_netto_label:'Net income', uebersicht:'Overview', r_lohnsteuer:'Income tax', r_soli:'Solidarity surcharge',
+    r_arbeitslos:'Unemployment insurance', r_pkv:'Private health/care (net)', r_gwv:'Benefit in kind',
+    aufteilung:'Breakdown', netto_short:'Net', abzuege:'Deductions', btn_neu:'NEW CALCULATION', btn_pdf:'DOWNLOAD PDF',
+    disclaimer:'Calculated per the German BMF payroll scheme 2025 & 2026 – no guarantee.',
+    of_brutto:'of {v} gross',
+    iv:['monthly','yearly','half-yearly','quarterly','weekly','daily','hourly'],
+    opt_ja:'Yes', opt_nein:'No', opt_kv_ges:'Statutory insured', opt_kv_frei:'Voluntarily statutory insured', opt_kv_priv:'Privately insured',
+    seo_h1:'German Gross-Net Salary Calculator 2026',
+    seo_intro:'Our free <strong>gross-net calculator</strong> shows your German net salary in seconds – exactly per the <strong>2026 payroll scheme (PAP) of the Federal Ministry of Finance</strong>, including tax class, state, church tax, private insurance and benefits in kind.',
+    seo_h2_was:'What do gross and net mean?',
+    seo_p_was:'<strong>Gross</strong> is your pay <em>before</em> deductions. <strong>Net</strong> is what remains after income tax, solidarity surcharge, church tax and the social insurance contributions.',
+    seo_h2_sozial:'Social insurance contributions 2026',
+    seo_h2_steuerklassen:'The 6 tax classes explained', seo_h2_faq:'Frequently asked questions',
+    faq_q1:'When do I pay the solidarity surcharge?', faq_a1:'Since 2021 about 90 % of taxpayers pay no soli. It only applies above <strong>€20,350</strong> annual income tax.',
+    faq_q2:'How much church tax is deducted?', faq_a2:'<strong>8 %</strong> in Bavaria and Baden-Württemberg, <strong>9 %</strong> in all other states.',
+    faq_q3:'What is a benefit in kind?', faq_a3:'A non-cash benefit such as a company car. It is taxed and charged but not paid in cash.',
+    faq_q4:'Statutory or private health insurance?', faq_a4:'Above €77,400 gross/year private insurance (PKV) is possible. Enter your PKV premium directly.',
+    faq_q5:'Is the calculation accurate?', faq_a5:'Yes – based on the official <strong>BMF payroll scheme</strong> for 2025 and 2026.',
+    related_title:'Related calculators',
+    nav_bnr:'Gross-Net Calculator', nav_dienstwagen:'Company-Car Calculator', nav_teilzeit:'Part-Time Calculator', nav_elterngeld:'Parental-Allowance Calculator', nav_minijob:'Mini-Job Calculator', nav_sk:'Tax class', nav_sozial:'Social contributions 2026',
+    rc_sk35:'Tax class 3 & 5', rc_d_dienstwagen:'Net pay with a company car and benefit in kind', rc_d_kirche:'8 % or 9 % – how much you pay in your state', rc_d_sk35:'Net pay for couples with unequal income', rc_d_teilzeit:'Net salary with reduced hours', rc_d_elterngeld:'Estimate parental allowance from your net income', rc_d_minijob:'520-euro job: contributions & payout at a glance',
+    seo_p_sozial:'Social contributions are usually split equally between employee and employer. The employee share in 2026 is:', th_versicherung:'Insurance', th_gesamt:'Total', th_an:'Employee',
+    seo_note:'*Childless employees aged 23+ pay a 0.6 % surcharge. In Saxony the employee pays 0.5 % more. Contribution ceilings 2026: €8,450/month (pension/unemployment), €5,812.50/month (health/care).',
+    sk_h1:'Tax class 1 & 2 – Singles & single parents', sk_b1:'<strong>Class 1</strong> applies to singles without children. <strong>Class 2</strong> is for single parents and includes a €4,260 annual relief amount.',
+    sk_h2:'Tax class 3, 4 & 5 – Married couples', sk_b2:'<strong>Class 3/5</strong> suits couples with very unequal income. <strong>Class 4</strong> is ideal for similar incomes.',
+    sk_h3:'Tax class 6 – Second job', sk_b3:'<strong>Class 6</strong> applies to a second job and has no allowances – the deductions are the highest.',
+    footer:'<strong>Gross-Net Calculator 2026</strong> · Calculated per the payroll scheme (PAP) of the German Federal Ministry of Finance.<br>Last updated: July 2026 · No guarantee. Not tax advice.',
+  },
+  tr: {
+    menu:'MENÜ', language:'Dil', group_rechner:'Hesaplayıcılar', group_steuerklassen:'Vergi sınıfları', group_themen:'Konular',
+    subtitle:'Net maaşını hızlı, basit<br>ve güvenilir şekilde hesapla.',
+    lbl_intervall:'Aralık', lbl_brutto:'Brüt gelir', lbl_zusatz:'Ek sağlık primi', lbl_steuerklasse:'Vergi sınıfı',
+    lbl_gwv:'Ayni menfaat', lbl_kinder:'Çocuk indirimi', lbl_freibetrag:'Vergi muafiyeti', lbl_bundesland:'Eyalet',
+    lbl_kirche:'Kilise vergisi', lbl_alter:'Yaş', lbl_kvtyp:'Sağlık sigortası', lbl_pkvbeitrag:'Özel sağlık / ay', lbl_agzuschuss:'İşveren katkısı',
+    unit_year:'Y', weitere_abzuege:'Diğer kesintiler (isteğe bağlı)', pflicht:'zorunlu',
+    cb_rente:'Emeklilik sigortası', cb_arbeitslos:'İşsizlik sig.', cb_kranken:'Sağlık sigortası', cb_pflege:'Bakım sigortası',
+    privacy:'Verileriniz gizli kalır ve saklanmaz.', btn_berechnen:'NET HESAPLA',
+    ti_zusatz:'Sağlık kasasına özel ek prim. 2026 ortalaması: %2,9.',
+    ti_steuerklasse:'1: bekar · 2: yalnız ebeveyn · 3/5: evli (farklı gelir) · 4: evli · 6: ikinci iş',
+    ti_gwv:'Aylık ayni menfaat, ör. şirket aracı. Vergilendirilir ama nakit ödenmez.',
+    ti_kinder:'Çocuk indirimi sayısı. Kilise vergisi ve dayanışma vergisini etkiler.',
+    ti_freibetrag:'ELStAM üzerinden yıllık vergi muafiyeti. Vergiye tabi geliri azaltır.',
+    ti_kirche:'Bavyera ve Baden-Württemberg: %8, diğer eyaletler: %9.',
+    ti_alter:'23 yaşından itibaren çocuksuzlar %0,6 ek bakım primi öder.',
+    ti_kvtyp:'Yasal, gönüllü veya özel sigorta.',
+    ti_pkvbeitrag:'Aylık özel sağlık ve bakım sigortası priminiz.',
+    ti_agzuschuss:'İşvereniniz özel sigortaya katkı yapıyor mu? Genelde evet.',
+    res_netto_label:'Net gelir', uebersicht:'Genel bakış', r_lohnsteuer:'Gelir vergisi', r_soli:'Dayanışma vergisi',
+    r_arbeitslos:'İşsizlik sigortası', r_pkv:'Özel sağlık/bakım (net)', r_gwv:'Ayni menfaat',
+    aufteilung:'Dağılım', netto_short:'Net', abzuege:'Kesintiler', btn_neu:'YENİ HESAPLAMA', btn_pdf:'PDF İNDİR',
+    disclaimer:'Almanya BMF 2025 & 2026 bordro planına göre hesaplandı – garanti verilmez.',
+    of_brutto:'{v} brütten',
+    iv:['aylık','yıllık','altı aylık','üç aylık','haftalık','günlük','saatlik'],
+    opt_ja:'Evet', opt_nein:'Hayır', opt_kv_ges:'Yasal sigortalı', opt_kv_frei:'Gönüllü yasal sigortalı', opt_kv_priv:'Özel sigortalı',
+    seo_h1:'Almanya Brüt-Net Maaş Hesaplama 2026',
+    seo_intro:'Ücretsiz <strong>brüt-net hesaplayıcımız</strong> ile Almanya net maaşınızı saniyeler içinde öğrenin – tam olarak <strong>Maliye Bakanlığı 2026 bordro planına (PAP)</strong> göre; vergi sınıfı, eyalet, kilise vergisi, özel sigorta ve ayni menfaat dahil.',
+    seo_h2_was:'Brüt ve net ne demek?',
+    seo_p_was:'<strong>Brüt</strong>, kesintilerden <em>önceki</em> maaştır. <strong>Net</strong>, gelir vergisi, dayanışma vergisi, kilise vergisi ve sosyal sigorta primlerinden sonra kalan tutardır.',
+    seo_h2_sozial:'2026 sosyal sigorta primleri',
+    seo_h2_steuerklassen:'6 vergi sınıfı kısaca', seo_h2_faq:'Sık sorulan sorular',
+    faq_q1:'Dayanışma vergisini ne zaman öderim?', faq_a1:'2021’den beri mükelleflerin yaklaşık %90’ı ödemiyor. Yalnızca yıllık gelir vergisi <strong>20.350 €</strong> üzerindeyse uygulanır.',
+    faq_q2:'Ne kadar kilise vergisi kesilir?', faq_a2:'Bavyera ve Baden-Württemberg’de <strong>%8</strong>, diğer eyaletlerde <strong>%9</strong>.',
+    faq_q3:'Ayni menfaat nedir?', faq_a3:'Şirket aracı gibi nakdi olmayan bir menfaat. Vergilendirilir ama nakit ödenmez.',
+    faq_q4:'Yasal mı özel sağlık sigortası mı?', faq_a4:'Yıllık 77.400 € brüt üzerinde özel sigorta (PKV) mümkündür. Priminizi doğrudan girin.',
+    faq_q5:'Hesaplama doğru mu?', faq_a5:'Evet – 2025 ve 2026 için resmi <strong>BMF bordro planına</strong> göre.',
+    related_title:'İlgili hesaplayıcılar',
+    nav_bnr:'Brüt-Net Hesaplayıcı', nav_dienstwagen:'Şirket Aracı Hesaplayıcı', nav_teilzeit:'Yarı Zamanlı Hesaplayıcı', nav_elterngeld:'Ebeveyn Ödeneği Hesaplayıcı', nav_minijob:'Mini-Job Hesaplayıcı', nav_sk:'Vergi sınıfı', nav_sozial:'Sosyal katkılar 2026',
+    rc_sk35:'Vergi sınıfı 3 & 5', rc_d_dienstwagen:'Şirket aracı ve ayni menfaat ile net maaş', rc_d_kirche:'%8 veya %9 – eyaletinizde ne kadar ödersiniz', rc_d_sk35:'Farklı gelirli çiftler için net maaş', rc_d_teilzeit:'Azaltılmış çalışma saatiyle net maaş', rc_d_elterngeld:'Net gelirinizden ebeveyn ödeneğini tahmin edin', rc_d_minijob:'520 avroluk iş: katkılar ve ödeme',
+    seo_p_sozial:'Sosyal katkılar genellikle işçi ve işveren arasında yarı yarıya paylaşılır. 2026’da işçi payı:', th_versicherung:'Sigorta', th_gesamt:'Toplam', th_an:'İşçi payı',
+    seo_note:'*23 yaş üstü çocuksuzlar %0,6 ek öder. Saksonya’da işçi %0,5 fazla öder. 2026 tavan tutarları: 8.450 €/ay (emeklilik/işsizlik), 5.812,50 €/ay (sağlık/bakım).',
+    sk_h1:'Vergi sınıfı 1 & 2 – Bekarlar ve yalnız ebeveynler', sk_b1:'<strong>Sınıf 1</strong> çocuksuz bekarlar içindir. <strong>Sınıf 2</strong> yalnız ebeveynler içindir ve yılda 4.260 € muafiyet içerir.',
+    sk_h2:'Vergi sınıfı 3, 4 & 5 – Evli çiftler', sk_b2:'<strong>Sınıf 3/5</strong> geliri çok farklı çiftler için uygundur. <strong>Sınıf 4</strong> benzer gelirler için idealdir.',
+    sk_h3:'Vergi sınıfı 6 – İkinci iş', sk_b3:'<strong>Sınıf 6</strong> ikinci iş içindir ve muafiyeti yoktur – kesintiler en yüksektir.',
+    footer:'<strong>Brüt-Net Hesaplayıcı 2026</strong> · Almanya Maliye Bakanlığı bordro planına (PAP) göre hesaplanmıştır.<br>Son güncelleme: Temmuz 2026 · Garanti verilmez. Vergi danışmanlığı değildir.',
+  },
+  ru: {
+    menu:'МЕНЮ', language:'Язык', group_rechner:'Калькуляторы', group_steuerklassen:'Налоговые классы', group_themen:'Темы',
+    subtitle:'Рассчитайте чистую зарплату<br>быстро и надёжно.',
+    lbl_intervall:'Период', lbl_brutto:'Доход брутто', lbl_zusatz:'Доп. взнос ОМС', lbl_steuerklasse:'Налоговый класс',
+    lbl_gwv:'Натур. выгода', lbl_kinder:'Вычеты на детей', lbl_freibetrag:'Налоговый вычет', lbl_bundesland:'Земля',
+    lbl_kirche:'Церковный налог', lbl_alter:'Возраст', lbl_kvtyp:'Медстрахование', lbl_pkvbeitrag:'Частное МС / мес', lbl_agzuschuss:'Доплата работодателя',
+    unit_year:'Г', weitere_abzuege:'Прочие вычеты (по желанию)', pflicht:'обязательно',
+    cb_rente:'Пенсионное страх.', cb_arbeitslos:'По безработице', cb_kranken:'Медстрахование', cb_pflege:'Уход',
+    privacy:'Ваши данные остаются конфиденциальными и не сохраняются.', btn_berechnen:'РАССЧИТАТЬ НЕТТО',
+    ti_zusatz:'Индивидуальный доп. взнос кассы ОМС. Средний 2026: 2,9 %.',
+    ti_steuerklasse:'1: холост · 2: одинокий родитель · 3/5: брак (разный доход) · 4: брак · 6: вторая работа',
+    ti_gwv:'Ежемесячная натуральная выгода, напр. служебный авто. Облагается, но не выплачивается наличными.',
+    ti_kinder:'Число вычетов на детей. Влияет на церковный налог и надбавку солидарности.',
+    ti_freibetrag:'Годовой налоговый вычет из ELStAM. Уменьшает налогооблагаемый доход.',
+    ti_kirche:'Бавария и Баден-Вюртемберг: 8 %, другие земли: 9 %.',
+    ti_alter:'С 23 лет бездетные платят надбавку 0,6 % на страхование по уходу.',
+    ti_kvtyp:'Государственное, добровольное или частное страхование.',
+    ti_pkvbeitrag:'Ваш ежемесячный взнос частного мед- и страхования по уходу.',
+    ti_agzuschuss:'Доплачивает ли работодатель за частное страхование? Обычно да.',
+    res_netto_label:'Доход нетто', uebersicht:'Обзор', r_lohnsteuer:'Подоходный налог', r_soli:'Надбавка солидарности',
+    r_arbeitslos:'Страхование по безработице', r_pkv:'Частное мед/уход (нетто)', r_gwv:'Натуральная выгода',
+    aufteilung:'Распределение', netto_short:'Нетто', abzuege:'Вычеты', btn_neu:'НОВЫЙ РАСЧЁТ', btn_pdf:'СКАЧАТЬ PDF',
+    disclaimer:'Рассчитано по схеме BMF 2025 и 2026 – без гарантии.',
+    of_brutto:'из {v} брутто',
+    iv:['в месяц','в год','раз в полгода','раз в квартал','в неделю','в день','в час'],
+    opt_ja:'Да', opt_nein:'Нет', opt_kv_ges:'Государственное страхование', opt_kv_frei:'Добровольное гос. страхование', opt_kv_priv:'Частное страхование',
+    seo_h1:'Калькулятор зарплаты брутто-нетто (Германия) 2026',
+    seo_intro:'Наш бесплатный <strong>калькулятор брутто-нетто</strong> покажет чистую зарплату в Германии за секунды – точно по <strong>схеме расчёта (PAP) 2026 Минфина ФРГ</strong>, с учётом налогового класса, земли, церковного налога, частного страхования и натуральной выгоды.',
+    seo_h2_was:'Что такое брутто и нетто?',
+    seo_p_was:'<strong>Брутто</strong> — зарплата <em>до</em> вычетов. <strong>Нетто</strong> — то, что остаётся после подоходного налога, надбавки солидарности, церковного налога и взносов социального страхования.',
+    seo_h2_sozial:'Взносы социального страхования 2026',
+    seo_h2_steuerklassen:'6 налоговых классов кратко', seo_h2_faq:'Частые вопросы',
+    faq_q1:'Когда я плачу надбавку солидарности?', faq_a1:'С 2021 года около 90 % не платят. Она возникает только при годовом налоге свыше <strong>20 350 €</strong>.',
+    faq_q2:'Сколько удерживается церковного налога?', faq_a2:'<strong>8 %</strong> в Баварии и Баден-Вюртемберге, <strong>9 %</strong> в остальных землях.',
+    faq_q3:'Что такое натуральная выгода?', faq_a3:'Неденежная выгода, напр. служебный автомобиль. Облагается, но не выплачивается наличными.',
+    faq_q4:'Государственное или частное страхование?', faq_a4:'При доходе свыше 77 400 € брутто/год возможно частное страхование (PKV). Укажите взнос напрямую.',
+    faq_q5:'Точен ли расчёт?', faq_a5:'Да — по официальной <strong>схеме BMF</strong> на 2025 и 2026 годы.',
+    related_title:'Похожие калькуляторы',
+    nav_bnr:'Калькулятор брутто-нетто', nav_dienstwagen:'Калькулятор служебного авто', nav_teilzeit:'Калькулятор неполной занятости', nav_elterngeld:'Калькулятор пособия на ребёнка', nav_minijob:'Калькулятор мини-джоба', nav_sk:'Налоговый класс', nav_sozial:'Соцвзносы 2026',
+    rc_sk35:'Налоговые классы 3 и 5', rc_d_dienstwagen:'Нетто со служебным авто и натуральной выгодой', rc_d_kirche:'8 % или 9 % – сколько вы платите в своей земле', rc_d_sk35:'Нетто для пар с разным доходом', rc_d_teilzeit:'Чистая зарплата при сокращённых часах', rc_d_elterngeld:'Оценка пособия из вашего чистого дохода', rc_d_minijob:'Работа на 520 евро: взносы и выплата',
+    seo_p_sozial:'Социальные взносы обычно делятся поровну между работником и работодателем. Доля работника в 2026 году:', th_versicherung:'Страхование', th_gesamt:'Всего', th_an:'Доля работника',
+    seo_note:'*Бездетные с 23 лет платят надбавку 0,6 %. В Саксонии работник платит на 0,5 % больше. Потолки взносов 2026: 8 450 €/мес (пенсия/безработица), 5 812,50 €/мес (мед/уход).',
+    sk_h1:'Налоговые классы 1 и 2 – холостые и одинокие родители', sk_b1:'<strong>Класс 1</strong> — для холостых без детей. <strong>Класс 2</strong> — для одиноких родителей, включает вычет 4 260 € в год.',
+    sk_h2:'Налоговые классы 3, 4 и 5 – супруги', sk_b2:'<strong>Класс 3/5</strong> выгоден при сильно разном доходе. <strong>Класс 4</strong> идеален при схожем доходе.',
+    sk_h3:'Налоговый класс 6 – вторая работа', sk_b3:'<strong>Класс 6</strong> — для второй работы, без вычетов; удержания самые высокие.',
+    footer:'<strong>Калькулятор брутто-нетто 2026</strong> · Рассчитано по схеме (PAP) Минфина ФРГ.<br>Обновлено: июль 2026 · Без гарантии. Не является налоговой консультацией.',
+  },
+  ar: {
+    menu:'القائمة', language:'اللغة', group_rechner:'الحاسبات', group_steuerklassen:'فئات الضرائب', group_themen:'المواضيع',
+    subtitle:'احسب صافي راتبك بسرعة<br>بسهولة وموثوقية.',
+    lbl_intervall:'الفترة', lbl_brutto:'الدخل الإجمالي', lbl_zusatz:'اشتراك تأمين إضافي', lbl_steuerklasse:'فئة الضريبة',
+    lbl_gwv:'ميزة عينية', lbl_kinder:'إعفاءات الأطفال', lbl_freibetrag:'الإعفاء الضريبي', lbl_bundesland:'الولاية',
+    lbl_kirche:'ضريبة الكنيسة', lbl_alter:'العمر', lbl_kvtyp:'التأمين الصحي', lbl_pkvbeitrag:'تأمين خاص / شهر', lbl_agzuschuss:'مساهمة صاحب العمل',
+    unit_year:'س', weitere_abzuege:'خصومات أخرى (اختياري)', pflicht:'إلزامي',
+    cb_rente:'تأمين التقاعد', cb_arbeitslos:'تأمين البطالة', cb_kranken:'التأمين الصحي', cb_pflege:'تأمين الرعاية',
+    privacy:'تبقى بياناتك خاصة ولا يتم تخزينها.', btn_berechnen:'احسب الصافي',
+    ti_zusatz:'اشتراك إضافي خاص بصندوق التأمين. المتوسط 2026: 2.9%.',
+    ti_steuerklasse:'1: أعزب · 2: والد وحيد · 3/5: متزوج (دخل مختلف) · 4: متزوج · 6: عمل ثانٍ',
+    ti_gwv:'ميزة عينية شهرية، مثل سيارة الشركة. تُفرض عليها ضريبة لكن لا تُدفع نقدًا.',
+    ti_kinder:'عدد إعفاءات الأطفال. يؤثر على ضريبة الكنيسة ورسم التضامن.',
+    ti_freibetrag:'إعفاء ضريبي سنوي من ELStAM. يقلل الدخل الخاضع للضريبة.',
+    ti_kirche:'بافاريا وبادن-فورتمبيرغ: 8%، الولايات الأخرى: 9%.',
+    ti_alter:'من عمر 23 يدفع من لا أطفال لهم رسمًا إضافيًا 0.6% لتأمين الرعاية.',
+    ti_kvtyp:'تأمين حكومي أو طوعي أو خاص.',
+    ti_pkvbeitrag:'اشتراكك الشهري للتأمين الصحي والرعاية الخاص.',
+    ti_agzuschuss:'هل يساهم صاحب العمل في التأمين الخاص؟ عادةً نعم.',
+    res_netto_label:'الدخل الصافي', uebersicht:'ملخص', r_lohnsteuer:'ضريبة الدخل', r_soli:'رسم التضامن',
+    r_arbeitslos:'تأمين البطالة', r_pkv:'تأمين صحي/رعاية خاص (صافي)', r_gwv:'ميزة عينية',
+    aufteilung:'التوزيع', netto_short:'صافي', abzuege:'الخصومات', btn_neu:'حساب جديد', btn_pdf:'تنزيل PDF',
+    disclaimer:'محسوب وفق خطة BMF لعامي 2025 و2026 – دون ضمان.',
+    of_brutto:'من {v} إجمالي',
+    iv:['شهري','سنوي','نصف سنوي','ربع سنوي','أسبوعي','يومي','بالساعة'],
+    opt_ja:'نعم', opt_nein:'لا', opt_kv_ges:'تأمين حكومي', opt_kv_frei:'تأمين حكومي طوعي', opt_kv_priv:'تأمين خاص',
+    seo_h1:'حاسبة الراتب الإجمالي والصافي في ألمانيا 2026',
+    seo_intro:'تُظهر لك <strong>حاسبة الإجمالي-الصافي</strong> المجانية صافي راتبك في ألمانيا خلال ثوانٍ – وفق <strong>خطة الرواتب (PAP) لعام 2026 لوزارة المالية الاتحادية</strong>، شاملة فئة الضريبة والولاية وضريبة الكنيسة والتأمين الخاص والميزة العينية.',
+    seo_h2_was:'ما معنى الإجمالي والصافي؟',
+    seo_p_was:'<strong>الإجمالي</strong> هو الراتب <em>قبل</em> الخصومات. <strong>الصافي</strong> هو ما يتبقى بعد ضريبة الدخل ورسم التضامن وضريبة الكنيسة واشتراكات التأمين الاجتماعي.',
+    seo_h2_sozial:'اشتراكات التأمين الاجتماعي 2026',
+    seo_h2_steuerklassen:'فئات الضرائب الست باختصار', seo_h2_faq:'الأسئلة الشائعة',
+    faq_q1:'متى أدفع رسم التضامن؟', faq_a1:'منذ 2021 لا يدفعه نحو 90% من دافعي الضرائب. يُطبّق فقط إذا تجاوزت ضريبة الدخل السنوية <strong>20,350 €</strong>.',
+    faq_q2:'كم تُخصم ضريبة الكنيسة؟', faq_a2:'<strong>8%</strong> في بافاريا وبادن-فورتمبيرغ، و<strong>9%</strong> في باقي الولايات.',
+    faq_q3:'ما هي الميزة العينية؟', faq_a3:'ميزة غير نقدية مثل سيارة الشركة. تُفرض عليها ضريبة واشتراكات لكن لا تُدفع نقدًا.',
+    faq_q4:'تأمين حكومي أم خاص؟', faq_a4:'فوق 77,400 € إجمالي/سنة يمكن التأمين الخاص (PKV). أدخل اشتراكك مباشرة.',
+    faq_q5:'هل الحساب دقيق؟', faq_a5:'نعم – وفق <strong>خطة BMF</strong> الرسمية لعامي 2025 و2026.',
+    related_title:'حاسبات ذات صلة',
+    nav_bnr:'حاسبة الإجمالي-الصافي', nav_dienstwagen:'حاسبة سيارة الشركة', nav_teilzeit:'حاسبة الدوام الجزئي', nav_elterngeld:'حاسبة بدل الوالدين', nav_minijob:'حاسبة الوظيفة الصغيرة', nav_sk:'فئة الضريبة', nav_sozial:'الاشتراكات الاجتماعية 2026',
+    rc_sk35:'فئتا الضريبة 3 و5', rc_d_dienstwagen:'الصافي مع سيارة الشركة والميزة العينية', rc_d_kirche:'8% أو 9% – كم تدفع في ولايتك', rc_d_sk35:'الصافي للأزواج بدخل مختلف', rc_d_teilzeit:'الراتب الصافي مع ساعات مخفّضة', rc_d_elterngeld:'قدّر بدل الوالدين من دخلك الصافي', rc_d_minijob:'وظيفة 520 يورو: الاشتراكات والصرف',
+    seo_p_sozial:'تُقتسم الاشتراكات الاجتماعية عادةً بالتساوي بين الموظف وصاحب العمل. حصة الموظف في 2026:', th_versicherung:'التأمين', th_gesamt:'الإجمالي', th_an:'حصة الموظف',
+    seo_note:'*من لا أطفال لهم فوق 23 عامًا يدفعون 0.6% إضافية. في ساكسونيا يدفع الموظف 0.5% أكثر. حدود الاشتراك 2026: 8,450 €/شهر (تقاعد/بطالة)، 5,812.50 €/شهر (صحة/رعاية).',
+    sk_h1:'فئتا الضريبة 1 و2 – العزاب والوالد الوحيد', sk_b1:'<strong>الفئة 1</strong> للعزاب دون أطفال. <strong>الفئة 2</strong> للوالد الوحيد وتشمل إعفاءً سنويًا قدره 4,260 €.',
+    sk_h2:'فئات الضريبة 3 و4 و5 – المتزوجون', sk_b2:'<strong>الفئة 3/5</strong> مناسبة عند اختلاف الدخل كثيرًا. <strong>الفئة 4</strong> مثالية عند تقارب الدخل.',
+    sk_h3:'فئة الضريبة 6 – عمل ثانٍ', sk_b3:'<strong>الفئة 6</strong> للعمل الثاني وبلا إعفاءات – الخصومات هي الأعلى.',
+    footer:'<strong>حاسبة الإجمالي-الصافي 2026</strong> · محسوبة وفق خطة الرواتب (PAP) لوزارة المالية الألمانية.<br>آخر تحديث: يوليو 2026 · دون ضمان. ليست استشارة ضريبية.',
+  },
+  pl: {
+    menu:'MENU', language:'Język', group_rechner:'Kalkulatory', group_steuerklassen:'Klasy podatkowe', group_themen:'Tematy',
+    subtitle:'Oblicz swoją pensję netto<br>szybko i niezawodnie.',
+    lbl_intervall:'Okres', lbl_brutto:'Dochód brutto', lbl_zusatz:'Dodatkowa składka zdr.', lbl_steuerklasse:'Klasa podatkowa',
+    lbl_gwv:'Świadczenie rzecz.', lbl_kinder:'Ulgi na dzieci', lbl_freibetrag:'Kwota wolna', lbl_bundesland:'Kraj związkowy',
+    lbl_kirche:'Podatek kościelny', lbl_alter:'Wiek (lata)', lbl_kvtyp:'Ubezpieczenie zdr.', lbl_pkvbeitrag:'Prywatne zdr. / mies.', lbl_agzuschuss:'Dopłata pracodawcy',
+    unit_year:'L', weitere_abzuege:'Dalsze potrącenia (opcjonalnie)', pflicht:'obowiązkowe',
+    cb_rente:'Ubezp. emerytalne', cb_arbeitslos:'Na wypadek bezrob.', cb_kranken:'Ubezp. zdrowotne', cb_pflege:'Ubezp. pielęgnacyjne',
+    privacy:'Twoje dane pozostają prywatne i nie są zapisywane.', btn_berechnen:'OBLICZ NETTO',
+    ti_zusatz:'Indywidualna dodatkowa składka kasy chorych. Średnia 2026: 2,9 %.',
+    ti_steuerklasse:'1: singiel · 2: samotny rodzic · 3/5: małżeństwo (różne dochody) · 4: małżeństwo · 6: druga praca',
+    ti_gwv:'Miesięczne świadczenie rzeczowe, np. samochód służbowy. Opodatkowane, ale nie wypłacane gotówką.',
+    ti_kinder:'Liczba ulg na dzieci. Wpływa na podatek kościelny i dodatek solidarnościowy.',
+    ti_freibetrag:'Roczna kwota wolna z ELStAM. Obniża dochód do opodatkowania.',
+    ti_kirche:'Bawaria i Badenia-Wirtembergia: 8 %, pozostałe kraje: 9 %.',
+    ti_alter:'Od 23. roku bezdzietni płacą dopłatę 0,6 % na ubezpieczenie pielęgnacyjne.',
+    ti_kvtyp:'Ustawowe, dobrowolne lub prywatne.',
+    ti_pkvbeitrag:'Twoja miesięczna składka prywatnego ubezpieczenia zdrowotnego i pielęgnacyjnego.',
+    ti_agzuschuss:'Czy pracodawca dopłaca do prywatnego ubezpieczenia? Zwykle tak.',
+    res_netto_label:'Dochód netto', uebersicht:'Przegląd', r_lohnsteuer:'Podatek dochodowy', r_soli:'Dodatek solidarnościowy',
+    r_arbeitslos:'Ubezpieczenie na wypadek bezrobocia', r_pkv:'Prywatne zdr./piel. (netto)', r_gwv:'Świadczenie rzeczowe',
+    aufteilung:'Podział', netto_short:'Netto', abzuege:'Potrącenia', btn_neu:'NOWE OBLICZENIE', btn_pdf:'POBIERZ PDF',
+    disclaimer:'Obliczono wg schematu BMF 2025 i 2026 – bez gwarancji.',
+    of_brutto:'z {v} brutto',
+    iv:['miesięcznie','rocznie','półrocznie','kwartalnie','tygodniowo','dziennie','godzinowo'],
+    opt_ja:'Tak', opt_nein:'Nie', opt_kv_ges:'Ubezpieczenie ustawowe', opt_kv_frei:'Dobrowolne ustawowe', opt_kv_priv:'Ubezpieczenie prywatne',
+    seo_h1:'Kalkulator wynagrodzeń brutto-netto (Niemcy) 2026',
+    seo_intro:'Nasz bezpłatny <strong>kalkulator brutto-netto</strong> pokaże Twoją niemiecką pensję netto w kilka sekund – dokładnie wg <strong>schematu płacowego (PAP) 2026 Ministerstwa Finansów</strong>, z uwzględnieniem klasy podatkowej, kraju związkowego, podatku kościelnego, ubezpieczenia prywatnego i świadczeń rzeczowych.',
+    seo_h2_was:'Co oznacza brutto i netto?',
+    seo_p_was:'<strong>Brutto</strong> to pensja <em>przed</em> potrąceniami. <strong>Netto</strong> to kwota po podatku dochodowym, dodatku solidarnościowym, podatku kościelnym i składkach na ubezpieczenia społeczne.',
+    seo_h2_sozial:'Składki na ubezpieczenia społeczne 2026',
+    seo_h2_steuerklassen:'6 klas podatkowych w skrócie', seo_h2_faq:'Najczęstsze pytania',
+    faq_q1:'Kiedy płacę dodatek solidarnościowy?', faq_a1:'Od 2021 r. około 90 % podatników go nie płaci. Pojawia się dopiero powyżej <strong>20 350 €</strong> rocznego podatku.',
+    faq_q2:'Ile wynosi podatek kościelny?', faq_a2:'<strong>8 %</strong> w Bawarii i Badenii-Wirtembergii, <strong>9 %</strong> w pozostałych krajach.',
+    faq_q3:'Czym jest świadczenie rzeczowe?', faq_a3:'Świadczenie niepieniężne, np. samochód służbowy. Jest opodatkowane, ale nie wypłacane gotówką.',
+    faq_q4:'Ubezpieczenie ustawowe czy prywatne?', faq_a4:'Powyżej 77 400 € brutto/rok możliwe jest ubezpieczenie prywatne (PKV). Wpisz składkę bezpośrednio.',
+    faq_q5:'Czy obliczenie jest dokładne?', faq_a5:'Tak – wg oficjalnego <strong>schematu BMF</strong> na 2025 i 2026 r.',
+    related_title:'Powiązane kalkulatory',
+    nav_bnr:'Kalkulator brutto-netto', nav_dienstwagen:'Kalkulator samochodu służbowego', nav_teilzeit:'Kalkulator pracy w niepełnym wymiarze', nav_elterngeld:'Kalkulator zasiłku rodzicielskiego', nav_minijob:'Kalkulator mini-jobu', nav_sk:'Klasa podatkowa', nav_sozial:'Składki społeczne 2026',
+    rc_sk35:'Klasa podatkowa 3 i 5', rc_d_dienstwagen:'Netto z samochodem służbowym i świadczeniem rzeczowym', rc_d_kirche:'8 % lub 9 % – ile płacisz w swoim kraju związkowym', rc_d_sk35:'Netto dla par o różnych dochodach', rc_d_teilzeit:'Pensja netto przy skróconym czasie pracy', rc_d_elterngeld:'Oszacuj zasiłek rodzicielski z dochodu netto', rc_d_minijob:'Praca za 520 euro: składki i wypłata',
+    seo_p_sozial:'Składki społeczne są zwykle dzielone po połowie między pracownika i pracodawcę. Udział pracownika w 2026 r.:', th_versicherung:'Ubezpieczenie', th_gesamt:'Łącznie', th_an:'Pracownik',
+    seo_note:'*Bezdzietni od 23. roku płacą dopłatę 0,6 %. W Saksonii pracownik płaci 0,5 % więcej. Limity składek 2026: 8.450 €/mies. (emerytura/bezrobocie), 5.812,50 €/mies. (zdrowie/opieka).',
+    sk_h1:'Klasa 1 i 2 – single i samotni rodzice', sk_b1:'<strong>Klasa 1</strong> dotyczy singli bez dzieci. <strong>Klasa 2</strong> jest dla samotnych rodziców i obejmuje ulgę 4.260 € rocznie.',
+    sk_h2:'Klasa 3, 4 i 5 – małżeństwa', sk_b2:'<strong>Klasa 3/5</strong> opłaca się przy bardzo różnych dochodach. <strong>Klasa 4</strong> jest idealna przy podobnych dochodach.',
+    sk_h3:'Klasa 6 – druga praca', sk_b3:'<strong>Klasa 6</strong> dotyczy drugiej pracy i nie ma ulg – potrącenia są najwyższe.',
+    footer:'<strong>Kalkulator brutto-netto 2026</strong> · Obliczono wg schematu płacowego (PAP) niemieckiego Ministerstwa Finansów.<br>Ostatnia aktualizacja: lipiec 2026 · Bez gwarancji. To nie porada podatkowa.',
+  },
+  bs: {
+    menu:'MENI', language:'Jezik', group_rechner:'Kalkulatori', group_steuerklassen:'Poreske klase', group_themen:'Teme',
+    subtitle:'Izračunaj svoju neto platu<br>brzo, jednostavno i pouzdano.',
+    lbl_intervall:'Interval', lbl_brutto:'Bruto primanje', lbl_zusatz:'Dodatni ZO doprinos', lbl_steuerklasse:'Poreska klasa',
+    lbl_gwv:'Nenovčana korist', lbl_kinder:'Olakšice za djecu', lbl_freibetrag:'Poreska olakšica', lbl_bundesland:'Pokrajina',
+    lbl_kirche:'Crkveni porez', lbl_alter:'Dob (godine)', lbl_kvtyp:'Zdravstveno osig.', lbl_pkvbeitrag:'Privatno ZO / mjesec', lbl_agzuschuss:'Doprinos poslodavca',
+    unit_year:'G', weitere_abzuege:'Dodatni odbici (opcionalno)', pflicht:'obavezno',
+    cb_rente:'Penziono osig.', cb_arbeitslos:'Za nezaposlenost', cb_kranken:'Zdravstveno osig.', cb_pflege:'Njega',
+    privacy:'Tvoji podaci ostaju privatni i ne pohranjuju se.', btn_berechnen:'IZRAČUNAJ NETO',
+    ti_zusatz:'Dodatni doprinos ovisan o zdravstvenoj kasi. Prosjek 2026: 2,9 %.',
+    ti_steuerklasse:'1: samac · 2: samohrani roditelj · 3/5: brak (različit prihod) · 4: brak · 6: drugi posao',
+    ti_gwv:'Mjesečna nenovčana korist, npr. službeni auto. Oporezuje se, ali se ne isplaćuje u kešu.',
+    ti_kinder:'Broj olakšica za djecu. Utiče na crkveni porez i doprinos solidarnosti.',
+    ti_freibetrag:'Godišnja poreska olakšica iz ELStAM. Smanjuje oporezivi prihod.',
+    ti_kirche:'Bavarska i Baden-Württemberg: 8 %, ostale pokrajine: 9 %.',
+    ti_alter:'Od 23. godine osobe bez djece plaćaju dodatak 0,6 % za osiguranje njege.',
+    ti_kvtyp:'Zakonsko, dobrovoljno ili privatno osiguranje.',
+    ti_pkvbeitrag:'Tvoj mjesečni doprinos privatnog zdravstvenog i osiguranja njege.',
+    ti_agzuschuss:'Da li poslodavac doprinosi privatnom osiguranju? Obično da.',
+    res_netto_label:'Neto primanje', uebersicht:'Pregled', r_lohnsteuer:'Porez na dohodak', r_soli:'Doprinos solidarnosti',
+    r_arbeitslos:'Osiguranje za nezaposlenost', r_pkv:'Privatno ZO/njega (neto)', r_gwv:'Nenovčana korist',
+    aufteilung:'Raspodjela', netto_short:'Neto', abzuege:'Odbici', btn_neu:'NOVI IZRAČUN', btn_pdf:'PREUZMI PDF',
+    disclaimer:'Izračunato po BMF planu za 2025 i 2026 – bez garancije.',
+    of_brutto:'od {v} bruto',
+    iv:['mjesečno','godišnje','polugodišnje','tromjesečno','sedmično','dnevno','po satu'],
+    opt_ja:'Da', opt_nein:'Ne', opt_kv_ges:'Zakonsko osiguran', opt_kv_frei:'Dobrovoljno zakonsko osiguran', opt_kv_priv:'Privatno osiguran',
+    seo_h1:'Bruto-neto kalkulator plate (Njemačka) 2026',
+    seo_intro:'Naš besplatni <strong>bruto-neto kalkulator</strong> pokazuje tvoju neto platu u Njemačkoj za nekoliko sekundi – tačno prema <strong>planu obračuna (PAP) 2026 Ministarstva finansija</strong>, uključujući poresku klasu, pokrajinu, crkveni porez, privatno osiguranje i nenovčane koristi.',
+    seo_h2_was:'Šta znači bruto i neto?',
+    seo_p_was:'<strong>Bruto</strong> je plata <em>prije</em> odbitaka. <strong>Neto</strong> je ono što ostane nakon poreza na dohodak, doprinosa solidarnosti, crkvenog poreza i doprinosa socijalnog osiguranja.',
+    seo_h2_sozial:'Doprinosi socijalnog osiguranja 2026',
+    seo_h2_steuerklassen:'6 poreskih klasa ukratko', seo_h2_faq:'Česta pitanja',
+    faq_q1:'Kada plaćam doprinos solidarnosti?', faq_a1:'Od 2021. oko 90 % poreznih obveznika ga ne plaća. Primjenjuje se tek iznad <strong>20.350 €</strong> godišnjeg poreza.',
+    faq_q2:'Koliko se crkvenog poreza odbija?', faq_a2:'<strong>8 %</strong> u Bavarskoj i Baden-Württembergu, <strong>9 %</strong> u ostalim pokrajinama.',
+    faq_q3:'Šta je nenovčana korist?', faq_a3:'Nenovčana korist poput službenog auta. Oporezuje se, ali se ne isplaćuje u kešu.',
+    faq_q4:'Zakonsko ili privatno osiguranje?', faq_a4:'Iznad 77.400 € bruto/godišnje moguće je privatno osiguranje (PKV). Unesi svoj doprinos direktno.',
+    faq_q5:'Da li je izračun tačan?', faq_a5:'Da – prema zvaničnom <strong>BMF planu</strong> za 2025. i 2026.',
+    related_title:'Povezani kalkulatori',
+    nav_bnr:'Bruto-neto kalkulator', nav_dienstwagen:'Kalkulator službenog auta', nav_teilzeit:'Kalkulator nepunog radnog vremena', nav_elterngeld:'Kalkulator roditeljske naknade', nav_minijob:'Mini-job kalkulator', nav_sk:'Poreska klasa', nav_sozial:'Socijalni doprinosi 2026',
+    rc_sk35:'Poreske klase 3 i 5', rc_d_dienstwagen:'Neto sa službenim autom i nenovčanom korišću', rc_d_kirche:'8 % ili 9 % – koliko plaćaš u svojoj pokrajini', rc_d_sk35:'Neto za parove s različitim prihodom', rc_d_teilzeit:'Neto plata pri smanjenom broju sati', rc_d_elterngeld:'Procijeni roditeljsku naknadu iz neto prihoda', rc_d_minijob:'Posao od 520 eura: doprinosi i isplata',
+    seo_p_sozial:'Socijalni doprinosi obično se dijele pola-pola između radnika i poslodavca. Udio radnika u 2026:', th_versicherung:'Osiguranje', th_gesamt:'Ukupno', th_an:'Udio radnika',
+    seo_note:'*Osobe bez djece od 23. godine plaćaju dodatak 0,6 %. U Saksoniji radnik plaća 0,5 % više. Granice doprinosa 2026: 8.450 €/mjesec (penziono/nezaposlenost), 5.812,50 €/mjesec (zdravstveno/njega).',
+    sk_h1:'Poreske klase 1 i 2 – samci i samohrani roditelji', sk_b1:'<strong>Klasa 1</strong> vrijedi za samce bez djece. <strong>Klasa 2</strong> je za samohrane roditelje i sadrži olakšicu od 4.260 € godišnje.',
+    sk_h2:'Poreske klase 3, 4 i 5 – bračni parovi', sk_b2:'<strong>Klasa 3/5</strong> isplati se pri jako različitom prihodu. <strong>Klasa 4</strong> je idealna pri sličnom prihodu.',
+    sk_h3:'Poreska klasa 6 – drugi posao', sk_b3:'<strong>Klasa 6</strong> vrijedi za drugi posao i nema olakšica – odbici su najveći.',
+    footer:'<strong>Bruto-neto kalkulator 2026</strong> · Izračunato po planu obračuna (PAP) njemačkog Ministarstva finansija.<br>Zadnje ažuriranje: juli 2026 · Bez garancije. Nije poreski savjet.',
+  },
+};
+let LANG = 'de';
+function t(key) { return (I18N[LANG] && I18N[LANG][key] != null) ? I18N[LANG][key] : (I18N.de[key] || key); }
+
+function setLanguage(lang) {
+  if (!I18N[lang]) lang = 'de';
+  LANG = lang;
+  const rtl = (lang === 'ar');
+  document.documentElement.lang = lang;
+  document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.setAttribute('title', t(el.getAttribute('data-i18n-title'))); });
+
+  // Select-Optionen
+  const iv = I18N[lang].iv;
+  const ivSel = document.getElementById('intervall');
+  if (ivSel) [...ivSel.options].forEach((o,i) => { if (iv[i]) o.textContent = iv[i].charAt(0).toUpperCase() + iv[i].slice(1); });
+  const setOpts = (id, vals) => { const s = document.getElementById(id); if (s) [...s.options].forEach(o => { if (vals[o.value] != null) o.textContent = vals[o.value]; }); };
+  setOpts('kirchensteuer', { ja: t('opt_ja'), nein: t('opt_nein') });
+  setOpts('pkvZuschuss', { ja: t('opt_ja'), nein: t('opt_nein') });
+  setOpts('kvtyp', { gesetzlich: t('opt_kv_ges'), freiwillig: t('opt_kv_frei'), privat: t('opt_kv_priv') });
+
+  var _gc=document.getElementById('globeCode'); if(_gc)_gc.textContent=lang.toUpperCase();
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-lang') === lang));
+  document.documentElement.setAttribute('data-lang', lang);
+  if (typeof updateInstallTexts === 'function') updateInstallTexts();
+
+  // Dynamische Ergebnis-Labels neu rendern, falls Ergebnisseite sichtbar
+  if (window.lastR && document.getElementById('page2').style.display === 'block') {
+    document.getElementById('res-interval').textContent = intervalLabel('monatlich');
+    document.getElementById('res-interval-tag').textContent = intervalTag('monatlich');
+    document.getElementById('res-brutto-tag').textContent = t('of_brutto').replace('{v}', fmt(window.lastR.brutto));
+  }
+}
+
+// ─── State ───────────────────────────────────────────────────────────────────
+let kinderCount = 0;
+
+function changeKinder(delta) {
+  kinderCount = Math.max(0, Math.min(10, kinderCount + delta));
+  document.getElementById('kinderVal').textContent = kinderCount;
+}
+
+function toggleCB(label, id) {
+  const cb = document.getElementById(id);
+  cb.checked = !cb.checked;
+  label.classList.toggle('checked', cb.checked);
+}
+
+// ─── Navigation ──────────────────────────────────────────────────────────────
+function showPage(n) {
+  document.getElementById('page1').style.display = n === 1 ? 'block' : 'none';
+  document.getElementById('page2').style.display = n === 2 ? 'block' : 'none';
+  if (n === 1 && typeof hideInstall === 'function') hideInstall();
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  showPage(1);
+}
+
+// ─── Tax calculation (Germany — nach BMF Programmablaufplan 2025 & 2026) ──────
+const YEARS = {
+  2026: {
+    bbgRV: 101400, bbgKV: 69750,
+    kinderfreibetrag: 4878,   // je Zähler (halb), für Kirche/Soli
+    soliFreigrenze: 20350,
+    gfb: 12348, gfbSplit: 24696,
+    // §32a EStG 2026 Tarifkoeffizienten
+    z2end: 17799, z3end: 69878, z4end: 277825,
+    z2a: 914.51, z2b: 1400,
+    z3a: 181.19, z3b: 2397, z3c: 1025.38,
+    z4m: 0.42, z4s: 10637.32,
+    z5m: 0.45, z5s: 18971.07,
+    mvspCapNormal: 1900, mvspCapSK3: 3000,
+  },
+  2025: {
+    bbgRV: 96600, bbgKV: 66150,
+    kinderfreibetrag: 4800,
+    soliFreigrenze: 19950,
+    gfb: 12096, gfbSplit: 24192,
+    z2end: 17443, z3end: 68480, z4end: 277825,
+    z2a: 932.30, z2b: 1400,
+    z3a: 176.64, z3b: 2397, z3c: 1015.13,
+    z4m: 0.42, z4s: 10911.92,
+    z5m: 0.45, z5s: 19246.67,
+    mvspCapNormal: 1900, mvspCapSK3: 3000,
+  },
+};
+
+const PARAMS = {
+  // Arbeitnehmer-Beitragssätze (gleich für 2025/2026)
+  rvRate: 0.093, avRate: 0.013, kvRateAN: 0.073, pvRateAN: 0.018,
+  pvChildless: 0.006, pvSachsen: 0.005, kvRateVSP: 0.070,
+  mvspRate: 0.12,
+  // Arbeitnehmer-Pauschbeträge je Steuerklasse
+  allowances: {
+    1: { arbn: 1230, sonder: 36, entlastung: 0,    split: 1 },
+    2: { arbn: 1230, sonder: 36, entlastung: 4260, split: 1 },
+    3: { arbn: 1230, sonder: 36, entlastung: 0,    split: 2 },
+    4: { arbn: 1230, sonder: 36, entlastung: 0,    split: 1 },
+    5: { arbn: 1230, sonder: 36, entlastung: 0,    split: 1 },
+    6: { arbn:    0, sonder:  0, entlastung: 0,    split: 1 },
+  },
+  soliRate: 0.055, soliPhaseIn: 0.119,
+  kircheLow: 0.08, kircheHigh: 0.09,
+};
+
+// §32a EStG Grundtarif (jahresabhängig)
+function tarif(zve, Y) {
+  zve = Math.max(0, Math.floor(zve));
+  if (zve <= Y.gfb) return 0;
+  if (zve <= Y.z2end) {
+    const y = (zve - Y.gfb) / 10000;
+    return Math.floor((Y.z2a * y + Y.z2b) * y);
+  }
+  if (zve <= Y.z3end) {
+    const z = (zve - Y.z2end) / 10000;
+    return Math.floor((Y.z3a * z + Y.z3b) * z + Y.z3c);
+  }
+  if (zve <= Y.z4end) {
+    return Math.floor(Y.z4m * zve - Y.z4s);
+  }
+  return Math.floor(Y.z5m * zve - Y.z5s);
+}
+
+// Lohnsteuer-Tarif inkl. Splitting (III) und Sonderverfahren V/VI
+function lohnsteuerTarif(zve, sk, Y) {
+  zve = Math.max(0, Math.floor(zve));
+  if (sk === 3) {
+    return tarif(zve / 2, Y) * 2;
+  }
+  if (sk === 5 || sk === 6) {
+    // §39b Abs. 2 S. 7 EStG: Sonderverfahren V/VI
+    const st = 2 * (tarif(1.25 * zve, Y) - tarif(0.75 * zve, Y));
+    return Math.max(st, 0);
+  }
+  return tarif(zve, Y); // SK I, II, IV
+}
+
+function toMonthly(value, interval) {
+  switch (interval) {
+    case 'jaehrlich':        return value / 12;
+    case 'halbjaehrlich':    return value / 6;
+    case 'vierteljaehrlich': return value / 3;
+    case 'woechentlich':     return value * 52 / 12;
+    case 'taeglich':         return value * 260 / 12;
+    case 'stuendlich':       return value * 2080 / 12;
+    default:                 return value; // monatlich
+  }
+}
+
+const IV_KEYS = ['monatlich','jaehrlich','halbjaehrlich','vierteljaehrlich','woechentlich','taeglich','stuendlich'];
+function intervalLabel(interval) {
+  const i = IV_KEYS.indexOf(interval);
+  const arr = I18N[LANG].iv;
+  return (i >= 0 ? arr[i] : arr[0]);
+}
+function intervalTag(interval) {
+  const s = intervalLabel(interval);
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function computeResults(o) {
+  const P = PARAMS;
+  const Y = YEARS[o.jahr] || YEARS[2026];
+
+  const barMonthly = toMonthly(o.brutto, o.interval);     // Barlohn
+  const gwv        = Math.max(0, o.gwv || 0);             // geldwerter Vorteil (mtl.)
+  const monthlyBrutto = barMonthly + gwv;                 // Gesamtbrutto (steuer-/sv-pflichtig)
+  const annualBrutto  = monthlyBrutto * 12;
+
+  const annBaseRV = Math.min(annualBrutto, Y.bbgRV);
+  const annBaseKV = Math.min(annualBrutto, Y.bbgKV);
+  const zusatz    = (o.zusatz || 0) / 100;
+  const privat    = o.kvtyp === 'privat';
+
+  // ── Sozialversicherung (tatsächlicher AN-Abzug, jährlich) ─────────────────
+  const rvA = o.sv.rv ? annBaseRV * P.rvRate : 0;
+  const avA = o.sv.av ? annBaseRV * P.avRate : 0;
+
+  let kvA = 0, pvA = 0, pkvA = 0;
+  if (privat) {
+    // Private KV/PV: Beitrag minus AG-Zuschuss
+    const pkvBeitrag = Math.max(0, o.pkvBeitrag || 0) * 12;
+    // AG-Zuschuss: max. halber allgemeiner Höchstbeitrag (7,3 % + halber Zusatz auf BBG)
+    const maxZuschuss = Y.bbgKV * (P.kvRateAN + zusatz / 2);
+    const zuschuss = o.pkvZuschuss === 'ja' ? Math.min(pkvBeitrag / 2, maxZuschuss) : 0;
+    pkvA = Math.max(0, pkvBeitrag - zuschuss);
+  } else {
+    kvA = o.sv.kv ? annBaseKV * (P.kvRateAN + zusatz / 2) : 0;
+    let pvRate = o.sv.pv ? P.pvRateAN : 0;
+    if (o.sv.pv && o.alter >= 23 && o.kinder === 0) pvRate += P.pvChildless;
+    if (o.sv.pv && o.bundesland === 'sn') pvRate += P.pvSachsen;
+    pvA = annBaseKV * pvRate;
+  }
+
+  const annualSV = rvA + avA + kvA + pvA + pkvA;
+
+  // ── Vorsorgepauschale (§39b Abs. 2 EStG) ──────────────────────────────────
+  const vsp1 = o.sv.rv ? annBaseRV * P.rvRate : 0;
+  let vsp3;
+  if (privat) {
+    vsp3 = pkvA; // private Basisbeiträge (vereinfacht)
+  } else {
+    let pvRateVSP = P.pvRateAN;
+    if (o.alter >= 23 && o.kinder === 0) pvRateVSP += P.pvChildless;
+    if (o.bundesland === 'sn') pvRateVSP += P.pvSachsen;
+    vsp3 = annBaseKV * (P.kvRateVSP + zusatz / 2 + pvRateVSP);
+  }
+  const mvspCap = o.sk === 3 ? Y.mvspCapSK3 : Y.mvspCapNormal;
+  const vsp2 = Math.min(annualBrutto * P.mvspRate, mvspCap);
+  const vorsorge = Math.ceil(vsp1 + Math.max(vsp3, vsp2));
+
+  // ── Lohnsteuer ────────────────────────────────────────────────────────────
+  const allow = P.allowances[o.sk];
+  const freibetrag = Math.max(0, o.freibetrag || 0);   // ELStAM-Jahresfreibetrag
+  let zve = annualBrutto - allow.arbn - allow.sonder - allow.entlastung - vorsorge - freibetrag;
+  zve = Math.max(0, Math.floor(zve));
+
+  const annualTax = Math.max(0, lohnsteuerTarif(zve, o.sk, Y));
+
+  // ── Bemessungsgrundlage für Soli & Kirche (mit Kinderfreibetrag) ──────────
+  const kinderFB = o.kinder * Y.kinderfreibetrag * (o.sk === 3 ? 2 : 1);
+  const zveKir = Math.max(0, zve - kinderFB);
+  const taxKir = Math.max(0, lohnsteuerTarif(zveKir, o.sk, Y));
+
+  // ── Solidaritätszuschlag ──────────────────────────────────────────────────
+  const soliFreigr = o.sk === 3 ? Y.soliFreigrenze * 2 : Y.soliFreigrenze;
+  let annualSoli = 0;
+  if (taxKir > soliFreigr) {
+    const full  = P.soliRate * taxKir;
+    const phase = P.soliPhaseIn * (taxKir - soliFreigr);
+    annualSoli = Math.round(Math.min(full, phase));
+  }
+
+  // ── Kirchensteuer ──────────────────────────────────────────────────────────
+  let annualKirche = 0;
+  if (o.kirchensteuer === 'ja') {
+    const kRate = (o.bundesland === 'by' || o.bundesland === 'bw') ? P.kircheLow : P.kircheHigh;
+    annualKirche = Math.round(taxKir * kRate);
+  }
+
+  // ── Monatswerte ────────────────────────────────────────────────────────────
+  const lohnsteuerM = annualTax / 12;
+  const soliM       = annualSoli / 12;
+  const kircheM     = annualKirche / 12;
+  const rvM = rvA / 12, avM = avA / 12, kvM = kvA / 12, pvM = pvA / 12, pkvM = pkvA / 12;
+  const totalSVM = annualSV / 12;
+
+  // Netto-Auszahlung: geldwerter Vorteil wird nicht bar ausgezahlt
+  const nettoM = monthlyBrutto - lohnsteuerM - soliM - kircheM - totalSVM - gwv;
+
+  return {
+    brutto:      monthlyBrutto,
+    barlohn:     barMonthly,
+    gwv:         gwv,
+    lohnsteuer:  lohnsteuerM,
+    soli:        soliM,
+    kirche:      kircheM,
+    rv: rvM, av: avM, kv: kvM, pv: pvM, pkv: pkvM,
+    privat:      privat,
+    netto:       Math.max(0, nettoM),
+    totalAbzuege: lohnsteuerM + soliM + kircheM + totalSVM + gwv,
+  };
+}
+
+// ─── Format ──────────────────────────────────────────────────────────────────
+function fmt(n) {
+  return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+function fmtSigned(n) {
+  return '− ' + fmt(n);
+}
+
+// ─── PKV toggle ───────────────────────────────────────────────────────────────
+function togglePKV() {
+  const privat = document.getElementById('kvtyp').value === 'privat';
+  document.getElementById('pkv-beitrag-group').style.display = privat ? '' : 'none';
+  document.getElementById('pkv-zuschuss-group').style.display = privat ? '' : 'none';
+}
+
+// ─── Main calculate ───────────────────────────────────────────────────────────
+function calculate() {
+  const o = {
+    brutto:       parseFloat(document.getElementById('brutto').value) || 0,
+    interval:     document.getElementById('intervall').value,
+    jahr:         document.getElementById('jahr').value,
+    sk:           parseInt(document.getElementById('steuerklasse').value),
+    kinder:       kinderCount,
+    bundesland:   document.getElementById('bundesland').value,
+    kirchensteuer: document.getElementById('kirchensteuer').value,
+    zusatz:       parseFloat(document.getElementById('zusatz').value) || 0,
+    alter:        parseInt(document.getElementById('alter').value) || 30,
+    gwv:          parseFloat(document.getElementById('gwv').value) || 0,
+    freibetrag:   parseFloat(document.getElementById('freibetrag').value) || 0,
+    kvtyp:        document.getElementById('kvtyp').value,
+    pkvBeitrag:   parseFloat(document.getElementById('pkvBeitrag').value) || 0,
+    pkvZuschuss:  document.getElementById('pkvZuschuss').value,
+    sv: {
+      rv: document.getElementById('cb-rv').checked,
+      av: document.getElementById('cb-av').checked,
+      kv: document.getElementById('cb-kv').checked,
+      pv: document.getElementById('cb-pv').checked,
+    },
+  };
+
+  const r = computeResults(o);
+  window.lastR = r;
+
+  // Fill page 2 (Ergebnis ist immer monatlich)
+  document.getElementById('res-netto').textContent       = fmt(r.netto);
+  document.getElementById('res-interval').textContent    = intervalLabel('monatlich');
+  document.getElementById('res-interval-tag').textContent = intervalTag('monatlich');
+  document.getElementById('res-brutto-tag').textContent  = t('of_brutto').replace('{v}', fmt(r.brutto));
+
+  document.getElementById('res-brutto-row').textContent  = fmt(r.brutto);
+  document.getElementById('res-lohnsteuer').textContent  = '− ' + fmt(r.lohnsteuer);
+  document.getElementById('res-soli').textContent        = '− ' + fmt(r.soli);
+  document.getElementById('res-kirche').textContent      = '− ' + fmt(r.kirche);
+  document.getElementById('res-rv').textContent          = '− ' + fmt(r.rv);
+  document.getElementById('res-av').textContent          = '− ' + fmt(r.av);
+  document.getElementById('res-kv').textContent          = '− ' + fmt(r.kv);
+  document.getElementById('res-pv').textContent          = '− ' + fmt(r.pv);
+  document.getElementById('res-pkv').textContent         = '− ' + fmt(r.pkv);
+  document.getElementById('res-gwv').textContent         = '− ' + fmt(r.gwv);
+  document.getElementById('res-netto-row').textContent   = fmt(r.netto);
+
+  // Show/hide optional rows
+  document.getElementById('row-kirche').style.display = o.kirchensteuer === 'ja' ? '' : 'none';
+  document.getElementById('row-gwv').style.display = r.gwv > 0 ? '' : 'none';
+  document.getElementById('row-rv').style.display = o.sv.rv ? '' : 'none';
+  document.getElementById('row-av').style.display = o.sv.av ? '' : 'none';
+  document.getElementById('row-kv').style.display = (!r.privat && o.sv.kv) ? '' : 'none';
+  document.getElementById('row-pv').style.display = (!r.privat && o.sv.pv) ? '' : 'none';
+  document.getElementById('row-pkv').style.display = r.privat ? '' : 'none';
+
+  // Donut chart
+  const nettoPct = r.brutto > 0 ? Math.round((r.netto / r.brutto) * 100) : 0;
+  const abzuegePct = 100 - nettoPct;
+  const circumference = 2 * Math.PI * 38; // ~238.76
+
+  document.getElementById('donut-netto-arc').style.strokeDasharray = circumference;
+  document.getElementById('donut-netto-arc').style.strokeDashoffset =
+    circumference * (1 - nettoPct / 100);
+  document.getElementById('donut-pct').textContent = nettoPct + '%';
+
+  document.getElementById('legend-netto').textContent      = fmt(r.netto);
+  document.getElementById('legend-netto-pct').textContent  = '(' + nettoPct + '%)';
+  document.getElementById('legend-abzuege').textContent    = fmt(r.totalAbzuege);
+  document.getElementById('legend-abzuege-pct').textContent = '(' + abzuegePct + '%)';
+
+  showPage(2);
+  setTimeout(maybeShowInstall, 700); // Install-Angebot erst nach dem Ergebnis
+}
+
+// ─── PDF print ───────────────────────────────────────────────────────────────
+function printResult() {
+  window.print();
+}
+
+// ─── Accordion ────────────────────────────────────────────────────────────────
+function toggleAcc(btn) {
+  btn.parentElement.classList.toggle('open');
+}
+
+// ─── Hamburger Drawer ─────────────────────────────────────────────────────────
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Fixe CTA-Leiste ausblenden, sobald man unter den Rechner (in den SEO-Text) scrollt
+window.addEventListener('scroll', () => {
+  const bar = document.querySelector('.cta-bar');
+  const app = document.querySelector('.app');
+  if (!bar || !app) return;
+  bar.classList.toggle('cta-hidden', app.getBoundingClientRect().bottom < window.innerHeight - 40);
+}, { passive: true });
+
+// ─── PWA Install ──────────────────────────────────────────────────────────────
+const INSTALL = {
+  de: { title:'App installieren', sub:'Rechner aufs Handy – offline & mit einem Tipp geöffnet.', yes:'Installieren', no:'Später', ios:'Tippe auf „Teilen" und dann „Zum Home-Bildschirm".' },
+  en: { title:'Install app', sub:'Add the calculator to your home screen – works offline.', yes:'Install', no:'Later', ios:'Tap „Share", then „Add to Home Screen".' },
+  tr: { title:'Uygulamayı yükle', sub:'Hesaplayıcıyı ana ekrana ekle – çevrimdışı çalışır.', yes:'Yükle', no:'Sonra', ios:'„Paylaş"a, ardından „Ana Ekrana Ekle"ye dokun.' },
+  ru: { title:'Установить приложение', sub:'Добавьте калькулятор на экран – работает офлайн.', yes:'Установить', no:'Позже', ios:'Нажмите „Поделиться", затем „На экран Домой".' },
+  ar: { title:'ثبّت التطبيق', sub:'أضف الحاسبة إلى الشاشة الرئيسية – تعمل دون إنترنت.', yes:'تثبيت', no:'لاحقًا', ios:'اضغط „مشاركة" ثم „إضافة إلى الشاشة الرئيسية".' },
+  pl: { title:'Zainstaluj aplikację', sub:'Dodaj kalkulator do ekranu głównego – działa offline.', yes:'Zainstaluj', no:'Później', ios:'Dotknij „Udostępnij", potem „Dodaj do ekranu początkowego".' },
+  bs: { title:'Instaliraj aplikaciju', sub:'Dodaj kalkulator na početni ekran – radi offline.', yes:'Instaliraj', no:'Kasnije', ios:'Dodirni „Podijeli", pa „Dodaj na početni ekran".' },
+};
+let deferredPrompt = null;
+let iosMode = false;
+
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
+window.addEventListener('appinstalled', () => { hideInstall(); deferredPrompt = null; });
+
+function installDismissed() {
+  try { return localStorage.getItem('pwa_dismissed') === '1'; } catch(e) { return !!window.__pwaDismissed; }
+}
+function markDismissed() {
+  try { localStorage.setItem('pwa_dismissed', '1'); } catch(e) { window.__pwaDismissed = true; }
+}
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+function updateInstallTexts() {
+  if(!document.getElementById("installBanner"))return;
+  const s = INSTALL[LANG] || INSTALL.de;
+  document.getElementById('installTitle').textContent = s.title;
+  document.getElementById('installSub').textContent = iosMode ? s.ios : s.sub;
+  document.getElementById('installYes').textContent = s.yes;
+  document.getElementById('installNo').textContent = s.no;
+  document.getElementById('installYes').style.display = iosMode ? 'none' : '';
+}
+function maybeShowInstall() {
+  if(!document.getElementById("installBanner"))return;
+  if (installDismissed() || isStandalone()) return;
+  const ua = navigator.userAgent || '';
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  if (deferredPrompt) { iosMode = false; }
+  else if (isIOS) { iosMode = true; }
+  else { return; } // nicht installierbar (oder Prompt noch nicht bereit)
+  updateInstallTexts();
+  document.getElementById('installBanner').classList.add('show');
+}
+function hideInstall() { var el=document.getElementById('installBanner'); if(el) el.classList.remove('show'); }
+function dismissInstall() { hideInstall(); markDismissed(); }
+async function doInstall() {
+  if (!deferredPrompt) { hideInstall(); return; }
+  deferredPrompt.prompt();
+  try { await deferredPrompt.userChoice; } catch(e) {}
+  deferredPrompt = null;
+  hideInstall();
+}
+
+// (kein Service Worker in dieser App)
+
+// ─── Jährliche Werte aus params.json laden (überschreibt eingebaute Defaults) ──
+async function loadParams() {
+  try {
+    const res = await fetch('params.json', { cache: 'no-cache' });
+    if (!res.ok) return;
+    const cfg = await res.json();
+    if (cfg.rates) {
+      const R = cfg.rates;
+      ['rvRate','avRate','kvRateAN','pvRateAN','pvChildless','pvSachsen','kvRateVSP','mvspRate','soliRate','soliPhaseIn','kircheLow','kircheHigh']
+        .forEach(k => { if (R[k] != null) PARAMS[k] = R[k]; });
+      // Pauschbeträge je Steuerklasse neu aufbauen
+      const arbn = R.arbn != null ? R.arbn : 1230;
+      const sonder = R.sonder != null ? R.sonder : 36;
+      const ent2 = R.entlastung2 != null ? R.entlastung2 : 4260;
+      PARAMS.allowances = {
+        1:{arbn, sonder, entlastung:0,    split:1},
+        2:{arbn, sonder, entlastung:ent2, split:1},
+        3:{arbn, sonder, entlastung:0,    split:2},
+        4:{arbn, sonder, entlastung:0,    split:1},
+        5:{arbn, sonder, entlastung:0,    split:1},
+        6:{arbn:0, sonder:0, entlastung:0, split:1},
+      };
+    }
+    if (cfg.years) { Object.keys(cfg.years).forEach(y => { YEARS[y] = Object.assign({}, cfg.years[y]); }); }
+    if (cfg.defaultYear && YEARS[cfg.defaultYear]) {
+      const jahrEl = document.getElementById('jahr'); if (jahrEl) jahrEl.value = cfg.defaultYear;
+      const dy = cfg.years && cfg.years[cfg.defaultYear];
+      if (dy && dy.zusatzAvg != null) { const z = document.getElementById('zusatz'); if (z && z.value == '2.9') z.value = dy.zusatzAvg; }
+    }
+  } catch (e) { /* offline / kein params.json → eingebaute Werte bleiben gültig */ }
+}
+
+// ─── Preset (für generierte Themenseiten) ─────────────────────────────────────
+function applyPreset(p) {
+  if (!p) return;
+  if (p.steuerklasse) { const el = document.getElementById('steuerklasse'); if (el) el.value = String(p.steuerklasse); }
+  if (p.kirchensteuer) { const el = document.getElementById('kirchensteuer'); if (el) el.value = p.kirchensteuer; }
+  if (p.bundesland) { const el = document.getElementById('bundesland'); if (el) el.value = p.bundesland; }
+}
+
+// ─── Init: erzwungene Sprache (__LANG) > URL (?lang=) > Browser > Deutsch ──────
+(function initLang(){
+  setLanguage("bs");
+  loadParams();
+})();
+</script>
+</body>
+</html>
