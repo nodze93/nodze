@@ -1,95 +1,69 @@
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import Ticker from "@/components/Ticker";
+import VodiciKlijent, { type VodicKartica } from "@/components/VodiciKlijent";
+import { getVodici } from "@/lib/vodici-db";
 import { getAllVodici } from "@/lib/data/vodici";
-import Link from "next/link";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
-  title: "Korak-po-korak vodiči — kodnas.de",
-  description: "Praktični vodiči za Bosance u Njemačkoj: viza, stan, zdravstvo, porez i penzija.",
+  title: "Vodiči za život u Njemačkoj — kodnas.de",
+  description:
+    "Praktični vodiči za našu dijasporu: vize i boravak, posao, stanovanje, porodica, zdravstvo, porezi i finansije.",
   alternates: { canonical: "/vodici" },
   openGraph: {
-    title: "Korak-po-korak vodiči — kodnas.de",
-    description: "Praktični vodiči za Bosance u Njemačkoj.",
+    title: "Vodiči za život u Njemačkoj — kodnas.de",
+    description: "Praktični vodiči za Bosance u Njemačkoj i Austriji.",
     url: "/vodici",
     siteName: "kodnas.de",
     locale: "bs_BA",
     type: "website",
     images: [{ url: "/og-default.jpg", width: 1200, height: 630, alt: "kodnas.de vodiči" }],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Korak-po-korak vodiči — kodnas.de",
-    description: "Praktični vodiči za Bosance u Njemačkoj.",
-    images: ["/og-default.jpg"],
-  },
 };
 
-export default function VodiciPage() {
-  const vodici = getAllVodici();
+export default async function VodiciPage() {
+  let vodici: VodicKartica[] = [];
+
+  // Primarno iz baze (usklađeno s detalj-stranicom).
+  try {
+    const rows = await getVodici();
+    if (rows.length) {
+      vodici = rows.map((v) => ({
+        slug: v.slug,
+        naziv: v.naziv,
+        opis: v.opis,
+        ikona: v.ikona,
+        kategorija: v.kategorija,
+        min_citanja: v.min_citanja,
+        brojKoraka: v.koraci?.length ?? 0,
+        imaTekst: !!v.tekst,
+      }));
+    }
+  } catch {
+    /* baza nedostupna — pada na rezervu ispod */
+  }
+
+  // Rezerva: ako baza prazna/pukne, koristi hard-kodirane vodiče (da lista ne bude prazna).
+  if (vodici.length === 0) {
+    vodici = getAllVodici().map((v) => ({
+      slug: v.slug,
+      naziv: v.naziv,
+      opis: v.opis,
+      ikona: v.ikona,
+      kategorija: v.kategorija,
+      min_citanja: v.minCitanja,
+      brojKoraka: v.koraci.length,
+      imaTekst: false,
+    }));
+  }
 
   return (
     <>
       <Nav />
-      <Ticker />
-
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
-        <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 8, letterSpacing: "-0.5px" }}>
-            Korak-po-korak vodiči
-          </h1>
-          <p style={{ fontSize: 15, color: "var(--tekst-muted)" }}>
-            Praktični vodiči koji te vode kroz birokratske procedure u Njemačkoj.
-          </p>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="vodici-page-grid">
-          {vodici.map((vodic) => (
-            <Link
-              key={vodic.id}
-              href={`/vodic/${vodic.slug}`}
-              style={{
-                background: "var(--white)",
-                border: "1px solid var(--border)",
-                borderRadius: 12,
-                padding: 24,
-                display: "flex",
-                gap: 16,
-                textDecoration: "none",
-                color: "inherit",
-                transition: "all 0.15s",
-              }}
-              className="hover:border-zelena hover:bg-zelena-svijetla"
-            >
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: "var(--zelena-svijetla)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>
-                {vodic.ikona}
-              </div>
-              <div style={{ flex: 1 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6, lineHeight: 1.3 }}>
-                  {vodic.naziv}
-                </h2>
-                <p style={{ fontSize: 13, color: "var(--tekst-muted)", lineHeight: 1.5, marginBottom: 10 }}>
-                  {vodic.opis}
-                </p>
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <span style={{ fontSize: 12, color: "var(--zelena)", fontWeight: 600 }}>
-                    {vodic.koraci.length} koraka · {vodic.minCitanja} min
-                  </span>
-                  <span className={`tag-pill tag-${vodic.kategorija}`}>{vodic.kategorija}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
+      <VodiciKlijent vodici={vodici} />
       <Footer />
-      <style>{`
-        @media (max-width: 768px) {
-          .vodici-page-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </>
   );
 }
