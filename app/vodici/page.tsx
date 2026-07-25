@@ -24,30 +24,11 @@ export const metadata: Metadata = {
 };
 
 export default async function VodiciPage() {
-  let vodici: VodicKartica[] = [];
+  // SVI vodiči = kod (statični) + baza (admin), spojeni po slug-u (baza pobjeđuje kod dupliranja).
+  const mapa = new Map<string, VodicKartica>();
 
-  // Primarno iz baze (usklađeno s detalj-stranicom).
-  try {
-    const rows = await getVodici();
-    if (rows.length) {
-      vodici = rows.map((v) => ({
-        slug: v.slug,
-        naziv: v.naziv,
-        opis: v.opis,
-        ikona: v.ikona,
-        kategorija: v.kategorija,
-        min_citanja: v.min_citanja,
-        brojKoraka: v.koraci?.length ?? 0,
-        imaTekst: !!v.tekst,
-      }));
-    }
-  } catch {
-    /* baza nedostupna — pada na rezervu ispod */
-  }
-
-  // Rezerva: ako baza prazna/pukne, koristi hard-kodirane vodiče (da lista ne bude prazna).
-  if (vodici.length === 0) {
-    vodici = getAllVodici().map((v) => ({
+  for (const v of getAllVodici()) {
+    mapa.set(v.slug, {
       slug: v.slug,
       naziv: v.naziv,
       opis: v.opis,
@@ -56,8 +37,27 @@ export default async function VodiciPage() {
       min_citanja: v.minCitanja,
       brojKoraka: v.koraci.length,
       imaTekst: false,
-    }));
+    });
   }
+
+  try {
+    for (const v of await getVodici()) {
+      mapa.set(v.slug, {
+        slug: v.slug,
+        naziv: v.naziv,
+        opis: v.opis,
+        ikona: v.ikona,
+        kategorija: v.kategorija,
+        min_citanja: v.min_citanja,
+        brojKoraka: v.koraci?.length ?? 0,
+        imaTekst: !!v.tekst,
+      });
+    }
+  } catch {
+    /* baza nedostupna — ostaju statični */
+  }
+
+  const vodici = Array.from(mapa.values());
 
   return (
     <>

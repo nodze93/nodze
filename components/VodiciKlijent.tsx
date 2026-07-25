@@ -1,7 +1,7 @@
 "use client";
 
 // ============================================================
-// VODIČI — app-stil lista s filter-čipovima (Ekran 1 + 2)
+// VODIČI — app-stil (Ekran 1 + 2): kategorije + kartice s ilustracijama
 // ============================================================
 
 import { useState } from "react";
@@ -19,6 +19,22 @@ export interface VodicKartica {
   imaTekst: boolean;
 }
 
+function Sat() {
+  return (
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function Bookmark() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#C4C9D0" strokeWidth="2">
+      <path d="M6 4h12v16l-6-4-6 4z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
   const [aktivna, setAktivna] = useState("sve");
 
@@ -28,111 +44,138 @@ export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
       ? vodici
       : vodici.filter((v) => grupa.cats!.includes(v.kategorija));
 
+  const naslovSekcije = aktivna === "sve" ? "Svi vodiči" : grupa?.label ?? "Vodiči";
+
   return (
-    <div className="vod-wrap">
+    <div className="vd-wrap">
       {/* Naslovni blok */}
-      <div className="vod-head">
-        <div className="vod-head-ico">📖</div>
+      <div className="vd-head">
+        <div className="vd-head-ico">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" strokeWidth="2">
+            <path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5z" strokeLinejoin="round" />
+            <path d="M4 20.5A2.5 2.5 0 016.5 18H20" />
+          </svg>
+        </div>
         <div>
-          <h1 className="vod-title">Vodiči za život u Njemačkoj</h1>
-          <p className="vod-sub">Praktični savjeti i uputstva za našu dijasporu.</p>
+          <h1 className="vd-title">Vodiči za život u Njemačkoj</h1>
+          <p className="vd-sub">Praktični savjeti i uputstva za našu dijasporu.</p>
         </div>
       </div>
 
-      {/* Filter-čipovi */}
-      <div className="vod-chips">
+      {/* Kategorije (tile-ovi, horizontalno) */}
+      <div className="vd-tiles">
         {VODIC_KATEGORIJE.map((k) => (
           <button
             key={k.key}
             onClick={() => setAktivna(k.key)}
-            className={`vod-chip${aktivna === k.key ? " active" : ""}`}
+            className={`vd-tile${aktivna === k.key ? " active" : ""}`}
           >
-            <span className="vod-chip-ico">{k.icon}</span>
-            {k.label}
+            <span className="vd-tile-ico">{k.icon}</span>
+            <span className="vd-tile-lbl">{k.label}</span>
           </button>
         ))}
       </div>
 
+      {/* Sekcija */}
+      <div className="vd-sec">
+        <span className="vd-sec-title">{naslovSekcije}</span>
+        <span className="vd-sec-count">{prikazani.length}</span>
+      </div>
+
       {/* Lista */}
-      <div className="vod-list">
-        {prikazani.length === 0 && (
-          <p className="vod-empty">Nema vodiča u ovoj kategoriji.</p>
-        )}
+      <div className="vd-list">
+        {prikazani.length === 0 && <p className="vd-empty">Nema vodiča u ovoj kategoriji.</p>}
         {prikazani.map((v) => {
           const dk = displejKategorija(v.kategorija);
           const boja = KAT_BOJA[dk.key] || KAT_BOJA.ostalo;
           return (
-            <Link key={v.slug} href={`/vodic/${v.slug}`} className="vod-card">
-              <span className="vod-card-thumb" style={{ background: boja.bg }}>
-                {v.ikona}
+            <Link key={v.slug} href={`/vodic/${v.slug}`} className="vd-card">
+              <span className="vd-card-thumb" style={{ background: boja.bg }}>
+                <img src={`/vodic-ilustracije/${dk.key}.svg`} alt="" loading="lazy" />
               </span>
-              <span className="vod-card-body">
-                <span className="vod-card-naslov">{v.naziv}</span>
-                <span className="vod-card-opis">{v.opis}</span>
-                <span className="vod-card-meta">
-                  <span className="vod-tag" style={{ background: boja.bg, color: boja.tekst }}>
+              <span className="vd-card-body">
+                <span className="vd-card-naslov">{v.naziv}</span>
+                <span className="vd-card-opis">{v.opis}</span>
+                <span className="vd-card-meta">
+                  <span className="vd-tag" style={{ background: boja.bg, color: boja.tekst }}>
                     {dk.label}
                   </span>
-                  <span className="vod-min">
-                    ⏱ {v.imaTekst ? `${v.min_citanja} min` : `${v.brojKoraka} koraka`}
+                  <span className="vd-min">
+                    <Sat /> {v.imaTekst ? `${v.min_citanja} min` : `${v.brojKoraka} koraka`}
                   </span>
                 </span>
               </span>
+              <span className="vd-card-bm"><Bookmark /></span>
             </Link>
           );
         })}
       </div>
 
       <style>{`
-        .vod-wrap { max-width: 760px; margin: 0 auto; padding: 18px 14px 24px; }
-        .vod-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-        .vod-head-ico {
-          width: 46px; height: 46px; border-radius: 12px; background: #EAF7EE;
-          display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;
+        .vd-wrap { max-width: 760px; margin: 0 auto; padding: 16px 14px 24px; }
+        .vd-head { display: flex; align-items: center; gap: 13px; margin-bottom: 18px; }
+        .vd-head-ico {
+          width: 48px; height: 48px; border-radius: 13px; background: #1a8a4a;
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+          box-shadow: 0 4px 10px rgba(26,138,74,.25);
         }
-        .vod-title { font-size: 21px; font-weight: 800; line-height: 1.2; color: #111827; letter-spacing: -0.3px; }
-        .vod-sub { font-size: 13px; color: #6B7280; margin-top: 3px; }
+        .vd-title { font-size: 21px; font-weight: 800; line-height: 1.2; color: #111827; letter-spacing: -0.3px; }
+        .vd-sub { font-size: 13px; color: #6B7280; margin-top: 3px; }
 
-        .vod-chips {
-          display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 12px;
+        .vd-tiles {
+          display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 14px;
           -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
-        .vod-chips::-webkit-scrollbar { display: none; }
-        .vod-chip {
-          display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
-          padding: 8px 14px; border-radius: 999px; border: 1px solid #E5E7EB;
-          background: #fff; color: #374151; font-size: 13px; font-weight: 600; cursor: pointer;
-          transition: all .15s;
+        .vd-tiles::-webkit-scrollbar { display: none; }
+        .vd-tile {
+          flex: 0 0 auto; width: 78px; display: flex; flex-direction: column; align-items: center; gap: 7px;
+          padding: 12px 6px; border-radius: 15px; border: 1.5px solid #EEF0F2; background: #fff;
+          cursor: pointer; transition: all .15s;
         }
-        .vod-chip .vod-chip-ico { font-size: 14px; }
-        .vod-chip.active { background: #1a8a4a; border-color: #1a8a4a; color: #fff; }
+        .vd-tile-ico {
+          width: 40px; height: 40px; border-radius: 11px; background: #F1F5F9;
+          display: flex; align-items: center; justify-content: center; font-size: 20px;
+        }
+        .vd-tile-lbl { font-size: 11px; font-weight: 600; color: #6B7280; text-align: center; line-height: 1.2; }
+        .vd-tile.active { border-color: #1a8a4a; background: #F0FBF4; }
+        .vd-tile.active .vd-tile-ico { background: #1a8a4a; }
+        .vd-tile.active .vd-tile-lbl { color: #1a8a4a; font-weight: 700; }
 
-        .vod-list { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
-        .vod-empty { color: #6B7280; font-size: 14px; padding: 20px 4px; }
-        .vod-card {
-          display: flex; gap: 12px; align-items: center; padding: 12px;
-          background: #fff; border: 1px solid #EEF0F2; border-radius: 14px;
+        .vd-sec { display: flex; align-items: center; gap: 8px; margin: 4px 2px 12px; }
+        .vd-sec-title { font-size: 16px; font-weight: 800; color: #111827; }
+        .vd-sec-count {
+          font-size: 12px; font-weight: 700; color: #1a8a4a; background: #E7F6EE;
+          padding: 2px 9px; border-radius: 999px;
+        }
+
+        .vd-list { display: flex; flex-direction: column; gap: 11px; }
+        .vd-empty { color: #6B7280; font-size: 14px; padding: 20px 4px; }
+        .vd-card {
+          display: flex; gap: 13px; align-items: center; padding: 12px;
+          background: #fff; border: 1px solid #EEF0F2; border-radius: 16px;
           text-decoration: none; color: inherit; box-shadow: 0 1px 3px rgba(0,0,0,.03);
           transition: border-color .15s, box-shadow .15s;
         }
-        .vod-card:active { background: #fafafa; }
-        @media (hover: hover) { .vod-card:hover { border-color: #1a8a4a; box-shadow: 0 2px 10px rgba(0,0,0,.06); } }
-        .vod-card-thumb {
-          width: 68px; height: 68px; border-radius: 12px; flex-shrink: 0;
-          display: flex; align-items: center; justify-content: center; font-size: 30px;
+        .vd-card:active { background: #fafafa; }
+        @media (hover: hover) { .vd-card:hover { border-color: #1a8a4a; box-shadow: 0 3px 12px rgba(0,0,0,.07); } }
+        .vd-card-thumb {
+          width: 76px; height: 76px; border-radius: 14px; flex-shrink: 0; overflow: hidden;
+          display: flex; align-items: center; justify-content: center;
         }
-        .vod-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-        .vod-card-naslov {
+        .vd-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .vd-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+        .vd-card-naslov {
           font-size: 15px; font-weight: 700; line-height: 1.3; color: #111827;
           display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
-        .vod-card-opis {
+        .vd-card-opis {
           font-size: 12.5px; color: #6B7280; line-height: 1.4;
           display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
         }
-        .vod-card-meta { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
-        .vod-tag { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
-        .vod-min { font-size: 11.5px; color: #9CA3AF; white-space: nowrap; }
+        .vd-card-meta { display: flex; align-items: center; gap: 10px; margin-top: 3px; }
+        .vd-tag { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
+        .vd-min { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: #9CA3AF; white-space: nowrap; }
+        .vd-card-bm { flex-shrink: 0; align-self: flex-start; padding-top: 2px; }
       `}</style>
     </div>
   );
