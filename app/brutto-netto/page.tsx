@@ -20,6 +20,7 @@ export default function BruttoNettoPage() {
       <iframe
         src="/kalkulator-app/index.html"
         title="Brutto-Netto Rechner"
+        allow="web-share; clipboard-write"
         className="bn-frame"
       />
       <style>{`
