@@ -21,6 +21,8 @@ const portal = [
   { label: "Kontakt", href: "/kontakt" },
   { label: "Sve vijesti", href: "/vijesti" },
   { label: "Vodiči", href: "/vodici" },
+  { label: "Impressum", href: "/impressum" },
+  { label: "Datenschutz", href: "/datenschutz" },
 ];
 
 export default function Footer() {
