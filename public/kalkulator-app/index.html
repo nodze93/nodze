@@ -1419,6 +1419,7 @@ function showPage(n) {
   document.getElementById('page1').style.display = n === 1 ? 'block' : 'none';
   document.getElementById('page2').style.display = n === 2 ? 'block' : 'none';
   if (n === 1 && typeof hideInstall === 'function') hideInstall();
+  if (n === 2) { try { if (window.parent && window.parent !== window) window.parent.postMessage({ type: 'kodnas-calc-result' }, '*'); } catch (e) {} }
   window.scrollTo(0, 0);
 }
 

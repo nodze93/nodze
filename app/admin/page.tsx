@@ -8,6 +8,7 @@ interface Stats {
   naČekanju: number;
   ukupnoVodica: number;
   ukupnoPregleda: number;
+  instalacije: number;
   pipelineLogs: Array<{
     datum: string;
     status: string;
@@ -131,7 +132,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Stat kartice */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginBottom: 32 }}>
         <StatCard
           label="Objavljeni članci"
           value={stats?.objavljeno ?? "—"}
@@ -160,6 +161,13 @@ export default function AdminDashboard() {
           value={stats?.ukupnoPregleda ?? "—"}
           icon="👁"
           color="#ec4899"
+        />
+        <StatCard
+          label="App instalacije"
+          value={stats?.instalacije ?? "—"}
+          icon="📲"
+          color="#1a8a4a"
+          sub="Koliko ljudi je dodalo app"
         />
       </div>
 

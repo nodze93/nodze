@@ -23,12 +23,20 @@ export async function GET() {
       (sum: number, c: { broj_pregleda: number }) => sum + (c.broj_pregleda || 0), 0
     );
 
+    // Broj instalacija PWA (otporno — ako tabela ne postoji, ostaje 0)
+    let instalacije = 0;
+    try {
+      const r = await db.from("app_instalacije").select("id", { count: "exact", head: true });
+      instalacije = r.count || 0;
+    } catch { /* tabela možda ne postoji */ }
+
     return NextResponse.json({
       ukupnoClanci: ukupno.count || 0,
       objavljeno: objavljeno.count || 0,
       naČekanju: naCekanju.count || 0,
       ukupnoVodica: vodici.count || 0,
       ukupnoPregleda,
+      instalacije,
       pipelineLogs: (logovi.data || []).map((l) => ({
         datum: l.datum,
         status: l.status,
@@ -39,7 +47,7 @@ export async function GET() {
     });
   } catch (err) {
     return NextResponse.json({
-      ukupnoClanci: 0, objavljeno: 0, naČekanju: 0, ukupnoVodica: 0, ukupnoPregleda: 0,
+      ukupnoClanci: 0, objavljeno: 0, naČekanju: 0, ukupnoVodica: 0, ukupnoPregleda: 0, instalacije: 0,
       pipelineLogs: [], sljedećiPipeline: "—",
       greska: (err as Error).message,
     });
