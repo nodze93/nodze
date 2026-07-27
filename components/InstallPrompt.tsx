@@ -1,9 +1,12 @@
 "use client";
 
 // ============================================================
-// INSTALL BANER (Android/Chrome) — pojavi se kad korisnik vidi
-// rezultat kalkulatora. Ne dira dizajn kalkulatora; sluša samo
-// poruku iz iframe-a ("rezultat spreman") + beforeinstallprompt.
+// INSTALL BANER — pojavi se kad korisnik vidi rezultat kalkulatora.
+//  • Android / desktop (Chrome, Edge, Brave): dugme "Instaliraj aplikaciju"
+//  • iPhone (Safari/Chrome): uputstvo (Apple ne dozvoljava dugme)
+//  • Već instalirano: ništa
+// Sluša poruku iz iframe-a ("kodnas-calc-result") + beforeinstallprompt.
+// Ne dira dizajn kalkulatora.
 // ============================================================
 
 import { useEffect, useRef, useState } from "react";
@@ -11,17 +14,17 @@ import { useEffect, useRef, useState } from "react";
 export default function InstallPrompt() {
   const deferredRef = useRef<any>(null);
   const dismissedRef = useRef(false);
-  const [show, setShow] = useState(false);
+  const [mode, setMode] = useState<null | "android" | "ios">(null);
 
   useEffect(() => {
     function onBIP(e: any) {
       e.preventDefault();
-      deferredRef.current = e; // spremi prompt za kasnije
+      deferredRef.current = e; // Android/desktop: spremi prompt
     }
     function onInstalled() {
       deferredRef.current = null;
-      setShow(false);
-      // javi backendu da je neko instalirao (za brojač u adminu)
+      setMode(null);
+      // javi backendu (brojač instalacija u adminu)
       try {
         fetch("/api/track-install", { method: "POST", keepalive: true }).catch(() => {});
       } catch {}
@@ -33,8 +36,14 @@ export default function InstallPrompt() {
       const standalone =
         window.matchMedia("(display-mode: standalone)").matches ||
         (navigator as any).standalone === true;
-      if (standalone) return; // već instalirano → ne prikazuj
-      if (deferredRef.current) setShow(true); // samo ako je instalacija moguća (Android/Chrome)
+      if (standalone) return; // već instalirano
+      if (deferredRef.current) {
+        setMode("android"); // instalacija moguća jednim klikom
+        return;
+      }
+      const ua = navigator.userAgent || "";
+      const isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+      if (isIOS) setMode("ios"); // iPhone → uputstvo
     }
     window.addEventListener("beforeinstallprompt", onBIP);
     window.addEventListener("appinstalled", onInstalled);
@@ -49,7 +58,7 @@ export default function InstallPrompt() {
   async function instaliraj() {
     const d = deferredRef.current;
     if (!d) {
-      setShow(false);
+      setMode(null);
       return;
     }
     d.prompt();
@@ -57,14 +66,14 @@ export default function InstallPrompt() {
       await d.userChoice;
     } catch {}
     deferredRef.current = null;
-    setShow(false);
+    setMode(null);
   }
   function kasnije() {
     dismissedRef.current = true;
-    setShow(false);
+    setMode(null);
   }
 
-  if (!show) return null;
+  if (!mode) return null;
 
   return (
     <div className="ipb" role="dialog" aria-label="Instaliraj aplikaciju">
@@ -76,10 +85,29 @@ export default function InstallPrompt() {
           <span>Kalkulator, vijesti i vodiči kao aplikacija — brzo, bez browsera.</span>
         </span>
       </div>
-      <div className="ipb-btns">
-        <button className="ipb-later" onClick={kasnije}>Kasnije</button>
-        <button className="ipb-go" onClick={instaliraj}>⤓ Instaliraj aplikaciju</button>
-      </div>
+
+      {mode === "android" ? (
+        <div className="ipb-btns">
+          <button className="ipb-later" onClick={kasnije}>Kasnije</button>
+          <button className="ipb-go" onClick={instaliraj}>⤓ Instaliraj aplikaciju</button>
+        </div>
+      ) : (
+        <div className="ipb-steps">
+          <div className="ipb-step">
+            <span className="ipb-n">1</span> Dodirni
+            <span className="ipb-share">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#0A84FF" strokeWidth="2">
+                <path d="M12 16V4M8 8l4-4 4 4" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M6 12v7a1 1 0 001 1h10a1 1 0 001-1v-7" strokeLinecap="round" />
+              </svg>
+            </span>
+            <b>Podijeli</b>
+          </div>
+          <div className="ipb-step">
+            <span className="ipb-n">2</span> Izaberi <b>„Dodaj na početni ekran"</b>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .ipb {
@@ -100,9 +128,17 @@ export default function InstallPrompt() {
         .ipb-ico i:nth-child(4) { background: #22C55E; }
         .ipb-tx b { font-size: 14.5px; font-weight: 800; color: #111; display: block; }
         .ipb-tx span { font-size: 12px; color: #6B7280; line-height: 1.35; display: block; margin-top: 1px; }
+
         .ipb-btns { display: flex; gap: 9px; }
         .ipb-later { flex: 0 0 auto; padding: 11px 14px; border-radius: 11px; background: #F3F4F6; color: #6B7280; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
         .ipb-go { flex: 1; padding: 11px; border-radius: 11px; background: #1a8a4a; color: #fff; font-size: 14px; font-weight: 800; border: none; cursor: pointer; }
+
+        .ipb-steps { display: flex; flex-direction: column; gap: 4px; }
+        .ipb-step { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #374151; }
+        .ipb-step b { color: #111; }
+        .ipb-n { width: 20px; height: 20px; border-radius: 50%; background: #EAF7EE; color: #1a8a4a; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .ipb-share { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; }
+        .ipb-share svg { width: 20px; height: 20px; }
       `}</style>
     </div>
   );
