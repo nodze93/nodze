@@ -28,6 +28,8 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
   a JA ga ručno kopiram u folder.
 - Claude NE MOŽE sam push (cloud 403) i NE MOŽE lokalno build/test
   (nema npm registry) — zato izmjene testiram na Vercel PREVIEW-u.
+- Claude sada VIZUELNO provjerava (renderuje screenshotove kroz Playwright/Chromium)
+  prije isporuke, i normalizuje kraj-linija (CRLF) da diff bude čist na Windowsu.
 
 ## ⚠️ PRAVILA
 1. Radi na PREVIEW branchu, pa merge u main tek kad potvrdim
@@ -40,6 +42,10 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 - Ključevi (novi format): sb_publishable_ (anon) / sb_secret_ (service role)
 - SQL šeme: supabase/schema.sql (osnovni — VEĆ pokrenut, ne dirati)
              supabase/moderacija.sql (redoslijed, je_naslovna, zakazano_za)
+
+## DOMENA / DNS / EMAIL
+- Domena kodnas.de je na **Namecheapu** (nameserveri dns1/dns2.registrar-servers.com), A zapis → Vercel.
+- Email **info@kodnas.de** još NE radi (nema MX). Postavlja se preko Namecheap "Redirect Email" (forwarding na gmail).
 
 ## ENV VARIJABLE
 ### Vercel (Production + Preview):
@@ -69,6 +75,13 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 - components/admin/AdminModeracija.tsx — admin traka + Article Manager
 - app/api/admin/* — admin API (auth, clanci, pipeline, me, redoslijed, naslovna...)
 - .github/workflows/bot-cron.yml — raspored bota (ZAŠTIĆEN, ručno kopirati)
+- components/BottomNav.tsx — donja app-traka (mobilni)
+- components/InstallPrompt.tsx — install baner (Android dugme / iOS uputstvo) + brojač
+- app/brutto-netto/page.tsx + public/kalkulator-app/* — kalkulator (iframe)
+- components/VodiciKlijent.tsx, VodicShare.tsx, lib/data/vodic-kategorije.ts, public/vodic-ilustracije/* — vodiči app-dizajn
+- app/impressum/page.tsx, app/datenschutz/page.tsx — pravne stranice
+- app/api/track-install/route.ts — brojač PWA instalacija
+- lib/revalidate.ts (osvjeziSajt) — poništavanje keša na objavu
 
 ## MODERACIJA (kako radim)
 - Uloguj se na /admin/login → na dnu svake stranice crna admin traka
@@ -76,21 +89,61 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 - Filter po kategoriji automatski (gdje si, to uređuješ)
 - Mockup primjeri (u kodu) se NE mogu moderirati; samo pravi članci (bot/ručno)
 
-## AKTUELNO (2026-07-17, druga sesija) — ⚠️ 6 fajlova ČEKA COMMIT + PUSH
-- Bot 2.0 "lijevak" (pipeline2) aktivan; lektor na Sonnet — gramatika čista.
-- Triaža popravljena: temperature 0 (dosljedno, nema više "lutrije") + blago olakšani
-  pragovi (68→61, sport/svijet 56→50, "već poznato" 0.3→0.35). Zaštita od duplikata ostaje.
-- Mobilna naslovna: Svijet/Sport sad čitaju direktno po kategoriji (prije pokazivali 1).
-- Vercel Analytics: komponente dodane u layout (ručno: Enable u Vercel dashboardu).
-- Brend ime svuda "kodnas.de" (bio "Dijaspora.ba" u tab/OG).
-- Facebook: NOVI TRAJNI token u Vercelu (FB_PAGE_TOKEN), FB_PAGE_ID=1270099672843899;
-  objava = slika+naslov + link u PRVOM KOMENTARU; admin javlja je li komentar prošao.
-- ⚠️ Ako FB token ikad opet istekne: Graph API Explorer → produži token → me/accounts →
-  kopiraj page access_token → Vercel FB_PAGE_TOKEN → Redeploy.
-- Kvote bota se postavljaju u ADMINU (Pipeline). Dijeljenje članaka (📤) ČEKA supabase/dijeljenja.sql.
-- Google Analytics (odvojeno od Vercel): treba NEXT_PUBLIC_GA_ID u Vercelu.
-- SLJEDEĆI KORACI (redom): 1) Promocija + Facebook setup  2) Google (Analytics + Search Console)
-  3) Impresum i Datenschutz — OBAVEZNO prava podaci, NIKAD placeholderi.
+## AKTUELNO (2026-07-27, treća sesija) — sve URAĐENO i push-ovano na main
+Commitovi ove sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstall
+
+### Google
+- Google Analytics: NEXT_PUBLIC_GA_ID postavljen u Vercelu (radi).
+- Search Console: verifikovan preko fajla `public/google4c6a50a83f529ec1.html` (NE BRISATI!).
+  Sitemap poslat (sitemap.xml). "Couldn't fetch" na početku je normalno.
+
+### PWA (aplikacija)
+- `public/manifest.json`, `public/sw.js` (bez keširanja), ikonice `public/icon-192.png`, `icon-512.png`, `apple-touch-icon.png`
+- `components/BottomNav.tsx` = donja traka (mobilni): Vijesti (/) · Vodiči (/vodici) · Brutto-Netto (/brutto-netto)
+- `layout.tsx`: manifest + theme-color #1a8a4a + appleWebApp + <BottomNav/> + registracija SW
+- Instalacija: Android/desktop Chrome/Edge = 1 klik; iPhone = ručno (Safari: Podijeli → Dodaj na početni ekran)
+
+### Brutto-Netto kalkulator
+- Korisnikovi statični fajlovi: `public/kalkulator-app/{index.html, admin.html, params.json, favicon.svg}`
+- Ruta `app/brutto-netto/page.tsx` = iframe (allow="web-share") + <InstallPrompt/>
+- Admin kalkulatora: link u admin meniju ISPOD "Facebook" (`app/admin/layout.tsx`) → /kalkulator-app/admin.html (lozinka netto2026)
+- Izmjene u index.html: boja PLAVA→ZELENA (#1a8a4a), bosanski default (setLanguage("bs")),
+  PDF dugme → "Podijeli" (navigator.share, link /brutto-netto), stepper "Podaci/Rezultat" + "Unesite podatke"
+- `vercel.json`: X-Frame-Options DENY → **SAMEORIGIN** (bez toga iframe kalkulatora je prazan!)
+- ⚠️ Dizajn kalkulatora NE dirati bez izričite potrebe (korisnikov je).
+
+### Vodiči — app dizajn
+- `lib/data/vodic-kategorije.ts` (prikazne kategorije + boje), `components/VodiciKlijent.tsx` (lista+čipovi),
+  `components/VodicShare.tsx`, `public/vodic-ilustracije/*.svg` (6 flat ilustracija po kategoriji)
+- `/vodici` i `/vodic/[slug]` presloženi u app-stil (hero, poglavlja iz koraka, share)
+- Lista SPAJA bazu + hard-kodirane (svih 38); detalj ima fallback na kod → svaki vodič se otvara
+
+### Impressum + Datenschutz (obavezno u Njemačkoj)
+- `app/impressum/page.tsx`, `app/datenschutz/page.tsx` (njemački, DSGVO), linkovi u Footer
+- Podaci: **Dzena Karg, Korbinianstraße 1, 80807 München, info@kodnas.de**
+- ⚠️ Cookie-baner prije GA (pristanak) — NIJE još urađeno (preporučeno).
+
+### Install baner + brojač (`components/InstallPrompt.tsx`)
+- Pojavi se kad korisnik vidi REZULTAT kalkulatora (iframe šalje postMessage "kodnas-calc-result" u showPage(2))
+- Android/desktop: dugme "Instaliraj aplikaciju"; iPhone: uputstvo (Podijeli → Dodaj na ekran); već instalirano: ništa
+- Brojač u adminu: `/api/track-install` (POST na `appinstalled`) + kartica "📲 App instalacije" u dashboardu
+- ⚠️ TREBA Supabase tabela (pokrenuti SQL):
+  `create table if not exists app_instalacije (id uuid primary key default gen_random_uuid(), created_at timestamptz not null default now(), platforma text);`
+
+### Vercel CPU (Hobby: Fluid Active CPU 4h/mj = JEDINI limit koji PAUZIRA sajt na 100%)
+- Bot piše članke na **GitHub Actions** → NE troši Vercel CPU. Vercel CPU troši POSLUŽIVANJE stranica.
+- `app/clanak/[slug]` je imao zaostali `force-dynamic` koji je poništavao `revalidate=300` → UKLONJEN → ISR (keš). Najveća ušteda.
+- `app/vodic/[slug]` i `app/vodici` → `revalidate=600`; + `osvjeziSajt()` dodan u vodici admin rute (instant na izmjenu).
+- `broj_pregleda` se NIGDJE ne uvećava u kodu (vidi ga samo admin) → keširanje ga ne kvari.
+- `osvjeziSajt()` (lib/revalidate.ts) se zove na svaku objavu članka → svježina očuvana.
+- Ostali limiti (Speed Insights, Web Analytics, ISR, transfer): kad se napune samo STANU da broje, NE ruše sajt.
+
+### ⏳ ČEKA KORISNIKA (ručno)
+1. **info@kodnas.de NE RADI još** → Namecheap → Manage kodnas.de → REDIRECT EMAIL → alias `info` → nodze93@gmail.com
+   (DNS je na **Namecheapu**: nameserveri registrar-servers.com, nema MX zapisa)
+2. Pokrenuti **SQL za app_instalacije** tabelu (gore) → da brojač instalacija radi
+3. Provjeriti **Vercel → Usage** datum reseta ciklusa (CPU je bio ~81%)
+4. (opciono) cookie-baner za GA pristanak
 
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.

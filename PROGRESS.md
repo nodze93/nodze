@@ -163,3 +163,39 @@ Zadnji update: 2026-07-17 (druga sesija)
 
 ## 💡 ZA POSLIJE
 - Ispovijesti sekcija, Telegram kanal, TikTok video
+
+---
+
+## 📅 SESIJA 2026-07-27 (PWA + kalkulator + vodiči + legal + CPU)
+
+### Google
+- [x] Google Analytics (NEXT_PUBLIC_GA_ID) — radi
+- [x] Search Console verifikovan (public/google4c6a50a83f529ec1.html — NE brisati), sitemap poslat
+
+### PWA aplikacija
+- [x] manifest.json, sw.js (bez keša), KN ikonice (192/512 + apple-touch)
+- [x] components/BottomNav.tsx — donja traka (Vijesti/Vodiči/Brutto-Netto)
+- [x] layout.tsx — manifest + theme-color + appleWebApp + SW registracija
+- [x] Install baner (InstallPrompt.tsx): Android/desktop dugme, iPhone uputstvo; brojač u adminu (/api/track-install)
+- [ ] Supabase tabela app_instalacije (SQL) — ČEKA korisnika
+
+### Brutto-Netto kalkulator (public/kalkulator-app/ u iframe-u na /brutto-netto)
+- [x] Ubačen + admin link ispod "Facebook"
+- [x] Boja plava→zelena, bosanski default, PDF→"Podijeli" (native share), stepper + "Unesite podatke"
+- [x] vercel.json: X-Frame-Options DENY→SAMEORIGIN (da iframe radi)
+- [x] iframe allow="web-share"
+
+### Vodiči app-dizajn
+- [x] Kategorije + čipovi + kartice s ilustracijama (6 SVG u public/vodic-ilustracije/)
+- [x] Detalj: hero + poglavlja + share; lista spaja bazu + kod (svih 38); detalj fallback na kod
+
+### Impressum + Datenschutz
+- [x] /impressum + /datenschutz (njemački, DSGVO) + linkovi u Footer
+- [x] Podaci: Dzena Karg, Korbinianstraße 1, 80807 München, info@kodnas.de
+- [ ] info@kodnas.de forwarding (Namecheap Redirect Email) — ČEKA korisnika
+- [ ] cookie-baner za GA pristanak (opciono)
+
+### Vercel CPU optimizacija (Hobby, Active CPU ~81%)
+- [x] app/clanak/[slug]: uklonjen zaostali force-dynamic (poništavao revalidate=300) → ISR
+- [x] app/vodic/[slug] + app/vodici → revalidate=600 + osvjeziSajt() u vodici admin
+- [x] Potvrđeno: bot piše na GitHub Actions (ne troši Vercel CPU); broj_pregleda se ne kvari keširanjem
