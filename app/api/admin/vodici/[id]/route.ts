@@ -3,6 +3,7 @@
 // DELETE /api/admin/vodici/[id]  — soft-delete (aktivan=false)
 import { NextResponse } from "next/server";
 import { getVodicByIdAdmin, updateVodic, deleteVodic } from "@/lib/vodici-db";
+import { osvjeziSajt } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export async function PUT(req: Request, { params }: Params) {
     const { id } = await params;
     const body = await req.json();
     const vodic = await updateVodic(id, body);
+    osvjeziSajt();
     return NextResponse.json({ vodic });
   } catch (err) {
     console.error("PUT /api/admin/vodici/[id]:", err);
@@ -31,6 +33,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   try {
     const { id } = await params;
     await deleteVodic(id);
+    osvjeziSajt();
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("DELETE /api/admin/vodici/[id]:", err);

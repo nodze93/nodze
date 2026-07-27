@@ -110,7 +110,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export const dynamic = 'force-dynamic';
+// 'force-dynamic' uklonjen → stranica je ISR (revalidate=300 + osvjeziSajt na objavu). Manje Vercel CPU-a.
 
 export async function generateStaticParams() {
   return [];

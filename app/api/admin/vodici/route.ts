@@ -2,6 +2,7 @@
 // POST /api/admin/vodici  — kreiraj novi vodič
 import { NextResponse } from "next/server";
 import { getAllVodiciAdmin, createVodic } from "@/lib/vodici-db";
+import { osvjeziSajt } from "@/lib/revalidate";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export async function POST(req: Request) {
       tekst: tekst ?? null,
       koraci: koraci ?? null,
     });
+    osvjeziSajt();
     return NextResponse.json({ vodic }, { status: 201 });
   } catch (err) {
     console.error("POST /api/admin/vodici:", err);

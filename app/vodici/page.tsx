@@ -5,7 +5,7 @@ import { getVodici } from "@/lib/vodici-db";
 import { getAllVodici } from "@/lib/data/vodici";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // ISR: keširano 10 min (+ instant osvježavanje na izmjenu u adminu)
 
 export const metadata: Metadata = {
   title: "Vodiči za život u Njemačkoj — kodnas.de",

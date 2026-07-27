@@ -87,7 +87,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // ISR: keširano 10 min (+ instant osvježavanje na izmjenu u adminu)
 
 export default async function VodicPage({ params }: Props) {
   const { slug } = await params;
