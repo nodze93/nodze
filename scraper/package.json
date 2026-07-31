@@ -11,6 +11,7 @@
     "test": "tsx --test src/**/*.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "postinstall": "playwright install chromium || true",
+    "layer:apply": "tsx src/applyLayer.ts",
     "images:enrich": "tsx src/images.ts",
     "images:icecat": "tsx src/icecat.ts",
     "images:download": "tsx src/downloadImages.ts",

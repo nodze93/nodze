@@ -7,6 +7,7 @@ import {
   ensureStore,
   linkStoreToPlz,
   pruneOldSnapshots,
+  recordScrapeRun,
   replaceSnapshot,
   type SnapshotRow,
 } from './db.js';
@@ -123,18 +124,35 @@ async function processPlz(
 
   for (const store of stores as ScrapedStore[]) {
     await sleep(config.delayMs);
+    const storeStarted = Date.now();
 
     const offers = await withRetry(`ponude ${store.slug}@${plz}`, () =>
       source.listOffers(store, plz),
     );
-    if (!offers) continue;
 
     // Prodavnica ide u bazu i kad danas nema ponuda - lista prodavnica
-    // po PLZ-u treba biti kompletna za dropdown na frontendu.
+    // po PLZ-u treba biti kompletna za dropdown na frontendu. Zato je
+    // upisemo prije nego pogledamo ponude (treba nam i za zapis prolaza).
     const storeId = dryRun ? 0 : await ensureStore(store);
     if (!dryRun) await linkStoreToPlz(storeId, plz);
+
+    if (!offers) {
+      // Prolaz je pao (izvor promijenio stranicu / mreza) - zabiljezi kao
+      // gresku da ga "Zdravlje scrapera" i alarm vide.
+      if (!dryRun)
+        await recordScrapeRun({
+          plz,
+          storeId,
+          items: 0,
+          durationMs: Date.now() - storeStarted,
+          status: 'error',
+          error: `listOffers nije uspio za ${store.slug}`,
+        });
+      continue;
+    }
     result.stores += 1;
 
+    let storeRows = 0;
     for (const offer of offers) {
       const clean = sanitizeOffer({
         ...offer,
@@ -163,8 +181,20 @@ async function processPlz(
       if (dryRun)
         dryRows.push({ ...clean, imageUrl, imageExact, imageSource, store: store.name, plz, date });
       else rows.push({ ...clean, imageUrl, imageExact, imageSource, storeId });
+      storeRows += 1;
     }
     log(`  ${store.name}: ${offers.length} ponuda`);
+
+    // Zapis o prolazu: koliko je artikala uslo za ovu prodavnicu danas.
+    // Ovo puni ak_scrape_runs, iz cega applyLayer racuna "juce vs danas".
+    if (!dryRun)
+      await recordScrapeRun({
+        plz,
+        storeId,
+        items: storeRows,
+        durationMs: Date.now() - storeStarted,
+        status: storeRows === 0 ? 'empty' : 'ok',
+      });
   }
 
   result.offers = dryRun ? dryRows.length : rows.length;

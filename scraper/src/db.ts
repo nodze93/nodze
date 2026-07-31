@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { config } from './config.js';
+import { productKeyOf } from './imageDecision.js';
 import { slugify } from './normalize.js';
 import type { ScrapedOffer, ScrapedStore } from './types.js';
 
@@ -62,8 +63,82 @@ export interface SnapshotRow extends ScrapedOffer {
   storeId: number;
   /** false kad je slika od drugog pakovanja istog artikla */
   imageExact?: boolean;
-  /** 'source' = iz letka, 'off' = Open Food Facts, 'manual' = svoja */
-  imageSource?: 'source' | 'off' | 'manual' | null;
+  /** odakle je slika; trajni sloj kasnije moze ovo dopuniti */
+  imageSource?: 'source' | 'off' | 'obf' | 'icecat' | 'stock' | 'manual' | 'manufacturer' | null;
+  /** barkod kad ga izvor da - najpouzdaniji nacin da se nadje slika */
+  ean?: string | null;
+}
+
+/** Zapis o jednom prolazu scrapera - bez ovoga admin/alarm nemaju odakle "juce". */
+export async function recordScrapeRun(run: {
+  plz: string;
+  storeId: number | null;
+  items: number;
+  durationMs: number;
+  status: 'ok' | 'empty' | 'error';
+  error?: string | null;
+}): Promise<void> {
+  await pool.query(
+    `insert into ak_scrape_runs (plz, store_id, items, duration_ms, status, error)
+     values ($1, $2, $3, $4, $5, $6)
+     on conflict (plz, store_id, date) do update
+        set items = excluded.items,
+            duration_ms = excluded.duration_ms,
+            status = excluded.status,
+            error = excluded.error,
+            started_at = now()`,
+    [run.plz, run.storeId, run.items, run.durationMs, run.status, run.error ?? null],
+  );
+}
+
+/**
+ * Poredjenje sa jucerasnjim danom - ovo puni "Zdravlje scrapera" i okida
+ * alarm. Pad preko `dropPct` posto se smatra kvarom (najcesce znaci da je
+ * izvor promijenio izgled stranice).
+ */
+export interface HealthRow {
+  plz: string;
+  store: string | null;
+  today: number;
+  yesterday: number;
+  changePct: number | null;
+  status: 'ok' | 'empty' | 'error';
+  broken: boolean;
+}
+
+export async function scrapeHealth(dropPct = 40): Promise<HealthRow[]> {
+  const { rows } = await pool.query<{
+    plz: string;
+    store: string | null;
+    today: string;
+    yesterday: string;
+    status: HealthRow['status'];
+  }>(
+    `select r.plz,
+            s.name as store,
+            r.items::text  as today,
+            coalesce(y.items, 0)::text as yesterday,
+            r.status
+       from ak_scrape_runs r
+       left join ak_stores s on s.id = r.store_id
+       left join ak_scrape_runs y
+              on y.plz = r.plz
+             and y.store_id is not distinct from r.store_id
+             and y.date = r.date - 1
+      where r.date = (select max(date) from ak_scrape_runs)
+      order by s.name nulls first`,
+  );
+
+  return rows.map((r) => {
+    const today = Number(r.today);
+    const yesterday = Number(r.yesterday);
+    const changePct = yesterday > 0 ? Number((((today - yesterday) / yesterday) * 100).toFixed(1)) : null;
+    const broken =
+      r.status === 'error' ||
+      today === 0 ||
+      (changePct !== null && changePct <= -dropPct);
+    return { plz: r.plz, store: r.store, today, yesterday, changePct, status: r.status, broken };
+  });
 }
 
 /**
@@ -87,7 +162,7 @@ export async function replaceSnapshot(
       const chunk = rows.slice(i, i + CHUNK);
       const values: unknown[] = [];
       const placeholders = chunk.map((row, idx) => {
-        const b = idx * 14;
+        const b = idx * 16;
         values.push(
           row.productName,
           row.oldPrice,
@@ -103,8 +178,13 @@ export async function replaceSnapshot(
           row.externalId ?? null,
           row.imageExact ?? true,
           row.imageSource ?? null,
+          // product_key racuna TypeScript i UPISUJE ga - SQL ga nikad ne
+          // racuna sam, inace bi se dvije implementacije razisle i trajni
+          // sloj bi tiho prestao da se spaja.
+          productKeyOf(row.productName),
+          row.ean ?? null,
         );
-        return `($${b + 1}, $${b + 2}, $${b + 3}, $${b + 4}, $${b + 5}, $${b + 6}, $${b + 7}, $${b + 8}, $${b + 9}, $${b + 10}, $${b + 11}, $${b + 12}, $${b + 13}, $${b + 14})`;
+        return `(${Array.from({ length: 16 }, (_, k) => `$${b + k + 1}`).join(', ')})`;
       });
 
       // discount_percent i savings NE upisujemo - baza ih racuna sama
@@ -112,7 +192,7 @@ export async function replaceSnapshot(
         `insert into ak_discounts
            (product_name, old_price, new_price, store_id, category, plz, date,
             image_url, valid_from, valid_to, source_url, external_id, image_exact,
-            image_source)
+            image_source, product_key, ean)
          values ${placeholders.join(', ')}`,
         values,
       );

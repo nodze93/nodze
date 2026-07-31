@@ -16,6 +16,8 @@ export interface ScrapedOffer {
   validTo?: string | null;
   sourceUrl?: string | null;
   externalId?: string | null;
+  /** barkod kad ga izvor da (danas: nijedan; ostavljeno za buduce izvore) */
+  ean?: string | null;
 }
 
 /**

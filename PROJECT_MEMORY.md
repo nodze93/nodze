@@ -149,6 +149,12 @@ Commitovi ove sesije: pwa · vodici · calc · datenshutzetc · appinstall · is
 - Snapshot po (PLZ, datum): obriši pa upiši, u transakciji → ponovno pokretanje ne pravi duplikate; sajt čita najnoviji datum, pa ako scraper padne vide se jučerašnje akcije
 - Gradovi: `scraper/data/plz.txt` (85737 mora ostati — podrazumijevani PLZ na sajtu)
 - Detalji i šta NAMJERNO ne radi (`prices:apply`, `images:download`): `scraper/README.md`
+- **TRAJNI SLOJ** (`supabase/akcije-trajni-sloj.sql`): odluke se vežu za `product_key` (računa ga scraper u TS-u i UPISUJE), ne za dnevnu ponudu, pa ne nestaju sutradan
+  - `ak_product_images` (potvrđene/ručne slike) + `ak_moderation` (skriveni artikli; `hidden` je povratan) → puni ih ADMIN (još NIJE napravljen)
+  - `ak_apply_product_layer()` prelije te odluke na najnoviji snapshot; RPC-i osvježeni sa `and not d.hidden` da skriveni ne izlaze javno
+  - `ak_scrape_runs` (jedan red po PLZ+prodavnica+dan) → `scraper/src/applyLayer.ts` (`npm run layer:apply`) računa „danas vs juče" i na pad/prazno ISPIŠE alarm + izlazni kod 3 → GitHub Actions korak pukne → mejl vlasniku
+  - Cron redoslijed: scrape → **layer:apply** (alarm) → images. Korak „Trajni sloj + alarm" dodan u `akcije-scraper.yml`
+  - Provjereno na pravoj Postgres 16 bazi: 43/43 testa, product_key 475/475, prelijevanje po EAN/ključu radi, skrivanje se poštuje u RPC-ima, alarm okida kod 3
 
 ### ⏳ ČEKA KORISNIKA (ručno)
 1. **info@kodnas.de NE RADI još** → Namecheap → Manage kodnas.de → REDIRECT EMAIL → alias `info` → nodze93@gmail.com
@@ -157,10 +163,12 @@ Commitovi ove sesije: pwa · vodici · calc · datenshutzetc · appinstall · is
 3. Provjeriti **Vercel → Usage** datum reseta ciklusa (CPU je bio ~81%)
 4. (opciono) cookie-baner za GA pristanak
 5. **AKCIJE — pokrenuti `supabase/akcije.sql`** u Supabase SQL Editoru (pravi `ak_` tabele i funkcije)
+5b. **AKCIJE — pokrenuti `supabase/akcije-trajni-sloj.sql`** ODMAH POSLIJE `akcije.sql` (trajni sloj + tabela zdravlja + alarm)
 6. **AKCIJE — GitHub secret `DATABASE_URL`**: Supabase → Settings → Database → Connection string → *Session pooler*
    → GitHub → Settings → Secrets and variables → Actions → New repository secret
 7. **AKCIJE — prvo pokretanje**: Actions → "Akcije — dnevni scraper" → Run workflow → `dry_run = true`
    (baza se ne dira; u artifactu `akcije-dry-run` se vidi je li KaufDA promijenio stranicu). Ako je uredu — pusti isto bez `dry_run`.
+8. **AKCIJE — admin panel još NIJE napravljen** (prijava, „potvrdi sliku"/„sakrij", pregled zdravlja). Temelj (tabele + funkcije) je spreman; sam admin je zaseban posao kad se odluči.
 
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.

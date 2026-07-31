@@ -95,6 +95,28 @@ jobs:
           echo "Pokrećem: npx tsx src/index.ts $ARGS"
           npx tsx src/index.ts $ARGS
 
+      # TRAJNI SLOJ + ALARM. Radi dvije stvari:
+      #   1. prelije trajne odluke (potvrđene/ručne slike iz ak_product_images,
+      #      skrivanja iz ak_moderation) na današnji snapshot — zato ručne
+      #      odluke ne nestaju kad scraper upiše nove redove;
+      #   2. uporedi "danas vs juče" po prodavnici i, ako je neka osvanula
+      #      prazna ili joj je broj artikala naglo pao, ISPIŠE alarm i vrati
+      #      izlazni kod 3 → korak pukne, a GitHub pošalje mejl vlasniku repa.
+      #
+      # Namjerno ide PRIJE slika: potvrđene/ručne slike imaju prednost nad
+      # automatskim Open Food Facts slikama. Na zdrav dan prođe (kod 0) i
+      # nastavlja se dalje; na pokvaren dan pukne — a tada nam OFF slike i
+      # nisu bitne, nego glasan alarm.
+      #
+      # (Dok se ne sagradi admin, ak_product_images i ak_moderation su prazne,
+      #  pa prelijevanje ne radi ništa — ali alarm radi od prvog dana.)
+      - name: Trajni sloj + alarm
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        working-directory: scraper
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx tsx src/applyLayer.ts
+
       # Slike: artikli kojima letak nije dao fotografiju traže se na
       # Open Food Facts. Ako ovo padne, akcije su i dalje ispravne — samo
       # dio artikala ostane sa crtanom ilustracijom umjesto fotografije,
