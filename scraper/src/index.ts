@@ -15,6 +15,7 @@ import { imageKey, loadImageCache, type CachedImage } from './imageCache.js';
 import { sanitizeOffer } from './normalize.js';
 import { KaufdaSource } from './sources/kaufda.js';
 import { MockSource } from './sources/mock.js';
+import { RetailersSource } from './sources/retailers.js';
 import type { ScrapedStore, Source } from './types.js';
 
 // ---------------------------------------------------------------------
@@ -229,7 +230,12 @@ async function main(): Promise<void> {
     delayMs: config.delayMs,
   });
 
-  const source: Source = args.source === 'kaufda' ? new KaufdaSource() : new MockSource();
+  const source: Source =
+    args.source === 'retailers'
+      ? new RetailersSource({ dryRun: args.dryRun })
+      : args.source === 'kaufda'
+        ? new KaufdaSource()
+        : new MockSource();
   const images = await loadImageCache();
   if (images.size > 0) log(`Cache slika: ${images.size} artikala`);
   const started = Date.now();

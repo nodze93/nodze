@@ -5,9 +5,10 @@
   "type": "module",
   "description": "Dnevno skuplja akcije iz njemackih letaka (KaufDA) i upisuje ih u ak_ tabele u Supabase.",
   "scripts": {
-    "scrape": "tsx src/index.ts --source=kaufda",
+    "scrape": "tsx src/index.ts --source=retailers",
     "scrape:mock": "tsx src/index.ts --source=mock",
-    "dry-run": "tsx src/index.ts --source=kaufda --dry-run",
+    "scrape:kaufda": "tsx src/index.ts --source=kaufda",
+    "dry-run": "tsx src/index.ts --source=retailers --dry-run",
     "test": "tsx --test src/**/*.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "postinstall": "playwright install chromium || true",

@@ -10,7 +10,7 @@ for (const candidate of ['.env', '../.env', '../.env.local']) {
 }
 
 export interface Args {
-  source: 'kaufda' | 'mock';
+  source: 'retailers' | 'kaufda' | 'mock';
   plz: string[] | null;
   dryRun: boolean;
   keepDays: number;
@@ -24,8 +24,8 @@ export function parseArgs(argv: string[]): Args {
   const has = (name: string) => argv.includes(`--${name}`);
 
   const source = (get('source') ?? process.env.SCRAPER_SOURCE ?? 'mock') as Args['source'];
-  if (source !== 'kaufda' && source !== 'mock') {
-    throw new Error(`Nepoznat --source=${source} (dozvoljeno: kaufda, mock)`);
+  if (source !== 'retailers' && source !== 'kaufda' && source !== 'mock') {
+    throw new Error(`Nepoznat --source=${source} (dozvoljeno: retailers, kaufda, mock)`);
   }
 
   const plzArg = get('plz');

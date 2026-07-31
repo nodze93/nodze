@@ -73,19 +73,21 @@ jobs:
           key: akcije-slike-${{ github.run_id }}
           restore-keys: akcije-slike-
 
-      - name: Skupi ponude sa KaufDA
+      - name: Skupi ponude (Aldi Süd + Kaufland)
         working-directory: scraper
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          SCRAPER_SOURCE: kaufda
-          # Jedan PLZ u jednom trenutku + 2,5 s pauze između prodavnica —
-          # namjerno sporo i pristojno prema tuđem serveru.
+          # "retailers" = čita akcije sa VLASTITIH stranica lanaca
+          # (aldi-sued.de, filiale.kaufland.de) koje su kao tekst i koje
+          # njihov robots.txt dozvoljava. KaufDA je napušten (blokirali /shelf).
+          SCRAPER_SOURCE: retailers
+          # Jedan po jedan + 2,5 s pauze — namjerno sporo i pristojno.
           SCRAPER_CONCURRENCY: "1"
           SCRAPER_DELAY_MS: "2500"
           SCRAPER_RESPECT_ROBOTS: "true"
           SCRAPER_KEEP_DAYS: "14"
         run: |
-          ARGS="--source=kaufda"
+          ARGS="--source=retailers"
           if [ -n "${{ github.event.inputs.plz }}" ]; then
             ARGS="$ARGS --plz=${{ github.event.inputs.plz }}"
           fi
