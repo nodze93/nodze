@@ -21,11 +21,20 @@ interface Props {
  *    se prikazuje ilustracija. Korisnik nikad ne vidi praznu ili polomljenu
  *    sliku, sto je vazno jer URL-ovi izvora zive samo dok traje letak.
  */
+/**
+ * Neki izvori (npr. Kaufland) umjesto prave slike znaju vratiti "fallback"
+ * placeholder — njihov sivi logo. Takav URL tretiramo kao da slike nema, pa
+ * se prikaže naša ilustracija umjesto tuđeg sivog placeholdera.
+ */
+function isPlaceholder(url: string): boolean {
+  return /fallback|placeholder|\/etc\.clientlibs\/|blank\.|spacer|1x1|transparent\./i.test(url);
+}
+
 export default function ProductImage({ imageUrl, category, productName, artSize }: Props) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  if (!imageUrl || failed) {
+  if (!imageUrl || failed || isPlaceholder(imageUrl)) {
     return <ProductArt category={category} productName={productName} size={artSize} />;
   }
 
