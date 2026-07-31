@@ -62,15 +62,40 @@ export function parseRobots(text: string, userAgent: string): RobotsRules {
   return exact?.rules ?? wildcard?.rules ?? { disallow: [], allow: [], crawlDelayMs: null };
 }
 
+/**
+ * Da li robots pravilo poklapa putanju.
+ *   *  = bilo koji niz znakova (uključujući /)
+ *   $  = kraj putanje
+ * Sve ostalo je doslovno; poklapanje ide od početka (prefiks).
+ *
+ * VAŽNO: pravilo tipa `/*​/*​/ajax/` NE smije da se skrati na `/` — inače bi
+ * ispalo da je zabranjeno baš sve. Zato ga pretvaramo u pravi regex.
+ */
+function patternMatches(pattern: string, path: string): boolean {
+  let re = '^';
+  for (const ch of pattern) {
+    if (ch === '*') re += '.*';
+    else if (ch === '$') re += '$';
+    else re += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  try {
+    return new RegExp(re).test(path);
+  } catch {
+    return false;
+  }
+}
+
 export function isAllowed(rules: RobotsRules | null, path: string): boolean {
   if (!rules) return true;
-  const matchLength = (patterns: string[]) =>
-    patterns.reduce((best, pattern) => {
-      const prefix = pattern.replace(/\*.*$/, '');
-      return path.startsWith(prefix) ? Math.max(best, prefix.length) : best;
-    }, -1);
+  // Google-ovo pravilo: najduže (najspecifičnije) pravilo koje poklapa
+  // pobjeđuje; kod jednake dužine Allow ima prednost nad Disallow.
+  const strongest = (patterns: string[]) =>
+    patterns.reduce(
+      (best, pattern) => (patternMatches(pattern, path) ? Math.max(best, pattern.length) : best),
+      -1,
+    );
 
-  const blocked = matchLength(rules.disallow);
-  if (blocked < 0) return true;
-  return matchLength(rules.allow) >= blocked;
+  const blocked = strongest(rules.disallow);
+  if (blocked < 0) return true; // ništa ne zabranjuje ovu putanju
+  return strongest(rules.allow) >= blocked; // Allow bar jednako specifičan → dozvoljeno
 }

@@ -53,13 +53,17 @@ export class KaufdaSource implements Source {
     return this.context;
   }
 
-  private async guardPath(path: string): Promise<void> {
-    if (!config.respectRobots) return;
+  private async pathAllowed(path: string): Promise<boolean> {
+    if (!config.respectRobots) return true;
     if (!this.robotsLoaded) {
       this.robots = await fetchRobots(config.kaufda.baseUrl, config.userAgent);
       this.robotsLoaded = true;
     }
-    if (!isAllowed(this.robots, path)) {
+    return isAllowed(this.robots, path);
+  }
+
+  private async guardPath(path: string): Promise<void> {
+    if (!(await this.pathAllowed(path))) {
       throw new Error(
         `robots.txt zabranjuje putanju ${path}. Scraper se zaustavlja. ` +
           `Ako imas dozvolu izvora, postavi SCRAPER_RESPECT_ROBOTS=false.`,
@@ -129,6 +133,13 @@ export class KaufdaSource implements Source {
   async listOffers(store: ScrapedStore, plz: string): Promise<ScrapedOffer[]> {
     if (!store.url) return [];
     const url = new URL(store.url, config.kaufda.baseUrl);
+
+    // Ako robots.txt zabranjuje baš ovu stranicu prodavnice, preskačemo je i
+    // idemo dalje — NE rušimo cijeli posao. Druge prodavnice mogu biti u redu.
+    if (!(await this.pathAllowed(url.pathname))) {
+      return [];
+    }
+
     const page = await this.openPage(url.toString(), url.pathname);
 
     try {
