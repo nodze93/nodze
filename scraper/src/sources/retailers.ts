@@ -108,7 +108,27 @@ export class RetailersSource implements Source {
             const name = alt || (nameEl?.textContent ?? '').trim();
             const np = (t.querySelector(sel.newPrice)?.textContent ?? '').trim();
             const op = (t.querySelector(sel.oldPrice)?.textContent ?? '').trim();
-            const src = img?.getAttribute('src') || img?.getAttribute('data-src') || '';
+            // PRAVA slika je u data-src / srcset (lijeno učitavanje); "src" je
+            // često placeholder (kod Kauflanda njihov sivi "fallback" logo).
+            // Gledamo prvo data-src/srcset, uzimamo zadnji (najveći) URL, i
+            // preskačemo očite placeholdere.
+            const cands = [
+              img?.getAttribute('data-src'),
+              img?.getAttribute('data-srcset'),
+              img?.getAttribute('srcset'),
+              img?.getAttribute('src'),
+            ];
+            let src = '';
+            for (const c of cands) {
+              if (!c) continue;
+              const url = /[, ]/.test(c)
+                ? (c.split(',').pop() ?? '').trim().split(/\s+/)[0]
+                : c.trim();
+              if (!url || url.startsWith('data:')) continue;
+              if (/fallback|placeholder|blank|spacer|1x1|loading|lazy/i.test(url)) continue;
+              src = url;
+              break;
+            }
             return { name, np, op, src };
           }),
         { nameSel: def.nameSel, newPrice: def.newPrice, oldPrice: def.oldPrice },
