@@ -1,0 +1,141 @@
+'use client';
+
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import OfferCard from '@/components/akcije/OfferCard';
+import { usePlz } from '@/components/akcije/PlzProvider';
+import PlzSheet from '@/components/akcije/PlzSheet';
+import Recommendation from '@/components/akcije/Recommendation';
+import StoreStrip from '@/components/akcije/StoreStrip';
+import { IconCart, IconChevron, IconStar } from '@/components/akcije/icons';
+import { formatPrice } from '@/lib/akcije/format';
+import type { Filters } from '@/lib/akcije/types';
+import { useFacets, useOffers } from '@/lib/akcije/useOffers';
+
+export default function HomePage() {
+  const { plz, ready } = usePlz();
+  const [plzOpen, setPlzOpen] = useState(false);
+
+  const filters: Filters = useMemo(
+    () => ({ plz, store: '', category: '', percent: 0, savings: 0, q: '', sort: 'percent' }),
+    [plz],
+  );
+
+  const { items, total, loading, error } = useOffers(filters);
+  const { stores } = useFacets(plz);
+
+  const top = items.slice(0, 10);
+  // Ispod Top ponuda prikazujemo NAREDNE artikle, da se lista ne ponavlja
+  const rest = items.slice(10, 22);
+  const bestSaving = items.reduce((max, item) => Math.max(max, item.savings ?? 0), 0);
+
+  return (
+    <>
+      <section className="hero">
+        <span className="hero-ico">
+          <IconCart size={24} />
+        </span>
+        <div>
+          <h1>Akcije ove sedmice</h1>
+          <p>
+            Najbolje ponude iz njemačkih trgovina na jednom mjestu.{' '}
+            <button
+              type="button"
+              onClick={() => setPlzOpen(true)}
+              style={{
+                background: 'none',
+                border: 0,
+                padding: 0,
+                font: 'inherit',
+                fontWeight: 700,
+                color: 'var(--brand)',
+                cursor: 'pointer',
+              }}
+            >
+              PLZ {plz}
+            </button>
+          </p>
+        </div>
+      </section>
+
+      <StoreStrip stores={stores} />
+
+      <section className="sec">
+        <div className="sec-hd">
+          <h2>
+            <IconStar size={17} style={{ color: '#f5a524' }} /> Top ponude ove sedmice
+          </h2>
+          <Link href="/akcije/ponude">
+            Pogledaj sve <IconChevron size={13} style={{ verticalAlign: -2 }} />
+          </Link>
+        </div>
+
+        {error ? (
+          <div className="state">
+            <h2>Nema veze sa serverom</h2>
+            <p>{error}</p>
+          </div>
+        ) : loading && items.length === 0 ? (
+          <div className="rail">
+            {Array.from({ length: 4 }, (_, index) => (
+              <div className="skel" key={index} />
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="state">
+            <h2>Za PLZ {plz} još nema podataka</h2>
+            <p>
+              Scraper za ovaj poštanski broj još nije pokrenut. Probaj drugu lokaciju — npr. 85737,
+              80331 ili 10115.
+            </p>
+            <button type="button" className="btn" onClick={() => setPlzOpen(true)}>
+              Promijeni lokaciju
+            </button>
+          </div>
+        ) : (
+          <div className="rail">
+            {top.map((item) => (
+              <OfferCard key={item.id} item={item} variant="rail" />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <Recommendation items={items} />
+
+      {items.length > 0 ? (
+        <>
+          <section className="sec">
+            <div className="sec-hd">
+              <h2>Sve akcije u PLZ {plz}</h2>
+              <Link href="/akcije/ponude">
+                Filteri <IconChevron size={13} style={{ verticalAlign: -2 }} />
+              </Link>
+            </div>
+            <div className="summary">
+              <b>{total} artikala</b>
+              <span className="dot" />
+              <span>{stores.length} prodavnica</span>
+              {bestSaving > 0 ? (
+                <>
+                  <span className="dot" />
+                  <span>najveća ušteda {formatPrice(bestSaving)}</span>
+                </>
+              ) : null}
+            </div>
+            <div className="grid">
+              {rest.map((item) => (
+                <OfferCard key={`all-${item.id}`} item={item} />
+              ))}
+            </div>
+            <Link href="/akcije/ponude" className="btn btn-ghost" style={{ marginTop: 14 }}>
+              Prikaži sve ({total}) i filtriraj
+            </Link>
+          </section>
+        </>
+      ) : null}
+
+      {!ready ? null : plzOpen ? <PlzSheet onClose={() => setPlzOpen(false)} /> : null}
+    </>
+  );
+}

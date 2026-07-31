@@ -1,0 +1,131 @@
+# ============================================================
+# AKCIJE — dnevno skupljanje ponuda iz njemačkih letaka
+# ============================================================
+# Šta radi, redom:
+#   1. otvori KaufDA za svaki PLZ iz scraper/data/plz.txt
+#   2. upiše svježi snapshot u ak_discounts (obriše pa upiše taj dan)
+#   3. izračuna staru cijenu za "Angebot" artikle iz istorije cijena
+#   4. dopuni slike sa Open Food Facts za artikle bez slike
+#
+# Sajt čita podatke preko /api/akcije/* koji su keširani 30 min na CDN-u,
+# pa ovaj posao NE opterećuje Vercel — samo bazu, jednom dnevno.
+#
+# POTREBAN SECRET (repo → Settings → Secrets and variables → Actions):
+#   DATABASE_URL  — Supabase → Settings → Database → Connection string
+#                   → "Session pooler". Lozinka baze ide unutar stringa.
+#
+# Prije PRVOG pravog pokretanja: pusti ga ručno sa "dry_run = true".
+# Tada baza NIJE dirana, a u logu se vidi šta bi bilo upisano — tako se
+# odmah primijeti ako je KaufDA promijenio izgled stranice.
+
+name: Akcije — dnevni scraper
+
+on:
+  schedule:
+    # GitHub cron je UVIJEK u UTC-u. 04:00 UTC = 06:00 ljeti (CEST),
+    # 05:00 zimi (CET). Namjerno ostavljamo jedan red umjesto dva: dva bi
+    # značila i dvostruko kucanje na tuđi server, a i zimi u 05:00 su podaci
+    # spremni prije nego iko ustane.
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+    inputs:
+      plz:
+        description: "Samo ovi PLZ-ovi, odvojeni zarezom (prazno = svi iz plz.txt)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Probno — ne dira bazu, samo ispiše šta bi upisao"
+        type: boolean
+        default: false
+
+# Dva pokretanja odjednom bi pisala u isti snapshot — pustimo da prvo završi.
+concurrency:
+  group: akcije-scraper
+  cancel-in-progress: false
+
+jobs:
+  skupi-akcije:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+
+    steps:
+      - name: Checkout koda
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instaliraj pakete (+ Chromium)
+        working-directory: scraper
+        run: npm install
+
+      # Bez ovoga bi svako jutro iznova pitali Open Food Facts za iste
+      # artikle (6,5 s po artiklu). Ovako se pita samo za nove.
+      # restore + save su namjerno razdvojeni: keš se snima tek nakon što
+      # korak sa slikama prođe, i pod novim ključem (isti ključ se ne može
+      # prepisati).
+      - name: Vrati keš slika iz prošlog pokretanja
+        uses: actions/cache/restore@v4
+        with:
+          path: scraper/data/image-cache.json
+          key: akcije-slike-${{ github.run_id }}
+          restore-keys: akcije-slike-
+
+      - name: Skupi ponude sa KaufDA
+        working-directory: scraper
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SCRAPER_SOURCE: kaufda
+          # Jedan PLZ u jednom trenutku + 2,5 s pauze između prodavnica —
+          # namjerno sporo i pristojno prema tuđem serveru.
+          SCRAPER_CONCURRENCY: "1"
+          SCRAPER_DELAY_MS: "2500"
+          SCRAPER_RESPECT_ROBOTS: "true"
+          SCRAPER_KEEP_DAYS: "14"
+        run: |
+          ARGS="--source=kaufda"
+          if [ -n "${{ github.event.inputs.plz }}" ]; then
+            ARGS="$ARGS --plz=${{ github.event.inputs.plz }}"
+          fi
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          echo "Pokrećem: npx tsx src/index.ts $ARGS"
+          npx tsx src/index.ts $ARGS
+
+      # Slike: artikli kojima letak nije dao fotografiju traže se na
+      # Open Food Facts. Ako ovo padne, akcije su i dalje ispravne — samo
+      # dio artikala ostane sa crtanom ilustracijom umjesto fotografije,
+      # pa korak namjerno ne ruši cijeli posao.
+      #
+      # NAPOMENA: `prices:apply` (izračun stare cijene za "Angebot" artikle)
+      # ovdje NE stoji. Taj skript računa referentnu cijenu iz tabele
+      # ak_price_observations, a nju za sada niko ne puni — treba nam izvor
+      # REDOVNIH cijena (webshop ili affiliate feed). Akcijske cijene iz
+      # letka se za to ne smiju koristiti: referenca po § 11 PAngV je
+      # najniža redovna cijena u 30 dana, pa bi popust ispao naduvan.
+      - name: Dopuni slike (Open Food Facts)
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        working-directory: scraper
+        timeout-minutes: 20
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx tsx src/images.ts --limit=150
+        continue-on-error: true
+
+      - name: Sačuvaj keš slika
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: scraper/data/image-cache.json
+          key: akcije-slike-${{ github.run_id }}
+
+      - name: Sačuvaj probni izvještaj
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: akcije-dry-run
+          path: scraper/out/
+          if-no-files-found: warn

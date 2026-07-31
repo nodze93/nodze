@@ -138,12 +138,29 @@ Commitovi ove sesije: pwa · vodici · calc · datenshutzetc · appinstall · is
 - `osvjeziSajt()` (lib/revalidate.ts) se zove na svaku objavu članka → svježina očuvana.
 - Ostali limiti (Speed Insights, Web Analytics, ISR, transfer): kad se napune samo STANU da broje, NE ruše sajt.
 
+### AKCIJE (/akcije) — popusti iz njemačkih letaka
+- Četvrta kartica u donjoj nav traci: Vijesti · **Akcije** · Vodiči · Brutto-Netto
+- Stranice: `/akcije`, `/akcije/ponude`, `/akcije/favoriti`, `/akcije/ponuda/[id]`, `/akcije/prodavnica/[slug]`
+- API: `/api/akcije/*` → Supabase RPC funkcije (`ak_discounts_search`, `ak_meta`, …), keš 30 min na CDN-u → **ne troši Vercel CPU**
+- CSS je cijeli prefiksiran sa `.ak` (`app/akcije/akcije.css`) da se `.card`/`.grid`/`.btn` ne sudare sa kodnas stilovima
+- Tabele u Supabase počinju sa `ak_` (`supabase/akcije.sql`). RLS je uključen BEZ policy-ja → čita samo service_role
+- `discount_percent` i `savings` su GENERATED kolone: bez stare cijene su NULL, pa "Angebot" artikli sami ispadaju iz filtera po procentu
+- Podaci: `scraper/` (svoj package.json, NE ide na Vercel) → GitHub Actions `akcije-scraper.yml`, svaki dan 04:00 UTC
+- Snapshot po (PLZ, datum): obriši pa upiši, u transakciji → ponovno pokretanje ne pravi duplikate; sajt čita najnoviji datum, pa ako scraper padne vide se jučerašnje akcije
+- Gradovi: `scraper/data/plz.txt` (85737 mora ostati — podrazumijevani PLZ na sajtu)
+- Detalji i šta NAMJERNO ne radi (`prices:apply`, `images:download`): `scraper/README.md`
+
 ### ⏳ ČEKA KORISNIKA (ručno)
 1. **info@kodnas.de NE RADI još** → Namecheap → Manage kodnas.de → REDIRECT EMAIL → alias `info` → nodze93@gmail.com
    (DNS je na **Namecheapu**: nameserveri registrar-servers.com, nema MX zapisa)
 2. Pokrenuti **SQL za app_instalacije** tabelu (gore) → da brojač instalacija radi
 3. Provjeriti **Vercel → Usage** datum reseta ciklusa (CPU je bio ~81%)
 4. (opciono) cookie-baner za GA pristanak
+5. **AKCIJE — pokrenuti `supabase/akcije.sql`** u Supabase SQL Editoru (pravi `ak_` tabele i funkcije)
+6. **AKCIJE — GitHub secret `DATABASE_URL`**: Supabase → Settings → Database → Connection string → *Session pooler*
+   → GitHub → Settings → Secrets and variables → Actions → New repository secret
+7. **AKCIJE — prvo pokretanje**: Actions → "Akcije — dnevni scraper" → Run workflow → `dry_run = true`
+   (baza se ne dira; u artifactu `akcije-dry-run` se vidi je li KaufDA promijenio stranicu). Ako je uredu — pusti isto bez `dry_run`.
 
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.

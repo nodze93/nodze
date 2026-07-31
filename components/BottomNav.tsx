@@ -4,8 +4,8 @@
 // DONJA NAV TRAKA (mobilni) — app-stil
 // ============================================================
 // Fiksna na dnu, iznad Chromeovih dugmadi. Kartice: Vijesti,
-// Vodiči, Brutto-Netto. Prikazuje se SAMO na telefonu (<=768px);
-// na desktopu je sakrivena (tamo je klasična Nav traka).
+// Akcije, Vodiči, Brutto-Netto. Prikazuje se SAMO na telefonu
+// (<=768px); na desktopu je sakrivena (tamo je klasična Nav traka).
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,6 +24,18 @@ const TABS = [
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 10.5 12 3l9 7.5" />
         <path d="M5 9.5V21h14V9.5" />
+      </svg>
+    ),
+  },
+  {
+    href: "/akcije",
+    label: "Akcije",
+    match: (p: string) => p.startsWith("/akcije"),
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 6h2.2l2.1 10.4a1.6 1.6 0 0 0 1.6 1.3h8.3a1.6 1.6 0 0 0 1.6-1.3L20.5 9H6" />
+        <circle cx="9.5" cy="20.5" r="1.2" fill="currentColor" stroke="none" />
+        <circle cx="17" cy="20.5" r="1.2" fill="currentColor" stroke="none" />
       </svg>
     ),
   },
@@ -95,12 +107,19 @@ export default function BottomNav() {
             font-size: 11px;
             font-weight: 600;
           }
+          .botnav-lbl { white-space: nowrap; }
           .botnav-item.active { color: #1a8a4a; }
           .botnav-item:active { background: #f3f4f6; }
           .botnav-ico { width: 24px; height: 24px; }
           .botnav-ico svg { width: 24px; height: 24px; display: block; }
           /* Razmak na dnu da sadržaj ne bude ispod trake */
           body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
+        }
+        /* Sa 4 kartice "Brutto-Netto" je najduži natpis — na uskim
+           telefonima se slova malo stisnu da ne pređe u dva reda. */
+        @media (max-width: 380px) {
+          .botnav-item { font-size: 10px; padding-left: 2px; padding-right: 2px; }
+          .botnav-lbl { letter-spacing: -0.02em; }
         }
       `}</style>
     </>

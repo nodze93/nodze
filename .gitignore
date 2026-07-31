@@ -33,3 +33,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scraper za akcije — ima svoj package.json, pa i svoje node_modules.
+# /node_modules i /out gore su vezani za korijen i ovo ne pokrivaju.
+scraper/node_modules
+scraper/dist
+scraper/out
+scraper/.env

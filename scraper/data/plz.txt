@@ -1,0 +1,14 @@
+# PLZ-ovi za koje skupljamo akcije. Jedan po liniji, # je komentar.
+#
+# Svaki dodatni PLZ produžava dnevni posao za par minuta, pa dodajemo
+# postepeno — kad vidimo da ljudi traže neki grad, doda se ovdje jedan red
+# i sutradan ujutro podaci su tu.
+#
+# VAŽNO: 85737 je i podrazumijevani PLZ na sajtu (PlzProvider), pa mora ostati.
+
+85737   # Ismaning (podrazumijevani na sajtu)
+80331   # München — centar
+80807   # München — Schwabing/Freimann
+70173   # Stuttgart
+60311   # Frankfurt am Main
+10115   # Berlin — Mitte

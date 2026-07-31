@@ -1,0 +1,4 @@
+# Scraper se NE deployuje na Vercel — pokreće ga GitHub Actions jednom
+# dnevno (.github/workflows/akcije-scraper.yml). Ovdje bi samo trošio
+# prostor i vrijeme builda; Playwright/Chromium ionako ne rade na Vercelu.
+scraper

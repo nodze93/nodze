@@ -1,0 +1,32 @@
+{
+  "name": "kodnas-akcije-scraper",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dnevno skuplja akcije iz njemackih letaka (KaufDA) i upisuje ih u ak_ tabele u Supabase.",
+  "scripts": {
+    "scrape": "tsx src/index.ts --source=kaufda",
+    "scrape:mock": "tsx src/index.ts --source=mock",
+    "dry-run": "tsx src/index.ts --source=kaufda --dry-run",
+    "test": "tsx --test src/**/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "postinstall": "playwright install chromium || true",
+    "images:enrich": "tsx src/images.ts",
+    "images:icecat": "tsx src/icecat.ts",
+    "images:download": "tsx src/downloadImages.ts",
+    "images:gc": "tsx src/gcImages.ts",
+    "prices:apply": "tsx src/prices.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.0",
+    "playwright": "^1.48.0",
+    "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}

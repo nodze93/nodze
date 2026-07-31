@@ -86,7 +86,7 @@ export default function RootLayout({
         <SearchModal />
         <AdminModeracija />
 
-        {/* Donja nav traka (mobilni): Vijesti · Vodiči · Brutto-Netto */}
+        {/* Donja nav traka (mobilni): Vijesti · Akcije · Vodiči · Brutto-Netto */}
         <BottomNav />
 
         {/* PWA — registruj service worker (bez keširanja, samo za instalabilnost) */}
