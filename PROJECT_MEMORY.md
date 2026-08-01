@@ -128,13 +128,21 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
   → `images:enrich` (Open Food Facts) ga popuni. Ide PRIJE enrich koraka u workflow-u.
 - ⚠️ Admin kolona „sa slikom %" broji samo da URL POSTOJI, ne da se otvara.
 
-### LANCI U SCRAPERU (5) — svi kroz `SCRAPER_SOURCE=retailers`
+### LANCI U SCRAPERU (6) — svi kroz `SCRAPER_SOURCE=retailers`
 | Lanac | Kako | Scope | Stara cijena |
 |---|---|---|---|
 | Aldi Süd / Aldi Nord | HTML (Playwright) | regionalno, 6 gradova | da |
 | Kaufland | HTML (Playwright) | **DE** | da |
 | **Lidl** | otvoreni Lidl Plus API | **DE** | da |
-| **REWE** | HTML (robots `Allow:`) | **DE** | **ne** → sve „Angebot" |
+| **REWE** | HTML **BEZ JS-a** | **DE** | **ne** → sve „Angebot" |
+| **OBI** | HTML **SA JS-om** + Nuxt payload | **DE** | da (često UVP) |
+
+⚠️ REWE i OBI su suprotni slučajevi — lako se zamijene:
+- **REWE bez JS-a**: sadržaj je već u HTML-u; kad se skripta izvrši, pregazi
+  listu (traži izbor marketa) → prvi put je prošla samo 1 od 16 kategorija.
+- **OBI sa JS-om**: server pošalje 316 KB sa NULA proizvoda (Baqend Speed Kit
+  preko Service Workera), pa listing MORA kroz browser. Ali stranice proizvoda
+  JESU server-rendered → rok važenja se vadi običnim `fetch`-om iz Nuxt payloada.
 
 - `scraper/src/sources/svi.ts` = spaja sve; `index.ts` zove samo njega.
   `--source=samo-retailers` isključi Lidl i REWE (dijagnostika).
@@ -147,7 +155,15 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
   nego u tabu `button[data-week="current"]` („Diese Woche 27.7. bis 2.8.").
   Ne dirati zabranjene parametre: `search=`, `sorting=`, `objectsPerPage=`,
   `merchant=`, `merchantType=`.
-- Istraživanje zašto Netto/EDEKA/Penny/dm/OBI NE rade: `scraper/docs/*.md`
+- OBI: dvije liste (`/promo/produkte/sale` ~552 pločice, `/angebote` ~84),
+  dedup po URL-u proizvoda. Bez stare cijene se red preskače.
+  ⚠️ Cente OBI stavlja u `<sup>`, ISTO kao markere fusnota → brišu se samo
+  `<sup>` koji NISU dvocifreni, inače 1.249 € postane 1,24 €.
+  ⚠️ Nova cijena je `.disc-product-price__base` (prvi iznos je precrtana stara).
+  ⚠️ Stara cijena je često **UVP** (preporuka proizvođača), ne ranija OBI cijena
+  — popust nije isto što i „jeftinije nego prošle sedmice".
+  Testovi: `scraper/src/sources/obi.test.ts`.
+- Istraživanje zašto Netto/EDEKA/Penny/dm NE rade: `scraper/docs/*.md`
   (EDEKA `/api/offers` vraća 403 „haha! better luck next time").
 - Osnova preuzeta iz korisnikovog `prospekt-bot` (Python) i prevedena u TS da
   radi kao ostali lanci — jedan workflow, jedan snapshot, isti logovi.

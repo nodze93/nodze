@@ -8,7 +8,8 @@
  *
  *    RetailersSource  Aldi Süd · Aldi Nord · Kaufland   (HTML, Playwright)
  *    LidlSource       Lidl                              (otvoreni Lidl Plus API)
- *    ReweSource       REWE                              (HTML, dijeli browser)
+ *    ReweSource       REWE                              (HTML BEZ JS-a)
+ *    ObiSource        OBI                               (HTML SA JS-om + Nuxt payload)
  *
  *  Ko gdje ide, odlučuje `listStores(plz)` svakog izvora:
  *  nacionalni lanci se javljaju samo za NACIONALNI_PLZ, regionalni za svoje
@@ -17,6 +18,7 @@
  */
 import type { ScrapedOffer, ScrapedStore, Source } from '../types.js';
 import { LidlSource } from './lidl.js';
+import { ObiSource } from './obi.js';
 import { RetailersSource } from './retailers.js';
 import { ReweSource } from './rewe.js';
 
@@ -25,6 +27,7 @@ export class SviLanciSource implements Source {
   private readonly retailers: RetailersSource;
   private readonly lidl: LidlSource;
   private readonly rewe: ReweSource;
+  private readonly obi: ObiSource;
 
   constructor(opts: { dryRun: boolean }) {
     this.retailers = new RetailersSource(opts);
@@ -33,6 +36,9 @@ export class SviLanciSource implements Source {
     // njihov sadržaj je već u HTML-u, a kad se skripta izvrši pregazi listu
     // (traži izbor marketa) pa ostane prazno — zato `true`.
     this.rewe = new ReweSource(() => this.retailers.novaStranica(true));
+    // OBI obrnuto od REWE-a: listing se BEZ JavaScripta uopšte ne prikaže
+    // (Baqend Speed Kit kroz Service Worker), pa mu treba pun browser.
+    this.obi = new ObiSource(() => this.retailers.novaStranica());
   }
 
   async listStores(plz: string): Promise<ScrapedStore[]> {
@@ -40,6 +46,7 @@ export class SviLanciSource implements Source {
       this.retailers.listStores(plz),
       this.lidl.listStores(plz),
       this.rewe.listStores(plz),
+      this.obi.listStores(plz),
     ]);
     return grupe.flat();
   }
@@ -47,6 +54,7 @@ export class SviLanciSource implements Source {
   async listOffers(store: ScrapedStore, plz: string): Promise<ScrapedOffer[]> {
     if (store.slug === 'lidl') return this.lidl.listOffers();
     if (store.slug === 'rewe') return this.rewe.listOffers();
+    if (store.slug === 'obi') return this.obi.listOffers();
     return this.retailers.listOffers(store, plz);
   }
 
