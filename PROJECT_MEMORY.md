@@ -120,55 +120,27 @@ Commitovi ove sesije: pwa · vodici · calc · datenshutzetc · appinstall · is
 
 ### Impressum + Datenschutz (obavezno u Njemačkoj)
 - `app/impressum/page.tsx`, `app/datenschutz/page.tsx` (njemački, DSGVO), linkovi u Footer
-- Podaci: **Dzena Karg, Korbinianstraße 1, 80807 München, info@kodnas.de**
-- ⚠️ Cookie-baner prije GA (pristanak) — NIJE još urađeno (preporučeno).
-
-### Install baner + brojač (`components/InstallPrompt.tsx`)
-- Pojavi se kad korisnik vidi REZULTAT kalkulatora (iframe šalje postMessage "kodnas-calc-result" u showPage(2))
-- Android/desktop: dugme "Instaliraj aplikaciju"; iPhone: uputstvo (Podijeli → Dodaj na ekran); već instalirano: ništa
-- Brojač u adminu: `/api/track-install` (POST na `appinstalled`) + kartica "📲 App instalacije" u dashboardu
-- ⚠️ TREBA Supabase tabela (pokrenuti SQL):
-  `create table if not exists app_instalacije (id uuid primary key default gen_random_uuid(), created_at timestamptz not null default now(), platforma text);`
-
-### Vercel CPU (Hobby: Fluid Active CPU 4h/mj = JEDINI limit koji PAUZIRA sajt na 100%)
-- Bot piše članke na **GitHub Actions** → NE troši Vercel CPU. Vercel CPU troši POSLUŽIVANJE stranica.
-- `app/clanak/[slug]` je imao zaostali `force-dynamic` koji je poništavao `revalidate=300` → UKLONJEN → ISR (keš). Najveća ušteda.
-- `app/vodic/[slug]` i `app/vodici` → `revalidate=600`; + `osvjeziSajt()` dodan u vodici admin rute (instant na izmjenu).
-- `broj_pregleda` se NIGDJE ne uvećava u kodu (vidi ga samo admin) → keširanje ga ne kvari.
-- `osvjeziSajt()` (lib/revalidate.ts) se zove na svaku objavu članka → svježina očuvana.
-- Ostali limiti (Speed Insights, Web Analytics, ISR, transfer): kad se napune samo STANU da broje, NE ruše sajt.
-
-### AKCIJE (/akcije) — popusti iz njemačkih letaka
-- Četvrta kartica u donjoj nav traci: Vijesti · **Akcije** · Vodiči · Brutto-Netto
-- Stranice: `/akcije`, `/akcije/ponude`, `/akcije/favoriti`, `/akcije/ponuda/[id]`, `/akcije/prodavnica/[slug]`
-- API: `/api/akcije/*` → Supabase RPC funkcije (`ak_discounts_search`, `ak_meta`, …), keš 30 min na CDN-u → **ne troši Vercel CPU**
-- CSS je cijeli prefiksiran sa `.ak` (`app/akcije/akcije.css`) da se `.card`/`.grid`/`.btn` ne sudare sa kodnas stilovima
-- Tabele u Supabase počinju sa `ak_` (`supabase/akcije.sql`). RLS je uključen BEZ policy-ja → čita samo service_role
-- `discount_percent` i `savings` su GENERATED kolone: bez stare cijene su NULL, pa "Angebot" artikli sami ispadaju iz filtera po procentu
-- Podaci: `scraper/` (svoj package.json, NE ide na Vercel) → GitHub Actions `akcije-scraper.yml`, svaki dan 04:00 UTC
-- Snapshot po (PLZ, datum): obriši pa upiši, u transakciji → ponovno pokretanje ne pravi duplikate; sajt čita najnoviji datum, pa ako scraper padne vide se jučerašnje akcije
-- Gradovi: `scraper/data/plz.txt` (85737 mora ostati — podrazumijevani PLZ na sajtu)
-- Detalji i šta NAMJERNO ne radi (`prices:apply`, `images:download`): `scraper/README.md`
-- **TRAJNI SLOJ** (`supabase/akcije-trajni-sloj.sql`): odluke se vežu za `product_key` (računa ga scraper u TS-u i UPISUJE), ne za dnevnu ponudu, pa ne nestaju sutradan
-  - `ak_product_images` (potvrđene/ručne slike) + `ak_moderation` (skriveni artikli; `hidden` je povratan) → puni ih ADMIN (još NIJE napravljen)
-  - `ak_apply_product_layer()` prelije te odluke na najnoviji snapshot; RPC-i osvježeni sa `and not d.hidden` da skriveni ne izlaze javno
-  - `ak_scrape_runs` (jedan red po PLZ+prodavnica+dan) → `scraper/src/applyLayer.ts` (`npm run layer:apply`) računa „danas vs juče" i na pad/prazno ISPIŠE alarm + izlazni kod 3 → GitHub Actions korak pukne → mejl vlasniku
-  - Cron redoslijed: scrape → **layer:apply** (alarm) → images. Korak „Trajni sloj + alarm" dodan u `akcije-scraper.yml`
-  - Provjereno na pravoj Postgres 16 bazi: 43/43 testa, product_key 475/475, prelijevanje po EAN/ključu radi, skrivanje se poštuje u RPC-ima, alarm okida kod 3
-
+- **IZVOR PODATAKA (velika promjena ove sesije): direktno sa stranica lanaca, NE KaufDA.**
+  - KaufDA NAPUSTEN: ponude po PLZ-u drzi na `/shelf` koju njihov robots.txt IZRICITO zabranjuje (+ stari `/Umgebung/` sada 404). Ne skrejpamo (pravno). `scraper/src/sources/kaufda.ts` ostaje u kodu ali se NE koristi.
+  - Novi izvor `scraper/src/sources/retailers.ts` (`SCRAPER_SOURCE=retailers`) cita akcije sa VLASTITIH stranica lanaca (tekst, robots dozvoljava). Selektori nadjeni gledanjem stranica u pravom Chrome-u.
+  - TRI lanca rade: **Aldi Sud** `aldi-sued.de/de/angebote.html` (JUG: 85737,80331,80807,70173,60311) - **Aldi Nord** `aldi-nord.de/angebote.html` (SAMO Berlin 10115; cijene "1.49**" skidaju zvjezdice; naziv=marka+h2; tekuca sedmica, sljedeca se ucita tek na klik) - **Kaufland** `filiale.kaufland.de/angebote.html` (SVI PLZ, nacionalno; cijena "1.99" tacka->zarez).
+  - GEOGRAFIJA: Aldi Sud i Nord ne postoje na istom mjestu -> svaki samo u svoje gradove (`plz` u RetailerDef); Kaufland svuda. Nacionalno = povuci jednom po lancu (kes) pa upisi u sve PLZ-ove tog lanca.
+- robots.ts BUG popravljen: `isAllowed` je pravilo `/*/*/ajax/` skracivao na `/` i blokirao BAS SVE (zato je KaufDA prvo "sve zabranjeno"). Sad pravi regex + `robots.test.ts`.
+- SLIKE: fotografija sa stranice lanca -> ako fali Open Food Facts (`images:enrich`) -> ako i to fali NASA ILUSTRACIJA (`ProductArt`). Kauflandov sivi "fallback" placeholder se prepoznaje kao "nema slike" (`ProductImage.isPlaceholder`; suzen regex da ne sakrije prave slike). CSS `.thumb img` max-height u px (slika se ne prelijeva preko naziva). Pokrivenost: Aldi Nord 265/266, Kaufland 17/49, Aldi Sud 4/23 (TODO: bolje hvatanje Aldi Sud/Kaufland slika, lijeno ucitavanje).
+- Snapshot po (PLZ, datum): delete `source='scraper'` pa insert (rucni unosi bi prezivjeli).
+- ZAKLJUCANI lanci (Lidl, Netto, Penny, REWE, Edeka, dm, OBI) = "fotoalbum"/JS/izbor marketa -> samo kroz crawler+vision (screenshot -> AI cita), ~5-15 EUR/mj + krhko + pravno sivo. ODLOZENO dok sajt ne dobije posjetioce.
+- TRAJNI SLOJ (`akcije-trajni-sloj.sql`): `ak_product_images`/`ak_moderation`/`ak_scrape_runs`/`ak_apply_product_layer()`/`applyLayer.ts` alarm - postoji u bazi/kodu; puni ga ADMIN koji JOS NIJE napravljen; alarm (danas vs juce) radi.
+- Gradovi: `scraper/data/plz.txt`. Detalji + sta namjerno ne radi: `scraper/README.md`.
 ### ⏳ ČEKA KORISNIKA (ručno)
 1. **info@kodnas.de NE RADI još** → Namecheap → Manage kodnas.de → REDIRECT EMAIL → alias `info` → nodze93@gmail.com
    (DNS je na **Namecheapu**: nameserveri registrar-servers.com, nema MX zapisa)
 2. Pokrenuti **SQL za app_instalacije** tabelu (gore) → da brojač instalacija radi
 3. Provjeriti **Vercel → Usage** datum reseta ciklusa (CPU je bio ~81%)
 4. (opciono) cookie-baner za GA pristanak
-5. **AKCIJE — pokrenuti `supabase/akcije.sql`** u Supabase SQL Editoru (pravi `ak_` tabele i funkcije)
-5b. **AKCIJE — pokrenuti `supabase/akcije-trajni-sloj.sql`** ODMAH POSLIJE `akcije.sql` (trajni sloj + tabela zdravlja + alarm)
-6. **AKCIJE — GitHub secret `DATABASE_URL`**: Supabase → Settings → Database → Connection string → *Session pooler*
-   → GitHub → Settings → Secrets and variables → Actions → New repository secret
-7. **AKCIJE — prvo pokretanje**: Actions → "Akcije — dnevni scraper" → Run workflow → `dry_run = true`
-   (baza se ne dira; u artifactu `akcije-dry-run` se vidi je li KaufDA promijenio stranicu). Ako je uredu — pusti isto bez `dry_run`.
-8. **AKCIJE — admin panel još NIJE napravljen** (prijava, „potvrdi sliku"/„sakrij", pregled zdravlja). Temelj (tabele + funkcije) je spreman; sam admin je zaseban posao kad se odluči.
+5. **AKCIJE — SQL** (`akcije.sql` + `akcije-trajni-sloj.sql`) POKRENUT; `DATABASE_URL` secret POSTAVLJEN; scraper radi, podaci u bazi (Aldi Sud/Nord/Kaufland). GOTOVO.
+6. **AKCIJE — PROVJERITI dnevni scraper**: GitHub Actions -> ima li pokretanje svako jutro ~06:00? Ako ne -> cron se ne pali -> ponude "ne osvjezavaju se". (Glavni sumnjivac za "uvijek jucerasnje".)
+7. **AKCIJE TODO**: (a) "vazi od/do" + prikaz po danu (korisnikova ideja, NIJE radjeno); (b) bolje hvatanje Aldi Sud/Kaufland slika; (c) ostali lanci = crawler+vision kad bude posjetilaca.
+8. **AKCIJE — rucni admin ODBACEN** (korisnik ne zeli rucni unos; fajlovi ostali samo u Claude /tmp). Trajni-sloj admin (potvrdi sliku/sakrij) i dalje NIJE napravljen.
 
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.
