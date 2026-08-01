@@ -10,7 +10,9 @@ for (const candidate of ['.env', '../.env', '../.env.local']) {
 }
 
 export interface Args {
-  source: 'retailers' | 'kaufda' | 'mock';
+  // 'retailers' = svi lanci (Aldi x2, Kaufland, Lidl, REWE) — naziv zadržan
+  // zbog workflowa; 'samo-retailers' = bez Lidla i REWE-a (za dijagnostiku).
+  source: 'retailers' | 'svi' | 'samo-retailers' | 'kaufda' | 'mock';
   plz: string[] | null;
   dryRun: boolean;
   keepDays: number;
@@ -24,8 +26,9 @@ export function parseArgs(argv: string[]): Args {
   const has = (name: string) => argv.includes(`--${name}`);
 
   const source = (get('source') ?? process.env.SCRAPER_SOURCE ?? 'mock') as Args['source'];
-  if (source !== 'retailers' && source !== 'kaufda' && source !== 'mock') {
-    throw new Error(`Nepoznat --source=${source} (dozvoljeno: retailers, kaufda, mock)`);
+  const DOZVOLJENI: Args['source'][] = ['retailers', 'svi', 'samo-retailers', 'kaufda', 'mock'];
+  if (!DOZVOLJENI.includes(source)) {
+    throw new Error(`Nepoznat --source=${source} (dozvoljeno: ${DOZVOLJENI.join(', ')})`);
   }
 
   const plzArg = get('plz');

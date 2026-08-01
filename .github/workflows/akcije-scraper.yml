@@ -73,13 +73,15 @@ jobs:
           key: akcije-slike-${{ github.run_id }}
           restore-keys: akcije-slike-
 
-      - name: Skupi ponude (Aldi Süd + Kaufland)
+      - name: Skupi ponude (Aldi ×2, Kaufland, Lidl, REWE)
         working-directory: scraper
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          # "retailers" = čita akcije sa VLASTITIH stranica lanaca
-          # (aldi-sued.de, filiale.kaufland.de) koje su kao tekst i koje
-          # njihov robots.txt dozvoljava. KaufDA je napušten (blokirali /shelf).
+          # "retailers" = SVI lanci koje umijemo čitati:
+          #   Aldi Süd / Aldi Nord / Kaufland — HTML sa njihovih stranica
+          #   Lidl                            — otvoreni Lidl Plus API
+          #   REWE                            — HTML (robots.txt ih izričito Allow-uje)
+          # KaufDA je napušten (blokirali /shelf).
           SCRAPER_SOURCE: retailers
           # Jedan po jedan + 2,5 s pauze — namjerno sporo i pristojno.
           SCRAPER_CONCURRENCY: "1"

@@ -342,6 +342,15 @@ export class RetailersSource implements Source {
     return page;
   }
 
+  /**
+   * Prazna stranica u ISTOM browseru — koristi je REWE izvor.
+   * Bolje nego drugi Chromium: manje memorije i jedno gašenje na kraju.
+   */
+  async novaStranica(): Promise<Page> {
+    const ctx = await this.ensureBrowser();
+    return ctx.newPage();
+  }
+
   private async dumpDebug(slug: string, page: Page): Promise<void> {
     if (this.debugDumped.has(slug)) return;
     this.debugDumped.add(slug);
@@ -422,7 +431,7 @@ function absoluteUrl(src: string, base: string): string | null {
   }
 }
 
-async function dismissCookieBanner(page: Page): Promise<void> {
+export async function dismissCookieBanner(page: Page): Promise<void> {
   const candidates = [
     'button:has-text("Alle akzeptieren")',
     'button:has-text("Akzeptieren")',

@@ -128,6 +128,30 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
   → `images:enrich` (Open Food Facts) ga popuni. Ide PRIJE enrich koraka u workflow-u.
 - ⚠️ Admin kolona „sa slikom %" broji samo da URL POSTOJI, ne da se otvara.
 
+### LANCI U SCRAPERU (5) — svi kroz `SCRAPER_SOURCE=retailers`
+| Lanac | Kako | Scope | Stara cijena |
+|---|---|---|---|
+| Aldi Süd / Aldi Nord | HTML (Playwright) | regionalno, 6 gradova | da |
+| Kaufland | HTML (Playwright) | **DE** | da |
+| **Lidl** | otvoreni Lidl Plus API | **DE** | da |
+| **REWE** | HTML (robots `Allow:`) | **DE** | **ne** → sve „Angebot" |
+
+- `scraper/src/sources/svi.ts` = spaja sve; `index.ts` zove samo njega.
+  `--source=samo-retailers` isključi Lidl i REWE (dijagnostika).
+- Lidl: `stores.lidlplus.com/api/v4/DE` (3.269 filijala) → uzorak 2 po pokrajini,
+  max 40 → `offers.lidlplus.com/app/api/v4/DE/{key}/offers`. Ponude nacionalne,
+  spajaju se po `id` ponude.
+  ⚠️ **`priceBox.smallPartNumeric` je STARA CIJENA, NE centi**, i vrijedi samo
+  kad je `strikethrough=true`. Testovi: `scraper/src/sources/lidl.test.ts`.
+- REWE: 16 kategorija pod `/angebote/nationale-angebote/`. Rok NIJE na pločici
+  nego u tabu `button[data-week="current"]` („Diese Woche 27.7. bis 2.8.").
+  Ne dirati zabranjene parametre: `search=`, `sorting=`, `objectsPerPage=`,
+  `merchant=`, `merchantType=`.
+- Istraživanje zašto Netto/EDEKA/Penny/dm/OBI NE rade: `scraper/docs/*.md`
+  (EDEKA `/api/offers` vraća 403 „haha! better luck next time").
+- Osnova preuzeta iz korisnikovog `prospekt-bot` (Python) i prevedena u TS da
+  radi kao ostali lanci — jedan workflow, jedan snapshot, isti logovi.
+
 ### LIDL — šta se može a šta ne (provjereno 2026-08-01)
 - **Namirnice: NE.** Prospekt je flipbook od 70 SLIKA — izvučen tekst daje samo navigaciju.
 - **Online/non-food: DA.** ESMARA/SILVERCREST/PARKSIDE imaju naziv, staru cijenu, procent

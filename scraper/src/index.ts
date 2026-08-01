@@ -16,6 +16,7 @@ import { sanitizeOffer } from './normalize.js';
 import { KaufdaSource } from './sources/kaufda.js';
 import { MockSource } from './sources/mock.js';
 import { RetailersSource } from './sources/retailers.js';
+import { SviLanciSource } from './sources/svi.js';
 import type { ScrapedStore, Source } from './types.js';
 
 // ---------------------------------------------------------------------
@@ -235,7 +236,11 @@ async function main(): Promise<void> {
   });
 
   const source: Source =
-    args.source === 'retailers'
+    // 'retailers' = SVI lanci (Aldi x2, Kaufland, Lidl, REWE). Naziv je
+    // ostao isti da workflow i stare komande i dalje rade.
+    args.source === 'retailers' || args.source === 'svi'
+      ? new SviLanciSource({ dryRun: args.dryRun })
+      : args.source === 'samo-retailers'
       ? new RetailersSource({ dryRun: args.dryRun })
       : args.source === 'kaufda'
         ? new KaufdaSource()
