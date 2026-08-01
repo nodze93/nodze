@@ -97,6 +97,17 @@ export class RetailersSource implements Source {
     const page = await this.open(store.url);
     try {
       await autoScroll(page);
+      // Natjeraj lijene slike da povuku PRAVI src prije čitanja. Inače dio
+      // ostane na placeholderu → prazna slika → ilustracija na sajtu.
+      await page.evaluate(() => {
+        document.querySelectorAll('img').forEach((im) => {
+          im.setAttribute('loading', 'eager');
+          const ds = im.getAttribute('data-src');
+          if (ds && !im.getAttribute('src')?.includes(ds)) im.setAttribute('src', ds);
+        });
+      });
+      await page.waitForTimeout(2500);
+      await autoScroll(page);
 
       const raw = (await page.$$eval(
         def.tile,

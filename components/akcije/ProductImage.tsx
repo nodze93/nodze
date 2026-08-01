@@ -27,7 +27,11 @@ interface Props {
  * se prikaže naša ilustracija umjesto tuđeg sivog placeholdera.
  */
 function isPlaceholder(url: string): boolean {
-  return /fallback|placeholder|\/etc\.clientlibs\/|blank\.|spacer|1x1|transparent\./i.test(url);
+  // SAMO pouzdani placeholderi (Kauflandov "fallback" iz /etc.clientlibs/).
+  // Namjerno BEZ "1x1/blank/spacer/transparent" — ti nizovi znaju biti dio
+  // imena PRAVE slike (npr. kvadratni format "…-1x1.jpg"), pa bi krivo sakrili
+  // stvarnu fotografiju i pokazali ilustraciju.
+  return /fallback|\/etc\.clientlibs\/|\/placeholder/i.test(url);
 }
 
 export default function ProductImage({ imageUrl, category, productName, artSize }: Props) {
