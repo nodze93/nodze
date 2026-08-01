@@ -24,9 +24,13 @@ export default function HomePage() {
   const { items, total, loading, error } = useOffers(filters);
   const { stores } = useFacets(plz);
 
-  const top = items.slice(0, 10);
-  // Ispod Top ponuda prikazujemo NAREDNE artikle, da se lista ne ponavlja
-  const rest = items.slice(10, 22);
+  // "Top ponude danas" = najveći popusti. Prikaži one ≥30% (fallback: top 12
+  // po popustu ako ih je malo taj dan) → traka je uvijek puna i stvarno "top".
+  const jakiPopust = items.filter((i) => (i.discount_percent ?? 0) >= 30);
+  const top = (jakiPopust.length >= 8 ? jakiPopust : items).slice(0, 12);
+  // Ispod: NAREDNE ponude koje NISU u "Top" (da se lista ne ponavlja).
+  const topIds = new Set(top.map((t) => t.id));
+  const rest = items.filter((i) => !topIds.has(i.id)).slice(0, 12);
   const bestSaving = items.reduce((max, item) => Math.max(max, item.savings ?? 0), 0);
 
   return (
@@ -36,7 +40,7 @@ export default function HomePage() {
           <IconCart size={24} />
         </span>
         <div>
-          <h1>Akcije ove sedmice</h1>
+          <h1>Akcije danas</h1>
           <p>
             Najbolje ponude iz njemačkih trgovina na jednom mjestu.{' '}
             <button
@@ -63,7 +67,7 @@ export default function HomePage() {
       <section className="sec">
         <div className="sec-hd">
           <h2>
-            <IconStar size={17} style={{ color: '#f5a524' }} /> Top ponude ove sedmice
+            <IconStar size={17} style={{ color: '#f5a524' }} /> Top ponude danas
           </h2>
           <Link href="/akcije/ponude">
             Pogledaj sve <IconChevron size={13} style={{ verticalAlign: -2 }} />

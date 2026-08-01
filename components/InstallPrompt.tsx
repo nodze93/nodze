@@ -21,8 +21,15 @@ export default function InstallPrompt() {
     // čim postane instalabilno (beforeinstallprompt) i kad kalkulator javi.
     function maybeShow() {
       if (dismissedRef.current) return;
+      // Ne dosađuj: ako je app već instalirana ILI je baner zatvoren u zadnjih
+      // 7 dana → ništa. (Instalirani korisnici tako ne dobijaju stalno „instaliraj".)
       try {
-        if (sessionStorage.getItem("kodnas-install-dismissed") === "1") {
+        if (localStorage.getItem("kodnas-install-done") === "1") {
+          dismissedRef.current = true;
+          return;
+        }
+        const ts = Number(localStorage.getItem("kodnas-install-dismissed") || 0);
+        if (ts && Date.now() - ts < 7 * 864e5) {
           dismissedRef.current = true;
           return;
         }
@@ -49,6 +56,10 @@ export default function InstallPrompt() {
     function onInstalled() {
       deferredRef.current = null;
       setMode(null);
+      // Trajno zapamti da je instalirano → baner se više NIKAD ne pojavi.
+      try {
+        localStorage.setItem("kodnas-install-done", "1");
+      } catch {}
       // javi backendu (brojač instalacija u adminu)
       try {
         fetch("/api/track-install", { method: "POST", keepalive: true }).catch(() => {});
@@ -90,9 +101,9 @@ export default function InstallPrompt() {
   }
   function kasnije() {
     dismissedRef.current = true;
-    // Zapamti za ovu sesiju da ne iskače na svakoj sljedećoj stranici.
+    // Zapamti „Kasnije" na 7 dana (ne samo sesiju) → ne iskače stalno.
     try {
-      sessionStorage.setItem("kodnas-install-dismissed", "1");
+      localStorage.setItem("kodnas-install-dismissed", String(Date.now()));
     } catch {}
     setMode(null);
   }
