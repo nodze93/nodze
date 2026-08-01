@@ -55,6 +55,8 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 - (opciono) GOOGLE_SITE_VERIFICATION, BING_SITE_VERIFICATION, UNSPLASH_ACCESS_KEY
 ### GitHub Actions Secrets (za bota):
 - ANTHROPIC_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, (UNSPLASH_ACCESS_KEY)
+### GitHub Actions Secrets (za AKCIJE scraper):
+- DATABASE_URL (Supabase → Settings → Database → Connection string → Session pooler)
 
 ## BOT
 - Pokreće se preko GitHub Actions (.github/workflows/bot-cron.yml)
@@ -89,8 +91,8 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 - Filter po kategoriji automatski (gdje si, to uređuješ)
 - Mockup primjeri (u kodu) se NE mogu moderirati; samo pravi članci (bot/ručno)
 
-## AKTUELNO (2026-07-27, treća sesija) — sve URAĐENO i push-ovano na main
-Commitovi ove sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstall
+## AKTUELNO — sve URAĐENO i push-ovano na main
+Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstall · akcije (temelj)
 
 ### Google
 - Google Analytics: NEXT_PUBLIC_GA_ID postavljen u Vercelu (radi).
@@ -99,7 +101,7 @@ Commitovi ove sesije: pwa · vodici · calc · datenshutzetc · appinstall · is
 
 ### PWA (aplikacija)
 - `public/manifest.json`, `public/sw.js` (bez keširanja), ikonice `public/icon-192.png`, `icon-512.png`, `apple-touch-icon.png`
-- `components/BottomNav.tsx` = donja traka (mobilni): Vijesti (/) · Vodiči (/vodici) · Brutto-Netto (/brutto-netto)
+- `components/BottomNav.tsx` = donja traka (mobilni): Vijesti (/) · **Akcije** (/akcije) · Vodiči (/vodici) · Brutto-Netto (/brutto-netto)
 - `layout.tsx`: manifest + theme-color #1a8a4a + appleWebApp + <BottomNav/> + registracija SW
 - Instalacija: Android/desktop Chrome/Edge = 1 klik; iPhone = ručno (Safari: Podijeli → Dodaj na početni ekran)
 
@@ -107,40 +109,57 @@ Commitovi ove sesije: pwa · vodici · calc · datenshutzetc · appinstall · is
 - Korisnikovi statični fajlovi: `public/kalkulator-app/{index.html, admin.html, params.json, favicon.svg}`
 - Ruta `app/brutto-netto/page.tsx` = iframe (allow="web-share") + <InstallPrompt/>
 - Admin kalkulatora: link u admin meniju ISPOD "Facebook" (`app/admin/layout.tsx`) → /kalkulator-app/admin.html (lozinka netto2026)
-- Izmjene u index.html: boja PLAVA→ZELENA (#1a8a4a), bosanski default (setLanguage("bs")),
-  PDF dugme → "Podijeli" (navigator.share, link /brutto-netto), stepper "Podaci/Rezultat" + "Unesite podatke"
 - `vercel.json`: X-Frame-Options DENY → **SAMEORIGIN** (bez toga iframe kalkulatora je prazan!)
 - ⚠️ Dizajn kalkulatora NE dirati bez izričite potrebe (korisnikov je).
 
 ### Vodiči — app dizajn
-- `lib/data/vodic-kategorije.ts` (prikazne kategorije + boje), `components/VodiciKlijent.tsx` (lista+čipovi),
-  `components/VodicShare.tsx`, `public/vodic-ilustracije/*.svg` (6 flat ilustracija po kategoriji)
-- `/vodici` i `/vodic/[slug]` presloženi u app-stil (hero, poglavlja iz koraka, share)
-- Lista SPAJA bazu + hard-kodirane (svih 38); detalj ima fallback na kod → svaki vodič se otvara
+- `lib/data/vodic-kategorije.ts`, `components/VodiciKlijent.tsx`, `components/VodicShare.tsx`, `public/vodic-ilustracije/*.svg`
+- `/vodici` i `/vodic/[slug]` u app-stilu; lista SPAJA bazu + hard-kodirane (svih 38); detalj fallback na kod
 
 ### Impressum + Datenschutz (obavezno u Njemačkoj)
 - `app/impressum/page.tsx`, `app/datenschutz/page.tsx` (njemački, DSGVO), linkovi u Footer
-- **IZVOR PODATAKA (velika promjena ove sesije): direktno sa stranica lanaca, NE KaufDA.**
-  - KaufDA NAPUSTEN: ponude po PLZ-u drzi na `/shelf` koju njihov robots.txt IZRICITO zabranjuje (+ stari `/Umgebung/` sada 404). Ne skrejpamo (pravno). `scraper/src/sources/kaufda.ts` ostaje u kodu ali se NE koristi.
-  - Novi izvor `scraper/src/sources/retailers.ts` (`SCRAPER_SOURCE=retailers`) cita akcije sa VLASTITIH stranica lanaca (tekst, robots dozvoljava). Selektori nadjeni gledanjem stranica u pravom Chrome-u.
-  - TRI lanca rade: **Aldi Sud** `aldi-sued.de/de/angebote.html` (JUG: 85737,80331,80807,70173,60311) - **Aldi Nord** `aldi-nord.de/angebote.html` (SAMO Berlin 10115; cijene "1.49**" skidaju zvjezdice; naziv=marka+h2; tekuca sedmica, sljedeca se ucita tek na klik) - **Kaufland** `filiale.kaufland.de/angebote.html` (SVI PLZ, nacionalno; cijena "1.99" tacka->zarez).
-  - GEOGRAFIJA: Aldi Sud i Nord ne postoje na istom mjestu -> svaki samo u svoje gradove (`plz` u RetailerDef); Kaufland svuda. Nacionalno = povuci jednom po lancu (kes) pa upisi u sve PLZ-ove tog lanca.
-- robots.ts BUG popravljen: `isAllowed` je pravilo `/*/*/ajax/` skracivao na `/` i blokirao BAS SVE (zato je KaufDA prvo "sve zabranjeno"). Sad pravi regex + `robots.test.ts`.
-- SLIKE: fotografija sa stranice lanca -> ako fali Open Food Facts (`images:enrich`) -> ako i to fali NASA ILUSTRACIJA (`ProductArt`). Kauflandov sivi "fallback" placeholder se prepoznaje kao "nema slike" (`ProductImage.isPlaceholder`; suzen regex da ne sakrije prave slike). CSS `.thumb img` max-height u px (slika se ne prelijeva preko naziva). Pokrivenost: Aldi Nord 265/266, Kaufland 17/49, Aldi Sud 4/23 (TODO: bolje hvatanje Aldi Sud/Kaufland slika, lijeno ucitavanje).
-- Snapshot po (PLZ, datum): delete `source='scraper'` pa insert (rucni unosi bi prezivjeli).
-- ZAKLJUCANI lanci (Lidl, Netto, Penny, REWE, Edeka, dm, OBI) = "fotoalbum"/JS/izbor marketa -> samo kroz crawler+vision (screenshot -> AI cita), ~5-15 EUR/mj + krhko + pravno sivo. ODLOZENO dok sajt ne dobije posjetioce.
-- TRAJNI SLOJ (`akcije-trajni-sloj.sql`): `ak_product_images`/`ak_moderation`/`ak_scrape_runs`/`ak_apply_product_layer()`/`applyLayer.ts` alarm - postoji u bazi/kodu; puni ga ADMIN koji JOS NIJE napravljen; alarm (danas vs juce) radi.
-- Gradovi: `scraper/data/plz.txt`. Detalji + sta namjerno ne radi: `scraper/README.md`.
+- Podaci: **Dzena Karg, Korbinianstraße 1, 80807 München, info@kodnas.de**
+- ⚠️ Cookie-baner prije GA (pristanak) — NIJE još urađeno (preporučeno).
+
+### Install baner + brojač (`components/InstallPrompt.tsx`)
+- Pojavi se kad korisnik vidi REZULTAT kalkulatora (iframe šalje postMessage "kodnas-calc-result")
+- Android/desktop: dugme "Instaliraj aplikaciju"; iPhone: uputstvo; već instalirano: ništa
+- Brojač u adminu: `/api/track-install` + kartica "📲 App instalacije"
+- ⚠️ TREBA Supabase tabela: `app_instalacije (id uuid pk default gen_random_uuid(), created_at timestamptz default now(), platforma text)`
+
+### Vercel CPU (Hobby: Fluid Active CPU 4h/mj = JEDINI limit koji PAUZIRA sajt na 100%)
+- Bot piše na GitHub Actions → NE troši Vercel CPU. Vercel CPU troši POSLUŽIVANJE stranica.
+- `app/clanak/[slug]` zaostali `force-dynamic` UKLONJEN → ISR (keš). `app/vodic/[slug]` i `app/vodici` → revalidate=600.
+- `osvjeziSajt()` (lib/revalidate.ts) se zove na objavu → svježina očuvana.
+- `/api/akcije/*` keš 30 min → akcije NE troše CPU.
+
+### AKCIJE (/akcije) — popusti iz njemačkih PRODAVNICA (direktno, NE KaufDA)
+- Četvrta kartica u donjoj nav traci: Vijesti · **Akcije** · Vodiči · Brutto-Netto
+- Stranice: `/akcije`, `/akcije/ponude`, `/akcije/favoriti`, `/akcije/ponuda/[id]`, `/akcije/prodavnica/[slug]`
+- API: `/api/akcije/*` → Supabase RPC (`ak_discounts_search`, `ak_meta`, …), keš 30 min → ne troši Vercel CPU
+- CSS prefiks `.ak` (`app/akcije/akcije.css`); tabele `ak_` (`supabase/akcije.sql`), RLS bez policy → čita samo service_role
+- `discount_percent`/`savings` = GENERATED (bez stare cijene NULL → "Angebot" ispada iz filtera po procentu)
+- **IZVOR PODATAKA (velika promjena): direktno sa stranica lanaca, NE KaufDA.**
+  - KaufDA NAPUŠTEN: ponude po PLZ-u drži na `/shelf` koju robots.txt IZRIČITO zabranjuje (+ stari `/Umgebung/` sada 404). Ne skrejpamo (pravno). `scraper/src/sources/kaufda.ts` ostaje u kodu, NE koristi se.
+  - Novi izvor `scraper/src/sources/retailers.ts` (`SCRAPER_SOURCE=retailers`) — čita akcije sa VLASTITIH stranica lanaca (tekst, robots dozvoljava). Selektori nađeni gledanjem stranica u pravom Chrome-u.
+  - TRI lanca: **Aldi Süd** `aldi-sued.de/de/angebote.html` (JUG: 85737,80331,80807,70173,60311) · **Aldi Nord** `aldi-nord.de/angebote.html` (SAMO Berlin 10115; cijene "1.49**" skidaju zvjezdice; naziv=marka+h2; tekuća sedmica, sljedeća se učita tek na klik) · **Kaufland** `filiale.kaufland.de/angebote.html` (SVI PLZ; cijena "1.99" tačka→zarez)
+  - GEOGRAFIJA: Aldi Süd i Nord ne postoje na istom mjestu → svaki samo u svoje gradove (`plz` u RetailerDef); Kaufland svuda. Nacionalno = povuci jednom po lancu (keš) pa upiši u sve PLZ-ove lanca.
+- robots.ts BUG popravljen: `isAllowed` je `/*/*/ajax/` skraćivao na `/` i blokirao BAŠ SVE → pravi regex + `robots.test.ts`.
+- SLIKE: fotografija sa stranice lanca → ako fali Open Food Facts (`images:enrich`) → ako i to fali ILUSTRACIJA (`ProductArt`). Kauflandov sivi "fallback" placeholder se prepoznaje kao "nema slike" (`ProductImage.isPlaceholder`). Pokrivenost: Aldi Nord 265/266, Kaufland 17/49, Aldi Süd 4/23 (TODO: bolje hvatanje Aldi Süd/Kaufland slika, lijeno učitavanje).
+- Snapshot (PLZ, datum): delete `source='scraper'` pa insert.
+- ZAKLJUČANI lanci (Lidl, Netto, Penny, REWE, Edeka, dm, OBI) = "fotoalbum"/JS/izbor marketa → samo crawler+vision (screenshot → AI čita), ~5-15 €/mj + krhko + pravno sivo. ODLOŽENO dok nema posjetilaca.
+- TRAJNI SLOJ (`akcije-trajni-sloj.sql`): `ak_product_images`/`ak_moderation`/`ak_scrape_runs`/`ak_apply_product_layer()`/`applyLayer.ts` alarm — postoji, puni ga ADMIN koji NIJE napravljen; alarm (danas vs juče) radi.
+- Gradovi: `scraper/data/plz.txt`. Detalji + šta namjerno ne radi: `scraper/README.md`.
+
 ### ⏳ ČEKA KORISNIKA (ručno)
 1. **info@kodnas.de NE RADI još** → Namecheap → Manage kodnas.de → REDIRECT EMAIL → alias `info` → nodze93@gmail.com
-   (DNS je na **Namecheapu**: nameserveri registrar-servers.com, nema MX zapisa)
 2. Pokrenuti **SQL za app_instalacije** tabelu (gore) → da brojač instalacija radi
 3. Provjeriti **Vercel → Usage** datum reseta ciklusa (CPU je bio ~81%)
 4. (opciono) cookie-baner za GA pristanak
-5. **AKCIJE — SQL** (`akcije.sql` + `akcije-trajni-sloj.sql`) POKRENUT; `DATABASE_URL` secret POSTAVLJEN; scraper radi, podaci u bazi (Aldi Sud/Nord/Kaufland). GOTOVO.
-6. **AKCIJE — PROVJERITI dnevni scraper**: GitHub Actions -> ima li pokretanje svako jutro ~06:00? Ako ne -> cron se ne pali -> ponude "ne osvjezavaju se". (Glavni sumnjivac za "uvijek jucerasnje".)
-7. **AKCIJE TODO**: (a) "vazi od/do" + prikaz po danu (korisnikova ideja, NIJE radjeno); (b) bolje hvatanje Aldi Sud/Kaufland slika; (c) ostali lanci = crawler+vision kad bude posjetilaca.
-8. **AKCIJE — rucni admin ODBACEN** (korisnik ne zeli rucni unos; fajlovi ostali samo u Claude /tmp). Trajni-sloj admin (potvrdi sliku/sakrij) i dalje NIJE napravljen.
+5. **AKCIJE — SQL** (`akcije.sql` + `akcije-trajni-sloj.sql`) POKRENUT; `DATABASE_URL` secret POSTAVLJEN; scraper radi, podaci u bazi (Aldi Süd/Nord/Kaufland). GOTOVO.
+6. **AKCIJE — PROVJERITI dnevni scraper**: GitHub Actions → ima li pokretanje svako jutro ~06:00? Ako ne → cron se ne pali → ponude "ne osvježavaju se". (Glavni sumnjivac za "uvijek jučerašnje".)
+7. **AKCIJE TODO**: (a) "važi od/do" + prikaz po danu (korisnikova ideja, NIJE rađeno); (b) bolje hvatanje Aldi Süd/Kaufland slika; (c) ostali lanci = crawler+vision kad bude posjetilaca.
+8. **AKCIJE — ručni admin ODBAČEN** (korisnik ne želi ručni unos; fajlovi ostali samo u Claude /tmp). Trajni-sloj admin (potvrdi sliku/sakrij) i dalje NIJE napravljen.
 
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.
