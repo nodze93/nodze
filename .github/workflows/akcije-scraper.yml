@@ -130,6 +130,19 @@ jobs:
       # REDOVNIH cijena (webshop ili affiliate feed). Akcijske cijene iz
       # letka se za to ne smiju koristiti: referenca po § 11 PAngV je
       # najniža redovna cijena u 30 dana, pa bi popust ispao naduvan.
+      # Lanci obrišu fotografiju kad akcija prođe, a mi i dalje čuvamo link.
+      # Baza tada tvrdi "ima sliku", a na sajtu se vidi crtana ilustracija.
+      # Ovaj korak pokuca na svaki URL i mrtve OBRIŠE — pa ih sljedeći korak
+      # (Open Food Facts) normalno popuni. Zato ide PRIJE njega.
+      - name: Provjeri jesu li slike žive
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        working-directory: scraper
+        timeout-minutes: 10
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx tsx src/checkImages.ts
+        continue-on-error: true
+
       - name: Dopuni slike (Open Food Facts)
         if: ${{ github.event.inputs.dry_run != 'true' }}
         working-directory: scraper

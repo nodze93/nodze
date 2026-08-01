@@ -80,7 +80,7 @@ export default function AkcijePregled() {
    * sa Open Food Facts, da se ne čeka noćni prolaz. Traje 15-40 min.
    */
   async function povuciSlike() {
-    if (!confirm("Pokrenuti scrape + dopunu slika na GitHub Actions?\n\nTraje 15–40 minuta.")) return;
+    if (!confirm("Pokrenuti scrape + dopunu slika na GitHub Actions?\n\nTraje oko 2 minute.")) return;
     setAkcijaBusy(true);
     setAkcijaMsg("");
     try {
@@ -251,8 +251,9 @@ export default function AkcijePregled() {
         {akcijaMsg && <div className={"pg-rr-msg" + (akcijaMsg.startsWith("Greška") ? " bad" : "")}>{akcijaMsg}</div>}
         <div className="pg-rr-note">
           „Apply layer" popuni prazne slike iz trajnog sloja i primijeni skrivanja — radi odmah.
-          „Povuci slike sada" pali GitHub Actions (15–40 min): skine ponude i dopuni slike sa
+          „Povuci slike sada" pali GitHub Actions (~2 min): skine ponude i dopuni slike sa
           Open Food Facts — koristi poslije JSON uvoza da uvezeni artikli dobiju fotografije.
+          Ako taj korak završi za 1s, znači da svi artikli već imaju sliku (nema šta popunjavati).
         </div>
       </div>
 

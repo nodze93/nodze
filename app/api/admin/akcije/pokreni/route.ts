@@ -26,6 +26,7 @@ export async function POST() {
   return NextResponse.json({
     ok: true,
     poruka:
-      "Pokrenuto na GitHub Actions. Traje 15–40 min: skine ponude, primijeni trajni sloj i dopuni slike.",
+      "Pokrenuto na GitHub Actions (traje ~2 min): skine ponude, primijeni trajni sloj i dopuni slike. " +
+      "Osvježi stranicu za koju minutu — na sajtu se vidi nakon isteka keša (2 min).",
   });
 }

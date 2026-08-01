@@ -121,11 +121,23 @@ export async function POST(req: Request) {
   //   [ {...}, {...} ]          ← goli niz
   //   { "offers": [ ... ] }     ← omotan
   //   { ...jedna ponuda... }    ← jedan objekat
-  const omotac = body as { offers?: unknown; items?: unknown; data?: unknown };
-  const ugnijezdjen = [omotac?.offers, omotac?.items, omotac?.data].find(Array.isArray);
-  const list: OfferInput[] = Array.isArray(body)
-    ? (body as OfferInput[])
-    : ((ugnijezdjen as OfferInput[] | undefined) ?? [body as OfferInput]);
+  function razmotaj(v: unknown): OfferInput[] {
+    if (Array.isArray(v)) return v as OfferInput[];
+    const w = v as { offers?: unknown; items?: unknown; data?: unknown } | null;
+    const niz = [w?.offers, w?.items, w?.data].find(Array.isArray);
+    return (niz as OfferInput[] | undefined) ?? [v as OfferInput];
+  }
+
+  let list = razmotaj(body);
+
+  // DVOSTRUKI OMOT: stariji admin (keširana skripta) je fajl {"offers":[...]}
+  // umotavao još jednom → {"offers":[{"offers":[...1807]}]}. Server bi to vidio
+  // kao JEDAN artikal bez naziva ("upisano 0, preskočeno 1"). Odmotaj i to.
+  while (list.length === 1 && list[0] && !Array.isArray(list[0])) {
+    const unutra = razmotaj(list[0]);
+    if (unutra.length === 1 && unutra[0] === list[0]) break; // nema više omota
+    list = unutra;
+  }
 
   if (list.length === 0) return NextResponse.json({ error: "Nema ponuda" }, { status: 400 });
   if (list.length > 500) return NextResponse.json({ error: "Najviše 500 odjednom" }, { status: 400 });
