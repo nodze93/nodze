@@ -17,9 +17,34 @@ export default function InstallPrompt() {
   const [mode, setMode] = useState<null | "android" | "ios">(null);
 
   useEffect(() => {
+    // Odluči da li i kako pokazati baner. Zove se na svakoj stranici (timer),
+    // čim postane instalabilno (beforeinstallprompt) i kad kalkulator javi.
+    function maybeShow() {
+      if (dismissedRef.current) return;
+      try {
+        if (sessionStorage.getItem("kodnas-install-dismissed") === "1") {
+          dismissedRef.current = true;
+          return;
+        }
+      } catch {}
+      const standalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (navigator as any).standalone === true;
+      if (standalone) return; // već instalirano → ništa
+      if (deferredRef.current) {
+        setMode("android"); // Android/desktop: instalacija jednim klikom
+        return;
+      }
+      const ua = navigator.userAgent || "";
+      const isIOS =
+        /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+      if (isIOS) setMode("ios"); // iPhone → uputstvo (Apple ne da dugme)
+    }
+
     function onBIP(e: any) {
       e.preventDefault();
-      deferredRef.current = e; // Android/desktop: spremi prompt
+      deferredRef.current = e; // spremi prompt
+      maybeShow(); // čim je instalabilno, pokaži (osim ako je zatvoreno)
     }
     function onInstalled() {
       deferredRef.current = null;
@@ -32,23 +57,18 @@ export default function InstallPrompt() {
     function onMsg(e: MessageEvent) {
       const d: any = e.data;
       if (!d || d.type !== "kodnas-calc-result") return;
-      if (dismissedRef.current) return;
-      const standalone =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        (navigator as any).standalone === true;
-      if (standalone) return; // već instalirano
-      if (deferredRef.current) {
-        setMode("android"); // instalacija moguća jednim klikom
-        return;
-      }
-      const ua = navigator.userAgent || "";
-      const isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-      if (isIOS) setMode("ios"); // iPhone → uputstvo
+      maybeShow();
     }
+
+    // NA SVAKOJ STRANICI: pokaži baner ubrzo nakon učitavanja (ne samo na
+    // kalkulatoru). Kratki delay da se stranica slegne.
+    const timer = window.setTimeout(maybeShow, 2200);
+
     window.addEventListener("beforeinstallprompt", onBIP);
     window.addEventListener("appinstalled", onInstalled);
     window.addEventListener("message", onMsg);
     return () => {
+      window.clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", onBIP);
       window.removeEventListener("appinstalled", onInstalled);
       window.removeEventListener("message", onMsg);
@@ -70,6 +90,10 @@ export default function InstallPrompt() {
   }
   function kasnije() {
     dismissedRef.current = true;
+    // Zapamti za ovu sesiju da ne iskače na svakoj sljedećoj stranici.
+    try {
+      sessionStorage.setItem("kodnas-install-dismissed", "1");
+    } catch {}
     setMode(null);
   }
 

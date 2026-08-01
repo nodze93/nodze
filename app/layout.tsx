@@ -6,6 +6,7 @@ import "./globals.css";
 import SearchModal from "@/components/SearchModal";
 import AdminModeracija from "@/components/admin/AdminModeracija";
 import BottomNav from "@/components/BottomNav";
+import InstallPrompt from "@/components/InstallPrompt";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de";
 
@@ -88,6 +89,10 @@ export default function RootLayout({
 
         {/* Donja nav traka (mobilni): Vijesti · Akcije · Vodiči · Brutto-Netto */}
         <BottomNav />
+
+        {/* Install baner — sada na SVAKOJ stranici (ne samo na kalkulatoru).
+            Sam se sakrije ako je već instalirano ili zatvoreno u ovoj sesiji. */}
+        <InstallPrompt />
 
         {/* PWA — registruj service worker (bez keširanja, samo za instalabilnost) */}
         <Script id="sw-register" strategy="afterInteractive">

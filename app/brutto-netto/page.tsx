@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import InstallPrompt from "@/components/InstallPrompt";
 
 // ============================================================
 // BRUTTO-NETTO KALKULATOR — /brutto-netto
@@ -24,9 +23,6 @@ export default function BruttoNettoPage() {
         allow="web-share; clipboard-write"
         className="bn-frame"
       />
-
-      {/* Install baner (Android) — pojavi se kad korisnik vidi rezultat */}
-      <InstallPrompt />
 
       <style>{`
         .bn-wrap {
