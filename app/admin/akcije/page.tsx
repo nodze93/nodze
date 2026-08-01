@@ -97,8 +97,13 @@ export default function AdminAkcije() {
     let offers: unknown;
     try {
       const text = await file.text();
-      offers = JSON.parse(text);
-      if (!Array.isArray(offers)) offers = [offers];
+      const parsed: unknown = JSON.parse(text);
+      // Fajl može biti goli niz ILI omotan ({"offers":[...]}). Ranije se
+      // omotani fajl umotavao JOŠ jednom → server je vidio jedan artikal bez
+      // naziva i javljao "upisano 0, preskočeno 1".
+      const omotac = parsed as { offers?: unknown; items?: unknown; data?: unknown };
+      const ugnijezdjen = [omotac?.offers, omotac?.items, omotac?.data].find(Array.isArray);
+      offers = Array.isArray(parsed) ? parsed : (ugnijezdjen ?? [parsed]);
     } catch {
       setBusy(false); setMsg(`Neispravan JSON u fajlu "${file.name}"`); return;
     }
