@@ -124,6 +124,8 @@ export class RetailersSource implements Source {
 
     const page = await this.open(store.url);
     try {
+      // Sacekaj da se kartice uopste pojave (sadrzaj se cesto puni tek uz JS).
+      await page.waitForSelector(def.tile, { timeout: config.timeoutMs }).catch(() => {});
       await autoScroll(page);
       // Natjeraj lijene slike da povuku PRAVI src prije čitanja. Inače dio
       // ostane na placeholderu → prazna slika → ilustracija na sajtu.
@@ -134,6 +136,10 @@ export class RetailersSource implements Source {
           if (ds && !im.getAttribute('src')?.includes(ds)) im.setAttribute('src', ds);
         });
       });
+      // Pusti slike da se STVARNO ucitaju — tek tada se src ustali na pravoj
+      // fotki (Kaufland/Aldi Süd inace na gresku vrate placeholder). Zato smo
+      // gore i prestali da abortiramo slike.
+      await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
       await page.waitForTimeout(2500);
       await autoScroll(page);
 
@@ -187,6 +193,15 @@ export class RetailersSource implements Source {
         .map((row) => toOffer(row, def, store.url!))
         .filter((o): o is ScrapedOffer => o !== null);
 
+      // DIJAGNOSTIKA (vidi se u GitHub Actions logu): koliko je artikala
+      // dobilo PRAVU sliku. Ako je "sa slikom" ≈ 0 za neki lanac, znaci da
+      // slika i dalje ne prolazi (pa gledaj primjer URL-a ispod).
+      const withImg = offers.filter((o) => o.imageUrl).length;
+      const sample = offers.find((o) => o.imageUrl)?.imageUrl ?? '—';
+      console.log(
+        `    [slike] ${def.name}: ${offers.length} artikala, ${withImg} sa slikom | primjer: ${sample.slice(0, 90)}`,
+      );
+
       this.offersCache.set(store.url, offers);
       return offers;
     } finally {
@@ -211,10 +226,14 @@ export class RetailersSource implements Source {
       viewport: { width: 1366, height: 900 },
     });
     this.context.setDefaultTimeout(config.timeoutMs);
-    // Slike i fontovi nam u DOM-u ne trebaju — manje prometa za obje strane.
+    // VAZNO: slike PUSTAMO da se ucitaju. Kaufland i Aldi Süd na gresku
+    // ucitavanja slike (kad je abortiramo) zamijene <img src> sivim
+    // placeholderom, pa bismo uhvatili prazno umjesto prave fotke — zato je
+    // ranije bilo 0 slika kod ta dva lanca. Fontove i medij i dalje odbijamo
+    // (ne trebaju nam u DOM-u, a stede promet).
     await this.context.route('**/*', (route) => {
       const type = route.request().resourceType();
-      if (type === 'image' || type === 'font' || type === 'media') return route.abort();
+      if (type === 'font' || type === 'media') return route.abort();
       return route.continue();
     });
     return this.context;
