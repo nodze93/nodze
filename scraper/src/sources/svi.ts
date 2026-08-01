@@ -29,8 +29,10 @@ export class SviLanciSource implements Source {
   constructor(opts: { dryRun: boolean }) {
     this.retailers = new RetailersSource(opts);
     this.lidl = new LidlSource();
-    // REWE dijeli browser sa RetailersSource — nema smisla dizati drugi Chromium.
-    this.rewe = new ReweSource(() => this.retailers.novaStranica());
+    // REWE dijeli browser sa RetailersSource, ali BEZ JavaScripta:
+    // njihov sadržaj je već u HTML-u, a kad se skripta izvrši pregazi listu
+    // (traži izbor marketa) pa ostane prazno — zato `true`.
+    this.rewe = new ReweSource(() => this.retailers.novaStranica(true));
   }
 
   async listStores(plz: string): Promise<ScrapedStore[]> {

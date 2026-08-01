@@ -16,6 +16,10 @@
  *  ispadnu kao „Angebot" bez procenta i ne ulaze u „Top ponude". To nije
  *  greška scrapera nego to što izvor daje.
  *
+ *  ⚠️ ČITA SE BEZ JAVASCRIPTA. Sav sadržaj je već u HTML-u (server-rendered),
+ *  a kad se njihova skripta izvrši, pregazi listu (traži izbor marketa) i
+ *  ostane prazno — tako je prvi put prošla samo 1 od 16 kategorija.
+ *
  *  Zasluge: kategorije i logika perioda preuzete iz korisnikovog
  *  `prospekt-bot` (Python); ovdje dodane i SLIKE, koje on ne skuplja.
  * =====================================================================
@@ -25,7 +29,7 @@ import { config } from '../config.js';
 import { procitajPeriod } from '../datumi.js';
 import { cleanProductName, normalizeCategory, parsePrice } from '../normalize.js';
 import type { ScrapedOffer, ScrapedStore, Source } from '../types.js';
-import { dismissCookieBanner, NACIONALNI_PLZ } from './retailers.js';
+import { NACIONALNI_PLZ } from './retailers.js';
 
 const BASE = 'https://www.rewe.de/angebote/nationale-angebote/';
 
@@ -94,8 +98,7 @@ export class ReweSource implements Source {
           waitUntil: 'domcontentloaded',
           timeout: config.timeoutMs,
         });
-        await dismissCookieBanner(page);
-        await page.waitForSelector('.cor-offer-renderer-tile', { timeout: 12_000 }).catch(() => {});
+        // Bez JS-a nema ni cookie-banera ni čekanja — sadržaj je već u HTML-u.
 
         const podaci = (await page.evaluate(() => {
           const tab = document.querySelector('button[data-week="current"]');

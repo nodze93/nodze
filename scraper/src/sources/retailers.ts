@@ -117,6 +117,8 @@ export class RetailersSource implements Source {
   readonly name = 'retailers';
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
+  /** kontekst bez JavaScripta — koristi ga REWE (vidi `novaStranica`) */
+  private contextBezJs: BrowserContext | null = null;
   private robots = new Map<string, RobotsRules | null>();
   // Nacionalno → povučemo jednom po lancu, pa isti rezultat vrijedi za sve PLZ-ove.
   private offersCache = new Map<string, ScrapedOffer[]>();
@@ -345,10 +347,28 @@ export class RetailersSource implements Source {
   /**
    * Prazna stranica u ISTOM browseru — koristi je REWE izvor.
    * Bolje nego drugi Chromium: manje memorije i jedno gašenje na kraju.
+   *
+   * `bezJs` = kontekst SA ISKLJUČENIM JavaScriptom. Treba REWE-u: njihove
+   * stranice su server-rendered i sav sadržaj je već u HTML-u, ali kad se
+   * JS izvrši, skripta pregazi listu (traži izbor marketa) pa ostane prazno.
+   * Bez JS-a se čita čist HTML — isto što vidi i običan `curl`.
    */
-  async novaStranica(): Promise<Page> {
-    const ctx = await this.ensureBrowser();
-    return ctx.newPage();
+  async novaStranica(bezJs = false): Promise<Page> {
+    if (!bezJs) {
+      const ctx = await this.ensureBrowser();
+      return ctx.newPage();
+    }
+    if (!this.contextBezJs) {
+      await this.ensureBrowser(); // podigni browser ako već nije
+      this.contextBezJs = await this.browser!.newContext({
+        userAgent: config.userAgent,
+        locale: 'de-DE',
+        timezoneId: 'Europe/Berlin',
+        javaScriptEnabled: false,
+      });
+      this.contextBezJs.setDefaultTimeout(config.timeoutMs);
+    }
+    return this.contextBezJs.newPage();
   }
 
   private async dumpDebug(slug: string, page: Page): Promise<void> {
@@ -363,8 +383,10 @@ export class RetailersSource implements Source {
   }
 
   async close(): Promise<void> {
+    await this.contextBezJs?.close();
     await this.context?.close();
     await this.browser?.close();
+    this.contextBezJs = null;
     this.context = null;
     this.browser = null;
   }
