@@ -55,6 +55,25 @@ export default function AkcijePregled() {
   const [plz, setPlz] = useState<string>("");
   const [d, setD] = useState<Dash | null>(null);
   const [loading, setLoading] = useState(true);
+  const [akcijaMsg, setAkcijaMsg] = useState<string>("");
+  const [akcijaBusy, setAkcijaBusy] = useState(false);
+
+  async function applyLayer() {
+    setAkcijaBusy(true);
+    setAkcijaMsg("");
+    try {
+      const r = await fetch("/api/admin/akcije/akcija?do=apply-layer", { method: "POST" });
+      const j = await r.json();
+      setAkcijaMsg(
+        j.ok
+          ? `Gotovo: ${j.by_ean} slika po EAN-u, ${j.by_key} po nazivu, ${j.hidden_rows} skriveno.`
+          : `Greška: ${j.error}`,
+      );
+    } catch (e) {
+      setAkcijaMsg("Greška: " + (e as Error).message);
+    }
+    setAkcijaBusy(false);
+  }
 
   const load = useCallback(async (p?: string) => {
     setLoading(true);
@@ -195,6 +214,26 @@ export default function AkcijePregled() {
         )}
       </div>
 
+      {/* Ručne radnje */}
+      <div className="pg-panel" style={{ marginTop: 18 }}>
+        <div className="pg-panel-hd">
+          <div><b>Ručne radnje</b><span className="pg-panel-sub"> pokreni odmah, bez čekanja crona</span></div>
+        </div>
+        <div className="pg-rr">
+          <button className="pg-rr-btn" onClick={applyLayer} disabled={akcijaBusy}>
+            {akcijaBusy ? "Radim…" : "🖼️ Primijeni sloj slika (apply layer)"}
+          </button>
+          <a className="pg-rr-link" href={AKCIJE_WORKFLOW} target="_blank" rel="noopener noreferrer">
+            📈 Pokreni scrape / enrich (GitHub) ↗
+          </a>
+        </div>
+        {akcijaMsg && <div className={"pg-rr-msg" + (akcijaMsg.startsWith("Greška") ? " bad" : "")}>{akcijaMsg}</div>}
+        <div className="pg-rr-note">
+          „Apply layer" popuni prazne slike iz trajnog sloja (Open Food Facts) i primijeni skrivanja.
+          Scrape i enrich rade u GitHub Actions cronu (dnevno).
+        </div>
+      </div>
+
       <div className="pg-note">
         Napomena: prikazani su samo lanci koje stvarno skidamo (Aldi Süd, Aldi Nord, Kaufland).
         Ostali (Lidl, REWE, Netto, Edeka, dm, OBI) pojaviće se kad im dodamo izvor (marktguru uvoz / crawler).
@@ -233,6 +272,13 @@ export default function AkcijePregled() {
         .pg-badge.ok { background: #ecfdf3; color: #16a34a; } .pg-badge.ok i { background: #16a34a; }
         .pg-badge.bad { background: #fef2f2; color: #dc2626; } .pg-badge.bad i { background: #dc2626; }
         .pg-note { color: #9ca3af; font-size: 12px; margin-top: 14px; line-height: 1.5; }
+        .pg-rr { display: flex; gap: 10px; flex-wrap: wrap; }
+        .pg-rr-btn { padding: 10px 16px; background: #111827; color: #fff; border: none; border-radius: 9px; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+        .pg-rr-btn:disabled { opacity: .55; cursor: default; }
+        .pg-rr-link { padding: 10px 16px; background: #fff; color: #2563eb; border: 1px solid #dbe4ff; border-radius: 9px; font-size: 13.5px; font-weight: 700; text-decoration: none; }
+        .pg-rr-msg { margin-top: 10px; font-size: 13px; font-weight: 600; color: #15803d; }
+        .pg-rr-msg.bad { color: #dc2626; }
+        .pg-rr-note { color: #9ca3af; font-size: 11.5px; margin-top: 10px; line-height: 1.5; }
         @media (max-width: 860px) { .pg-cards { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 520px) { .pg-cards { grid-template-columns: 1fr; } }
       `}</style>

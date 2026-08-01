@@ -21,12 +21,12 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { label: "Pregled", icon: "▦", href: "/admin/akcije/pregled" },
-  { label: "Scraper", icon: "📈" },
-  { label: "Slike", icon: "🖼️" },
+  { label: "Scraper", icon: "📈", href: "/admin/akcije/scraper" },
+  { label: "Slike", icon: "🖼️", href: "/admin/akcije/slike" },
   { label: "Popusti", icon: "🏷️", href: "/admin/akcije", exact: true },
-  { label: "Prodavnice", icon: "🏪" },
-  { label: "PLZ pokrivenost", icon: "📍" },
-  { label: "Kategorije", icon: "🗂️" },
+  { label: "Prodavnice", icon: "🏪", href: "/admin/akcije/prodavnice" },
+  { label: "PLZ pokrivenost", icon: "📍", href: "/admin/akcije/plz" },
+  { label: "Kategorije", icon: "🗂️", href: "/admin/akcije/kategorije" },
   { label: "Dozvole", icon: "🛡️" },
 ];
 

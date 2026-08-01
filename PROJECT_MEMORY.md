@@ -26,10 +26,10 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 - IZUZETAK: `.github/workflows/*.yml` su ZAŠTIĆENI od strane GitHub-a —
   most ih NE MOŽE pisati. Taj fajl (bot-cron.yml) Claude mi pošalje,
   a JA ga ručno kopiram u folder.
-- Claude NE MOŽE sam push (cloud 403) i NE MOŽE lokalno build/test
-  (nema npm registry) — zato izmjene testiram na Vercel PREVIEW-u.
-- Claude sada VIZUELNO provjerava (renderuje screenshotove kroz Playwright/Chromium)
-  prije isporuke, i normalizuje kraj-linija (CRLF) da diff bude čist na Windowsu.
+- Claude NE MOŽE sam push (cloud 403). MOŽE `tsc --noEmit` (tipska provjera) u sandboxu, ali NE MOŽE pokrenuti bazu/scraper lokalno (nema mrežu do Supabase/lanaca) — pravu provjeru radi UŽIVO kroz Chrome na deployanom sajtu (npr. `/api/akcije/discounts`).
+- Build prolazi i uz tipske greške u TUĐIM fajlovima jer `next.config` ima `ignoreBuildErrors: true` + `eslint.ignoreDuringBuilds: true`. Claude gleda da su BAŠ NJEGOVI fajlovi čisti.
+- ⚠️ GIT LOCK: Claude NE SMIJE pokretati `git` komande preko mosta (device_bash) — one kao "bridge" korisnik naprave `.git/index.lock` koji onda blokira korisnikov GitHub Desktop ("A lock file already exists"). Ako se desi: ukloni `.git/index.lock` (premjesti ga, jer most ne može `rm`) i NE pokreći git poslije toga. Za isporuku koristi samo device_commit_files (piše fajlove, ne dira git).
+- Line-endings: 30+ fajlova zna pokazivati kao "modified" u GitHub Desktopu — to su SAMO CRLF/LF razlike (sadržaj isti kao GitHub), bezopasno, slobodno commit.
 
 ## ⚠️ PRAVILA
 1. Radi na PREVIEW branchu, pa merge u main tek kad potvrdim
@@ -131,7 +131,7 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
 - Bot piše na GitHub Actions → NE troši Vercel CPU. Vercel CPU troši POSLUŽIVANJE stranica.
 - `app/clanak/[slug]` zaostali `force-dynamic` UKLONJEN → ISR (keš). `app/vodic/[slug]` i `app/vodici` → revalidate=600.
 - `osvjeziSajt()` (lib/revalidate.ts) se zove na objavu → svježina očuvana.
-- `/api/akcije/*` keš 30 min → akcije NE troše CPU.
+- `/api/akcije/*` keš **2 min** (`s-maxage=120`, `revalidate=120` u `lib/akcije-server.ts` + `app/api/akcije/*`). Bilo 30 min + 24h stale-while-revalidate → izmjene su visjele satima i razlikovao se telefon/kompjuter. Kratak keš = izmjene se vide skoro odmah, promet mali pa CPU ostaje nizak.
 
 ### AKCIJE (/akcije) — popusti iz njemačkih PRODAVNICA (direktno, NE KaufDA)
 - Četvrta kartica u donjoj nav traci: Vijesti · **Akcije** · Vodiči · Brutto-Netto
@@ -145,11 +145,24 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
   - TRI lanca: **Aldi Süd** `aldi-sued.de/de/angebote.html` (JUG: 85737,80331,80807,70173,60311) · **Aldi Nord** `aldi-nord.de/angebote.html` (SAMO Berlin 10115; cijene "1.49**" skidaju zvjezdice; naziv=marka+h2; tekuća sedmica, sljedeća se učita tek na klik) · **Kaufland** `filiale.kaufland.de/angebote.html` (SVI PLZ; cijena "1.99" tačka→zarez)
   - GEOGRAFIJA: Aldi Süd i Nord ne postoje na istom mjestu → svaki samo u svoje gradove (`plz` u RetailerDef); Kaufland svuda. Nacionalno = povuci jednom po lancu (keš) pa upiši u sve PLZ-ove lanca.
 - robots.ts BUG popravljen: `isAllowed` je `/*/*/ajax/` skraćivao na `/` i blokirao BAŠ SVE → pravi regex + `robots.test.ts`.
-- SLIKE: fotografija sa stranice lanca → ako fali Open Food Facts (`images:enrich`) → ako i to fali ILUSTRACIJA (`ProductArt`). Kauflandov sivi "fallback" placeholder se prepoznaje kao "nema slike" (`ProductImage.isPlaceholder`). Pokrivenost: Aldi Nord 265/266, Kaufland 17/49, Aldi Süd 4/23 (TODO: bolje hvatanje Aldi Süd/Kaufland slika, lijeno učitavanje).
+- SLIKE (POPRAVLJENO): fotografija sa stranice lanca → ako fali Open Food Facts (`images:enrich`) → ako i to fali ILUSTRACIJA (`ProductArt`). Kauflandov sivi "fallback" placeholder se prepoznaje kao "nema slike" (`ProductImage.isPlaceholder`).
+  - **BUG bio: scraper je ABORTIRAO učitavanje slika (`route.abort` za `image`).** Kaufland/Aldi Süd na grešku učitavanja zamijene `<img src>` sivim placeholderom → hvatali smo prazno (0 slika). Aldi Nord to ne radi (zato je jedini radio). FIX u `retailers.ts`: NE abortiramo slike (samo font/media), + `waitForLoadState('networkidle')` + dijagnostički log `[slike]`. Poslije fixa: Aldi Süd 23/23, Kaufland 49/49, Aldi Nord 265/266 — praktično 100%.
 - Snapshot (PLZ, datum): delete `source='scraper'` pa insert.
 - ZAKLJUČANI lanci (Lidl, Netto, Penny, REWE, Edeka, dm, OBI) = "fotoalbum"/JS/izbor marketa → samo crawler+vision (screenshot → AI čita), ~5-15 €/mj + krhko + pravno sivo. ODLOŽENO dok nema posjetilaca.
-- TRAJNI SLOJ (`akcije-trajni-sloj.sql`): `ak_product_images`/`ak_moderation`/`ak_scrape_runs`/`ak_apply_product_layer()`/`applyLayer.ts` alarm — postoji, puni ga ADMIN koji NIJE napravljen; alarm (danas vs juče) radi.
-- Gradovi: `scraper/data/plz.txt`. Detalji + šta namjerno ne radi: `scraper/README.md`.
+- TRAJNI SLOJ (`akcije-trajni-sloj.sql`): `ak_product_images`/`ak_moderation`/`ak_scrape_runs`/`ak_apply_product_layer()`/`applyLayer.ts` alarm. Alarm (danas vs juče) radi. **ADMIN KONZOL NAPRAVLJEN** (vidi dolje).
+- Gradovi (privremeno): `scraper/data/plz.txt`. **Plan: preći s PLZ-uzoraka na REGIJE — vidi `PLAN-REGIJE.md`.** Detalji: `scraper/README.md`.
+
+### AKCIJE — ADMIN KONZOL (`/admin/akcije/*`) — NAPRAVLJENO
+- Svijetli samostalni konzol (`app/admin/akcije/layout.tsx`) sa sidebar-om; opšti (tamni) admin okvir se zaobiđe za `/admin/akcije/*` (`app/admin/layout.tsx` early-return). Zaštićen postojećim middleware-om.
+- **Pregled** (`/admin/akcije/pregled` + `api/admin/akcije/dashboard`): stat-kartice + Zdravlje scrapera (danas vs juče iz `ak_scrape_runs`) + Ručne radnje ("Primijeni sloj slika" = poziva `ak_apply_product_layer` RPC; scrape/enrich vode na GitHub Actions). PLZ izbornik.
+- **Slike** (`/admin/akcije/slike` + `api/admin/akcije/slike`): tabovi (Nesigurno/Bez slike/Odbačeno/Potvrđene), Potvrdi/Odbaci (mijenja `ak_product_images.status`), "Okači svoju" = zalijepi URL slike (manual, bez file-storagea zasad), Pokrivenost slikama (po izvoru + licenca).
+- **Scraper** (`/admin/akcije/scraper`): historija prolaza. **Prodavnice / PLZ pokrivenost / Kategorije** (`api/admin/akcije/liste?what=`): liste nad snapshotom. **Popusti** = postojeća `/admin/akcije` (unos + JSON uvoz).
+- **Dozvole** = "uskoro" (traži hash lozinki). Pravi file-upload slika = "uskoro" (treba storage). Icecat/Pexels izvori = nisu povezani.
+- **JSON IMPORTER** (`app/admin/akcije/page.tsx` + `api/admin/akcije/route.ts`): lijepljenje ili **upload `.json`**. Prima `productName/store/newPrice/oldPrice/category/imageUrl/validFrom/validTo/plz/offerId/offerUrl`. Za marktguru: **slike agregatora (marktguru/kaufda/bonial) se NAMJERNO preskaču** (`cleanImageUrl`) — za slike se oslanjamo SAMO na OFF (pravni razlog). `offerId→external_id`, `offerUrl→source_url`.
+- marktguru: API traži POJAM PRETRAGE (nije bulk feed) + pravni rizik (§87b) → NIJE dobar besplatan izvor; koristi se samo ručni JSON uvoz ako korisnik želi.
+
+### INSTALL PROMPT — sada na SVAKOJ stranici
+- `components/InstallPrompt.tsx`: prije se palio SAMO na kalkulatoru (postMessage). Sada je u `app/layout.tsx` (root) i pali se na svakoj stranici ~2s nakon učitavanja (`maybeShow` + timer). Pamti "Kasnije" u `sessionStorage`. Uklonjen duplikat sa `app/brutto-netto/page.tsx`.
 
 ### ⏳ ČEKA KORISNIKA (ručno)
 1. **info@kodnas.de NE RADI još** → Namecheap → Manage kodnas.de → REDIRECT EMAIL → alias `info` → nodze93@gmail.com
@@ -157,9 +170,10 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
 3. Provjeriti **Vercel → Usage** datum reseta ciklusa (CPU je bio ~81%)
 4. (opciono) cookie-baner za GA pristanak
 5. **AKCIJE — SQL** (`akcije.sql` + `akcije-trajni-sloj.sql`) POKRENUT; `DATABASE_URL` secret POSTAVLJEN; scraper radi, podaci u bazi (Aldi Süd/Nord/Kaufland). GOTOVO.
-6. **AKCIJE — PROVJERITI dnevni scraper**: GitHub Actions → ima li pokretanje svako jutro ~06:00? Ako ne → cron se ne pali → ponude "ne osvježavaju se". (Glavni sumnjivac za "uvijek jučerašnje".)
-7. **AKCIJE TODO**: (a) "važi od/do" + prikaz po danu (korisnikova ideja, NIJE rađeno); (b) bolje hvatanje Aldi Süd/Kaufland slika; (c) ostali lanci = crawler+vision kad bude posjetilaca.
-8. **AKCIJE — ručni admin ODBAČEN** (korisnik ne želi ručni unos; fajlovi ostali samo u Claude /tmp). Trajni-sloj admin (potvrdi sliku/sakrij) i dalje NIJE napravljen.
+6. **AKCIJE — dnevni scraper RADI** (potvrđeno): GitHub Actions "Akcije — dnevni scraper" se pali po cronu i prolazi uspješno. "Uvijek jučerašnje" je bio KEŠ (30 min + 24h stale), sada 2 min → riješeno.
+7. **AKCIJE TODO**: (a) "važi od/do" + prikaz po danu — importer sada čita `validFrom/validTo`, ali PRIKAZ po danu u dizajnu NIJE rađen; (b) slike Aldi Süd/Kaufland POPRAVLJENE; (c) ostali lanci = crawler+vision ili marktguru JSON, kad bude posjetilaca; (d) pravi file-upload slika (treba storage); (e) Dozvole (hash lozinki); (f) Icecat/Pexels izvori slika.
+8. **AKCIJE — admin konzol NAPRAVLJEN** (Pregled/Scraper/Slike/Prodavnice/PLZ/Kategorije/Popusti+JSON uvoz). Korisnik SADA želi JSON uvoz (predomislio se oko ručnog) — upload `.json` radi.
+9. **AKCIJE — REGIJE**: dogovoren prelazak s 8.200 PLZ na model regija (nacionalno + Aldi jug/sjever + kasnije REWE/Edeka). Detaljan plan: **`PLAN-REGIJE.md`**. Sljedeći veći zadatak.
 
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.
