@@ -12,6 +12,7 @@ const navItems: { href: string; label: string; icon: string; exact?: boolean; ex
   // Kalkulator (Brutto-Netto) — vanjska statična stranica s vlastitom prijavom.
   { href: "/kalkulator-app/admin.html", label: "Kalkulator", icon: "🧮", external: true },
   { href: "/admin/vodici", label: "Vodiči", icon: "🗺️" },
+  { href: "/admin/akcije/pregled", label: "Akcije", icon: "🏷️" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
