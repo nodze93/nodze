@@ -168,6 +168,19 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
 - Osnova preuzeta iz korisnikovog `prospekt-bot` (Python) i prevedena u TS da
   radi kao ostali lanci — jedan workflow, jedan snapshot, isti logovi.
 
+### ZAMKA: `__name is not defined` u `page.evaluate`
+- U funkciji koja ide u `page.evaluate` **NE definisati imenovane funkcije**
+  (`const f = () => {}` ni `function f() {}`). `tsx`/esbuild ih umota u
+  pomoćnik `__name`, kojeg u stranici nema → `ReferenceError`.
+- Dozvoljeno: anonimne funkcije unutar `.map()/.filter()` i ravan kod.
+- Provjera: `f.toString()` pod `tsx` — ako sadrži `__name`, puca.
+
+### ZAŠTITA OD PARSERA HILJADA (`sanitizeOffer`)
+- Popust > 95% → stara cijena se BACA + `[sumnjivo]` u logu.
+- Razlog: "1.249,00" pogrešno pročitano kao 1.24 je tiha greška 1000× —
+  cijena izgleda uredno, samo je besmislena. Vrijedi za SVIH 6 lanaca.
+- Ideja preuzeta iz korisnikovog `obi-bot` validatora.
+
 ### USER-AGENT — svjesna odluka, ne mijenjati bez razloga
 - Podrazumijevano: `kodnas-bot/1.0 (+kontakt: info@kodnas.de)` — Aldi ×2,
   Kaufland, Lidl i REWE rade s tim.

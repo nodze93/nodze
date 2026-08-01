@@ -119,17 +119,11 @@ export class ObiSource implements Source {
         }
 
         const kartice = (await page.evaluate(() => {
-          // Cente ostavi (dvocifreni <sup>), markere fusnota izbaci — inače
-          // "1.249,00 €" + marker "10" postane besmislica.
-          const ocisti = (el: Element | null): string => {
-            if (!el) return '';
-            const kopija = el.cloneNode(true) as Element;
-            kopija.querySelectorAll('sup').forEach((s) => {
-              if (!/^\d{2}$/.test((s.textContent ?? '').trim())) s.remove();
-            });
-            return (kopija.textContent ?? '').replace(/\s+/g, ' ').trim();
-          };
-
+          // ⚠️ NE definisati IMENOVANE funkcije unutar `evaluate`
+          // (`const f = () => {}` ili `function f() {}`). `tsx`/esbuild ih
+          // umota u pomoćnik `__name`, koji u stranici ne postoji → padne s
+          // "ReferenceError: __name is not defined". Zato je sve pisano
+          // ravno, a jedine funkcije su anonimne (unutar `.map`).
           return Array.from(document.querySelectorAll('.disc-product-price-container')).map((c) => {
             // popni se do kartice koja ima i link na proizvod i sliku
             let p: Element | null = c;
@@ -143,12 +137,27 @@ export class ObiSource implements Source {
               }
             }
             const img = kartica?.querySelector('img') ?? null;
+
+            // Cente ostavi (dvocifreni <sup>), markere fusnota izbaci — inače
+            // "1.249,00 €" + marker "10" postane besmislica (greška 1000×).
+            const cijene = ['.disc-product-price__base', '.disc-product-price__crossed-out'].map(
+              (sel) => {
+                const el = c.querySelector(sel);
+                if (!el) return '';
+                const kopija = el.cloneNode(true) as Element;
+                kopija.querySelectorAll('sup').forEach((s) => {
+                  if (!/^\d{2}$/.test((s.textContent ?? '').trim())) s.remove();
+                });
+                return (kopija.textContent ?? '').replace(/\s+/g, ' ').trim();
+              },
+            );
+
             return {
               // `alt` je pun naziv proizvoda — čistije nego vaditi ga iz teksta
               // kartice, gdje se miješa "Verkäufer:", "Online verfügbar" i sl.
               naziv: (img?.getAttribute('alt') ?? '').trim(),
-              nova: ocisti(c.querySelector('.disc-product-price__base')),
-              stara: ocisti(c.querySelector('.disc-product-price__crossed-out')),
+              nova: cijene[0] ?? '',
+              stara: cijene[1] ?? '',
               href: (kartica?.querySelector('a[href*="/p/"]')?.getAttribute('href') ?? '').split('?')[0] ?? '',
               slika: img?.getAttribute('src') ?? '',
             };

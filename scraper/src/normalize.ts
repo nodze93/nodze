@@ -104,8 +104,24 @@ export function sanitizeOffer<T extends { productName: string | null; oldPrice: 
   if (!productName) return null;
   if (offer.newPrice === null || !Number.isFinite(offer.newPrice)) return null;
 
-  const oldPrice =
+  let oldPrice =
     offer.oldPrice !== null && offer.oldPrice > offer.newPrice ? offer.oldPrice : null;
+
+  // ZAŠTITA OD PARSERA HILJADA. Njemački zapis "1.249,00" znači 1249, a ne
+  // 1,24 — ko to pogriješi, dobije popust od 99,9% umjesto ispravnog. Takva
+  // greška je tiha: cijena izgleda uredno, samo je 1000× manja.
+  // Popust preko 95% je gotovo uvijek znak da je parser pukao, pa staru
+  // cijenu bacamo (artikal ostaje kao "Angebot") i glasno javljamo.
+  if (oldPrice !== null && offer.newPrice > 0) {
+    const postotak = (1 - offer.newPrice / oldPrice) * 100;
+    if (postotak > 95) {
+      console.log(
+        `    [sumnjivo] ${productName.slice(0, 50)}: ${oldPrice} → ${offer.newPrice} ` +
+          `(${postotak.toFixed(0)}%) — stara cijena odbačena, provjeri parser hiljada`,
+      );
+      oldPrice = null;
+    }
+  }
 
   return { ...offer, productName, newPrice: offer.newPrice, oldPrice };
 }
