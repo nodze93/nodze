@@ -27,6 +27,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   if (pathname === "/admin/login") return <>{children}</>;
+  // Akcije-konzol ima svoj (svijetli) sidebar — ne umotavamo ga u opšti
+  // (tamni) admin okvir da se ne dobiju dva sidebar-a.
+  if (pathname.startsWith("/admin/akcije")) return <>{children}</>;
 
   const zatvori = () => setSidebarOpen(false);
 

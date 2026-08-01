@@ -250,12 +250,12 @@ export default function AdminDashboard() {
               }}>
                 <span>⏳</span> Odobreni članci
               </Link>
-              <Link href="/admin/akcije" style={{
+              <Link href="/admin/akcije/pregled" style={{
                 display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
                 background: "#fef2f8", borderRadius: 8, textDecoration: "none", color: "#111",
                 fontSize: 13, fontWeight: 500,
               }}>
-                <span>🏷️</span> Akcije — unos / uvoz JSON
+                <span>🏷️</span> Akcije — konzol (pregled, unos, slike…)
               </Link>
               <Link href="/admin/newsletter" style={{
                 display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
