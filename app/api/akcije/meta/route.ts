@@ -5,7 +5,7 @@
 
 import { db, jsonCached, jsonError, plzOf } from "@/lib/akcije-server";
 
-export const revalidate = 1800;
+export const revalidate = 120;
 
 const PRAZNO = {
   date: null,

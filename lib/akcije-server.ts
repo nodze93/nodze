@@ -11,8 +11,14 @@ import { createServerClient } from "@/lib/supabase";
 export const SORTS = ["percent", "savings", "price", "name"] as const;
 export type SortKey = (typeof SORTS)[number];
 
-/** 30 min na CDN-u, dan "stale" — podaci se ionako mijenjaju 1× dnevno. */
-export const AK_CACHE = "public, s-maxage=1800, stale-while-revalidate=86400";
+/**
+ * 2 min na CDN-u, još 5 min "stale" dok se u pozadini osvježi. Podaci se
+ * mijenjaju 1× dnevno (scraper), ali kratak keš znači da se izmjene (nove
+ * slike, novi artikli) vide skoro odmah — ranije je bilo 30 min + dan
+ * "stale", pa je stara verzija znala visjeti satima (i razlikovati se
+ * telefon/kompjuter). Promet je mali pa Vercel CPU ostaje nizak.
+ */
+export const AK_CACHE = "public, s-maxage=120, stale-while-revalidate=300";
 
 export function jsonCached(data: unknown, maxAge = AK_CACHE) {
   return NextResponse.json(data, { headers: { "Cache-Control": maxAge } });
