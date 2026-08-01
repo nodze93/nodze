@@ -4,7 +4,7 @@ import { config } from '../config.js';
 import { procitajPeriod } from '../datumi.js';
 import { cleanProductName, normalizeCategory, parsePrice } from '../normalize.js';
 import { fetchRobots, isAllowed, type RobotsRules } from '../robots.js';
-import type { ScrapedOffer, ScrapedStore, Source } from '../types.js';
+import type { ScrapedOffer, ScrapedStore, Scope, Source } from '../types.js';
 
 /**
  * =====================================================================
@@ -34,7 +34,13 @@ interface RetailerDef {
   oldPrice: string;
   /** Kaufland/Aldi Nord cijenu pišu kao "1.99" (tačka) → prebacimo u "1,99" */
   dotDecimal: boolean;
-  /** Samo ovi PLZ-ovi (regija lanca). Prazno = svi (nacionalno, npr. Kaufland). */
+  /**
+   * Gdje ponude vrijede. 'DE' = cijela Njemačka → povuče se JEDNOM i upiše
+   * pod NACIONALNI_PLZ, pa vrijedi za svih ~8.200 PLZ-ova.
+   * Regionalni lanci (Aldi) i dalje idu po gradovima iz `plz`.
+   */
+  scope: Scope;
+  /** Samo ovi PLZ-ovi — vrijedi SAMO za regionalne lance (scope != 'DE'). */
   plz?: string[];
   /**
    * Zadnji dan prodajne sedmice (0=ned … 6=sub) — koristi se SAMO kad lanac
@@ -44,8 +50,15 @@ interface RetailerDef {
   krajSedmice: number;
 }
 
+/**
+ * Posebna "kanta" za NACIONALNE ponude. Nije pravi grad — samo mjesto u bazi
+ * gdje stoje ponude koje vrijede svugdje (Kaufland, Lidl…). Sajt ih pokazuje
+ * SVAKOM korisniku, koji god PLZ upisao.
+ */
+export const NACIONALNI_PLZ = '00000';
+
 // Aldi Süd (jug/zapad) i Aldi Nord (sjever/istok) NE postoje na istom mjestu,
-// pa svaki ide samo u svoje gradove. Kaufland je nacionalan (svi PLZ-ovi).
+// pa svaki ide samo u svoje gradove — dok ne napravimo mapu PLZ→regija.
 const JUG = ['85737', '80331', '80807', '70173', '60311']; // München, Stuttgart, Frankfurt, Ismaning
 const SJEVER = ['10115']; // Berlin
 
@@ -58,6 +71,7 @@ const RETAILERS: RetailerDef[] = [
     nameSel: '.product-tile__name',
     newPrice: 'ins.base-price__discounted',
     oldPrice: 'del',
+    scope: 'aldi-sued',
     dotDecimal: false,
     plz: JUG,
     krajSedmice: 6, // Aldi: sedmica ide do subote
@@ -71,6 +85,7 @@ const RETAILERS: RetailerDef[] = [
     brandSel: '.product-tile__content__upper__brand-name',
     newPrice: '.tag__label--price',
     oldPrice: '.strike-price',
+    scope: 'aldi-nord',
     dotDecimal: true,
     plz: SJEVER,
     krajSedmice: 6,
@@ -83,6 +98,7 @@ const RETAILERS: RetailerDef[] = [
     nameSel: '.k-product-tile__title',
     newPrice: '.k-price-tag__price',
     oldPrice: '.k-price-tag__old-price-line-through',
+    scope: 'DE', // Kaufland: iste cijene u cijeloj Njemačkoj
     dotDecimal: true,
     krajSedmice: 3, // Kaufland: sedmica ide čet–srijeda
   },
@@ -112,12 +128,18 @@ export class RetailersSource implements Source {
   }
 
   async listStores(plz: string): Promise<ScrapedStore[]> {
-    // Regionalni lanci idu samo u svoje gradove; nacionalni (bez plz) svuda.
-    return RETAILERS.filter((r) => !r.plz || r.plz.includes(plz)).map((r) => ({
+    // NACIONALNI_PLZ ('00000') je posebna "kanta" u koju ide sve što vrijedi
+    // za cijelu Njemačku — povuče se jednom umjesto po svakom gradu.
+    // Ostali PLZ-ovi dobijaju samo regionalne lance (Aldi jug/sjever).
+    const nacionalni = plz === NACIONALNI_PLZ;
+    return RETAILERS.filter((r) =>
+      nacionalni ? r.scope === 'DE' : r.scope !== 'DE' && (!r.plz || r.plz.includes(plz)),
+    ).map((r) => ({
       name: r.name,
       slug: r.slug,
       url: r.offersUrl,
       logoUrl: null,
+      scope: r.scope,
     }));
   }
 

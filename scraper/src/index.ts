@@ -179,9 +179,13 @@ async function processPlz(
       else if (imageSource === 'off') result.imagesFromOff += 1;
       else result.imagesMissing += 1;
 
+      // `scope` kaže GDJE ponuda vrijedi: 'DE' = cijela Njemačka (upisuje se
+      // jednom, pod NACIONALNI_PLZ), inače regija lanca.
+      const scope = store.scope ?? null;
+
       if (dryRun)
-        dryRows.push({ ...clean, imageUrl, imageExact, imageSource, store: store.name, plz, date });
-      else rows.push({ ...clean, imageUrl, imageExact, imageSource, storeId });
+        dryRows.push({ ...clean, imageUrl, imageExact, imageSource, store: store.name, plz, date, scope });
+      else rows.push({ ...clean, imageUrl, imageExact, imageSource, storeId, scope });
       storeRows += 1;
     }
     log(`  ${store.name}: ${offers.length} ponuda`);

@@ -1,7 +1,92 @@
 # PROGRESS LOG — KODNAS.DE
 
-## STATUS: LIVE + bot 2.0 (lijevak) radi
-Zadnji update: 2026-07-17 (druga sesija)
+## STATUS: LIVE · bot 2.0 radi · /akcije radi sa 4 lanca
+Zadnji update: 2026-08-01
+
+---
+
+## ✅ SESIJA 2026-08-01 (akcije: duplikati, datumi, JSON uvoz, Lidl) — SVE PUSHOVANO
+
+### Install prompt — iOS
+- [x] „Već imam aplikaciju" link u iPhone baneru → trajno `kodnas-install-done`.
+      iPhone NIKAD ne šalje `appinstalled`, a Safari i app imaju odvojen localStorage,
+      pa se instalirana app ne može detektovati — korisnik to sam kaže.
+- Fajl: components/InstallPrompt.tsx
+
+### QA uživo — nađeno gledanjem sajta u Chrome-u
+- Klik na „Top ponude danas → Pogledaj sve" vodio na stranicu koja piše „Sve akcije"
+- 12 od 72 ponude bili DUPLIKATI (Kaufland isti artikal na više mjesta na stranici)
+- Klik na srce kod duplikata bojio OBA (favorit ide po nazivu, ne po redu)
+- Nijedna kartica nije imala „Vrijedi do" — scraper nije vadio datume
+- (NE diramo, korisnikova odluka: kategorije na njemačkom, „Akcije" van gornjeg menija)
+
+### Duplikati — riješeno na dva mjesta
+- [x] `scraper/src/sources/retailers.ts` → `dedup()` po (naziv + nova cijena); ne ulaze u bazu
+- [x] `app/api/akcije/discounts/route.ts` → izbacuje ih i iz odgovora (današnji snapshot je
+      već bio u bazi s duplikatima) + ispravlja ukupan broj
+- Provjereno na pravim podacima: 72 → 60, izbačeno tačno 12, ništa jedinstveno nije palo
+- Prvi pravi run: `[dupli] Kaufland: izbačeno 12`, `[dupli] Aldi Nord: izbačeno 8`
+
+### Naslov „Top ponude danas"
+- [x] Link nosi `top=1`; `/akcije/ponude` tada piše „Top ponude danas" umjesto „Sve akcije"
+
+### DATUMI VAŽENJA (valid_from / valid_to) — velika stvar
+- [x] `scraper/src/datumi.ts` + `datumi.test.ts` (10/10 testova) — parser njemačkih perioda:
+      „Gültig vom 30.07. bis 05.08." · „Wochenangebote Mo., 27.7. – Sa., 1.8." ·
+      „Angebote ab Donnerstag 30.7." · „Aktion Mo. 27.7." · „Nur Sa. 1.8."
+      Pogađa godinu (radi i preko Nove godine); kad je dat samo početak, kraj je zadnji
+      dan prodajne sedmice lanca (`krajSedmice`: Aldi subota=6, Kaufland srijeda=3).
+- [x] `retailers.ts` prolazi kroz dokument REDOM, pamti zadnji naslov s datumom i lijepi ga
+      na artikle ispod. „Dauerhaft günstige Produkte" resetuje period (nisu sedmična akcija).
+- [x] `supabase/akcije-datumi.sql` → poslije nadograđen u `akcije-uvoz.sql` (vidi dolje)
+- [x] API filtrira po danu **po Berlinu** (Vercel radi u UTC-u)
+- Kartica i detalj su „Vrijedi do" VEĆ imali — falio je samo podatak
+- Prvi pravi run: `[datumi] Kaufland 37/37`, `[datumi] Aldi Süd 11/23`
+  (12 od 23 su „Dauerhaft" — namjerno bez roka)
+
+### JSON UVOZ — bio potpuno pokvaren, sada radi
+- [x] **Kolona `source` NIJE POSTOJALA** u `ak_discounts`, a importer je upisuje →
+      svaki red odbijen; `/api/admin/akcije` vraćao 500. → `supabase/akcije-uvoz.sql`
+- [x] Scraper je brisao SVE za (plz, datum) → pojeo bi ručni uvoz.
+      Sada briše samo `source='scraper'` (`scraper/src/db.ts`)
+- [x] Sajt pokazuje samo najnoviji snapshot → ručni uvoz bi nestao sutradan.
+      Sada ručni redovi idu po DATUMU VAŽENJA. ⚠️ Zato ručni red MORA imati `valid_to`.
+- [x] **Dupli omot**: admin je fajl `{"offers":[...]}` umotavao još jednom → server vidio
+      JEDAN artikal bez naziva → „upisano 0, preskočeno 1". Popravljeno na obje strane
+      (klijent + server razmotaju bilo koji oblik). 6/6 testova.
+- [x] Poruka o preskakanju sada kaže ŠTA fali, ne samo brojku
+
+### LIDL — uvezen, 58 ponuda
+- Provjereno: Lidlove NAMIRNICE se ne mogu skrejpati — Prospekt je flipbook od 70 SLIKA
+  (izvučen tekst = samo navigacija). Njihov ONLINE dio (ESMARA/SILVERCREST/PARKSIDE) JESTE
+  tekst, sa starom cijenom, procentom i „auch in der Filiale 27.07. - 01.08." → mogući izvor.
+- Korisnikov JSON je imao 1807 redova / 33 TUĐA PLZ-a (nijedan naš) = 58 artikala × 33 grada.
+  Sređeno na 58 × naših 6 gradova = 348 redova. **Lidl je nacionalan — cijene iste svugdje.**
+- Lidl se pojavio u traci sam, sa svojim znakom (već pripremljen u `lib/akcije/stores.ts`)
+
+### SLIKE — admin je lagao „100%"
+- [x] `scraper/src/checkImages.ts` (`npm run images:check`) + korak u workflow-u PRIJE
+      Open Food Facts dopune. Pokuca na svaki URL; mrtvima obriše `image_url` → postaju
+      „bez slike" → OFF ih popuni. 6/6 testova (404, HTML sa statusom 200, HEAD zabranjen…)
+- Nađeno mjerenjem: 52 od 58 Lidlovih slika se učita, 6 mrtvo. Admin je brojao samo
+  „ima URL u bazi", ne „slika se otvara".
+- **HOTLINK — svjesna odluka.** Sve 4 prodavnice se povlače s tuđih CDN-ova
+  (lidlplus / kaufland.media.schwarz / aldi.cx / scene7), ništa se ne kopira kod nas.
+  Pravno je to SIGURNIJE od skidanja (nema umnožavanja); `images:download` NAMJERNO ostaje
+  isključen. Kad sajt poraste — provjeriti kod njemačkog advokata.
+
+### Admin — dugme „Povuci slike sada"
+- [x] `lib/github-dispatch.ts` → `dispatchWorkflow()` (pokreće bilo koji workflow)
+- [x] `app/api/admin/akcije/pokreni/route.ts` + dugme u Pregledu
+- Posao traje ~2 min (ne 15–40 kako je prvo pisalo)
+
+### Stanje na kraju sesije
+- 118 ponuda za PLZ 85737: Lidl 58 · Kaufland 37 · Aldi Süd 23 (+ Aldi Nord 258 u 10115)
+- ⚠️ Lidl pada na ~15 već sutra — 43 od 58 ističe 1.8.
+
+---
+
+## Starije sesije
 
 ## ✅ SESIJA 2026-07-17 (druga — 5 popravki; ⚠️ ČEKA COMMIT + PUSH)
 

@@ -5,6 +5,14 @@
 # i sutradan ujutro podaci su tu.
 #
 # VAŽNO: 85737 je i podrazumijevani PLZ na sajtu (PlzProvider), pa mora ostati.
+#
+# 00000 NIJE grad — to je "kanta" za NACIONALNE ponude (Kaufland, Lidl…).
+# One se povuku JEDNOM i vrijede za svih ~8.200 njemačkih PLZ-ova, pa ih ne
+# treba prepisivati po gradovima. Ostali redovi ispod su samo za REGIONALNE
+# lance (Aldi jug/sjever), dok ne napravimo mapu PLZ→regija.
+# Ne brisati 00000 — bez njega nema nacionalnih ponuda.
+
+00000   # NACIONALNO (nije grad) — Kaufland, Lidl…
 
 85737   # Ismaning (podrazumijevani na sajtu)
 80331   # München — centar

@@ -61,6 +61,8 @@ export async function linkStoreToPlz(storeId: number, plz: string): Promise<void
 
 export interface SnapshotRow extends ScrapedOffer {
   storeId: number;
+  /** 'DE' = vrijedi u cijeloj Njemačkoj; inače regija lanca (aldi-sued/aldi-nord) */
+  scope?: string | null;
   /** false kad je slika od drugog pakovanja istog artikla */
   imageExact?: boolean;
   /** odakle je slika; trajni sloj kasnije moze ovo dopuniti */
@@ -168,7 +170,7 @@ export async function replaceSnapshot(
       const chunk = rows.slice(i, i + CHUNK);
       const values: unknown[] = [];
       const placeholders = chunk.map((row, idx) => {
-        const b = idx * 16;
+        const b = idx * 17;
         values.push(
           row.productName,
           row.oldPrice,
@@ -189,8 +191,9 @@ export async function replaceSnapshot(
           // sloj bi tiho prestao da se spaja.
           productKeyOf(row.productName),
           row.ean ?? null,
+          row.scope ?? null,
         );
-        return `(${Array.from({ length: 16 }, (_, k) => `$${b + k + 1}`).join(', ')})`;
+        return `(${Array.from({ length: 17 }, (_, k) => `$${b + k + 1}`).join(', ')})`;
       });
 
       // discount_percent i savings NE upisujemo - baza ih racuna sama
@@ -198,7 +201,7 @@ export async function replaceSnapshot(
         `insert into ak_discounts
            (product_name, old_price, new_price, store_id, category, plz, date,
             image_url, valid_from, valid_to, source_url, external_id, image_exact,
-            image_source, product_key, ean)
+            image_source, product_key, ean, scope)
          values ${placeholders.join(', ')}`,
         values,
       );

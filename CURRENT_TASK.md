@@ -1,68 +1,60 @@
 # TRENUTNI ZADATAK
 
-## Datum: 2026-07-17 (kasna sesija)
+## Datum: 2026-08-01
 
 ## STANJE
 - Portal LIVE: kodnas.de — radi
 - Bot: radi preko GitHub Actions, piše draftove
-- Danas napravljeno 5 popravki (dole). ⚠️ TREBA COMMIT + PUSH da se aktiviraju.
+- **/akcije radi sa 4 lanca**: Aldi Süd, Aldi Nord, Kaufland (scraper) + Lidl (JSON uvoz)
+- Sve od danas je commitovano i pushovano. SQL migracije pokrenute u Supabaseu.
 
-## ✅ ŠTA SMO RADILI (2026-07-17, druga sesija)
+## ✅ ŠTA JE URAĐENO DANAS
+Detaljno u `PROGRESS.md` (sesija 2026-08-01). Ukratko:
 
-### 1. Mobilna naslovna — Svijet i Sport pokazivali samo 1 članak
-- Uzrok: `dajLiveSvijet`/`dajLiveSport` (lib/live.ts) su uzimali samo 60 najnovijih iz
-  SVIH kategorija pa filtrirali → sport/svijet "ispadali" iz tog prozora.
-- Popravka: sada pitaju bazu DIREKTNO po kategoriji (nova `dajObjavljeneOr`), kao /kategorija stranice.
-- Fajl: lib/live.ts
+1. **Duplikati** — 12 od 72 ponude su bili isti artikal. Čisti se u scraperu I u API-ju.
+2. **Naslov** — „Top ponude danas → Pogledaj sve" više ne vodi na stranicu koja piše „Sve akcije".
+3. **Datumi važenja** — scraper sada čita period iz naslova sekcija na stranicama lanaca;
+   sajt pokazuje samo ono što DANAS važi; kartica piše „Vrijedi do DD.MM".
+4. **JSON uvoz** — bio potpuno pokvaren (falila kolona `source`, dupli omot, scraper ga brisao).
+   Sada radi; ručni uvoz živi po datumu važenja, ne po snapshotu.
+5. **Lidl** — 58 ponuda uvezeno. Namirnice se NE mogu skrejpati (flipbook slika).
+6. **Slike** — `images:check` čisti mrtve linkove pa ih Open Food Facts popuni.
 
-### 2. Bot ne piše (0 članaka, "lutrija")
-- Uzrok 1: triaža (AI) radila BEZ postavljene temperature → nasumično; isti ulaz
-  nekad prođe nekad ne ("2x ništa, 3. put par"). Auto i ručno su INAČE isti kod.
-- Uzrok 2: "već poznato" ×0.3 praktično ubija svaki članak koji AI označi, a označava često.
-- Popravka (blago, da NE počne pisati duplikate):
-  - `temperature: 0` na triažu → dosljedno (glavna popravka).
-  - prag 68→61, sport/svijet prag 56→50 (~10% lakše).
-  - "već poznato" 0.3→0.35 (sitno).
-  - Memorija (3 dana) i tema-dedup NETAKNUTI — štit protiv duplikata ostaje.
-- Fajlovi: lib/bot/agenti/claude.ts (dodan temperature param), lib/bot/agenti/triaza.ts
+## 🎯 SLJEDEĆI ZADATAK: SVI PLZ-ovi (model REGIJA)
 
-### 3. Vercel Analytics "pokvaren"
-- Uzrok: paketi @vercel/analytics i @vercel/speed-insights instalirani, ali komponente
-  nikad ubačene u layout → ništa se nije skupljalo.
-- Popravka: <Analytics /> i <SpeedInsights /> dodani u app/layout.tsx.
-- RUČNO: u Vercel dashboardu upaliti Web Analytics (Enable) ako nije.
+Sada pokrivamo samo **6 gradova** (85737, 80331, 80807, 70173, 60311, 10115). Ko unese
+bilo koji drugi PLZ — ne vidi ništa. Cilj: **svih ~8.200 njemačkih PLZ-ova**.
 
-### 4. Ime "Dijaspora.ba" → "kodnas.de"
-- Tab naslov + open graph (title + siteName) u app/layout.tsx.
-- Interni nazivi u kodu (jeDijaspora, naziv workflow-a) NISU dirani (korisnik ih ne vidi).
+Plan je već napisan i dogovoren: **`PLAN-REGIJE.md`**.
 
-### 5. Facebook — istekao token + link u komentaru
-- Napravljen NOVI TRAJNI Page token (Graph API Explorer → produžen → me/accounts).
-- Upisan u Vercel: FB_PAGE_TOKEN (novi), FB_PAGE_ID = 1270099672843899. Redeploy urađen.
-- Kod: facebook.ts sada provjerava i vraća je li link-komentar prošao; fb-share ruta
-  ispisuje jasnu poruku (uspjeh ili razlog zašto komentar nije prošao).
-- Fajlovi: lib/bot/facebook.ts, app/api/admin/fb-share/route.ts
+Suština: ponude se ne razlikuju po PLZ-u nego po REGIJI, i većina je nacionalna.
+Umjesto 8.200 kopija istih podataka → nekoliko „kanti":
+- `DE` = nacionalno (Kaufland, Lidl, Netto, Penny, dm, OBI)
+- `aldi-sued` / `aldi-nord` = dvije polovine Njemačke
+- (kasnije) `rewe-<regija>`, `edeka-<regija>` po Bundeslandu
 
-## ⚠️ RUČNI KORACI KOJI ČEKAJU
-1. **GitHub Desktop → Commit → Push** (svih 6 izmijenjenih fajlova gore).
-   - Sajt (live.ts, layout.tsx, facebook.ts, fb-share) → ide preko Vercela.
-   - Bot (claude.ts, triaza.ts) → radi tek nakon push-a (izvršava se na GitHub Actions).
-2. Vercel dashboard → Analytics → Enable (ako Web Analytics nije upaljen).
-3. Test bota: admin → "Pokreni odmah" par puta → sad bi trebao pisati dosljedno (ne duplikate).
-4. Test FB: objavi članak → dugme za dijeljenje → provjeri sliku + link u prvom komentaru.
+Korisnikov PLZ se preslika u regije: `['DE', aldiRegija(plz)]`.
 
-## 🎯 SLJEDEĆI KORACI (dogovoreni redoslijed, ostaje od prije)
-1. Promocija + Facebook setup
-2. Google (Analytics + Search Console + submit sitemap)
-3. Impresum i Datenschutz (OBAVEZNO pravi podaci — bez placeholdera!)
+### Otvoreno pitanje prije koda
+**Odakle tačna mapa PLZ → Aldi Nord/Süd?** Granica („Aldi-Äquator") nije čist prefiks —
+sječe NRW i Hessen. Treba provjeren javni dataset + njegova licenca.
+PLZ → Bundesland je lakše (prefiks je dobra aproksimacija), ali treba tek za REWE/Edeka.
+
+## ⏳ ČEKA KORISNIKA (ručno)
+1. `info@kodnas.de` još ne radi → Namecheap → Redirect Email → alias `info` → nodze93@gmail.com
+2. SQL za tabelu `app_instalacije` (brojač PWA instalacija)
+3. (opciono) cookie-baner za GA pristanak
+4. Ponedjeljkom: novi Lidl JSON za sljedeću sedmicu (KW32) — mora se presložiti na naše PLZ-ove
+   dok ne pređemo na regije
 
 ## RADNI DOGOVOR (bitno)
-- Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene),
-  nikad iz starog snimka — da ne poremeti dizajn.
-- Korisnik: Commit + Push čim se izmjena napravi (da se verzije ne razilaze).
+- Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla; prije izmjena provjeri da se lokalni
+  HEAD poklapa sa `origin/main` i javi ako se razilaze.
+- Korisnik: Commit + Push čim se izmjena napravi.
+- NE mijenjati kod dok se plan ne dogovori.
 
 ## PROMPT ZA SLJEDEĆI CHAT
-"Otvori PROJECT_MEMORY.md, PROGRESS.md, CURRENT_TASK.md. Šta smo radili? Šta je sljedeći korak?"
+"Otvori PROJECT_MEMORY.md, PROGRESS.md, CURRENT_TASK.md, PLAN-REGIJE.md. Radimo regije."
 
 ## STATUS
-🟡 Sve napravljeno, ČEKA Commit + Push. Nakon push-a: testirati bota i FB objavu.
+🟢 Sve pushovano i radi. Sljedeće: prelazak sa 6 uzoraka-gradova na REGIJE (svi PLZ).

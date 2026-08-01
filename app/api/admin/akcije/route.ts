@@ -11,7 +11,11 @@ import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-const ALL_PLZ = "00000"; // "svi gradovi" (nacionalni letak)
+// "Kanta" za NACIONALNE ponude — nije grad. Red upisan ovdje dobije
+// scope='DE' i vidi ga SVAKI korisnik, koji god PLZ imao.
+// (Ranije je ovo bila slijepa ulica: red se upiše, ali ga pretraga po
+//  pravom PLZ-u nikad ne nađe. Od `akcije-regije.sql` stvarno radi.)
+const ALL_PLZ = "00000";
 
 function slugify(raw: string): string {
   return raw
@@ -201,6 +205,9 @@ export async function POST(req: Request) {
       source_url: sourceUrl,
       external_id: externalId,
       source: "manual",
+      // Bez PLZ-a = nacionalna ponuda (Lidl i sl. imaju iste cijene svugdje):
+      // upiše se jednom i vidi je cijela Njemačka. S PLZ-om ostaje lokalna.
+      scope: plz === ALL_PLZ ? "DE" : null,
     });
 
     if (error) preskoceno.push(`${productName} (${error.message})`);

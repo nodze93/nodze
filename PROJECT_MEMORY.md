@@ -93,6 +93,48 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 
 ## AKTUELNO — sve URAĐENO i push-ovano na main
 Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstall · akcije (temelj)
+2026-08-01: duplikati · datumi važenja · JSON uvoz popravljen · Lidl · provjera slika
+
+### SQL MIGRACIJE (redoslijed pokretanja u Supabaseu)
+1. `akcije.sql` ✅  2. `akcije-trajni-sloj.sql` ✅
+3. `akcije-datumi.sql` ✅ (filter po datumu)
+4. **`akcije-uvoz.sql`** ✅ — NADOGRAĐUJE #3, uvijek pokreni OVAJ ako ideš iznova.
+   Dodaje kolonu `source` i pravilo: scraper redovi po snapshotu, ručni po datumu važenja.
+
+### DATUMI VAŽENJA — kako radi (2026-08-01)
+- `scraper/src/datumi.ts` — parser njemačkih perioda iz naslova sekcija, sa testovima.
+  „Gültig vom 30.07. bis 05.08." · „Angebote ab Donnerstag 30.7." · „Nur Sa. 1.8." …
+- `retailers.ts` ide kroz dokument REDOM i lijepi zadnji viđeni naslov s datumom na artikle
+  ispod. „Dauerhaft günstige Produkte" resetuje period (nisu sedmična akcija → bez roka).
+- `krajSedmice` po lancu kad je dat samo početak: Aldi = subota (6), Kaufland = srijeda (3).
+- Filter „važi danas" postoji NA DVA MJESTA: u bazi (akcije-uvoz.sql) i u API-ju
+  (`app/api/akcije/discounts/route.ts`, po BERLINU jer Vercel radi u UTC-u).
+- U logu GitHub Actions traži `[datumi]` i `[dupli]` — tako se vidi je li lanac promijenio izgled.
+
+### JSON UVOZ (`/admin/akcije`) — pravila
+- Prima goli niz, `{"offers":[...]}` ili jedan objekat (i dvostruko umotano, zbog starog buga).
+- **Obavezno:** `productName`, `store`, `newPrice`, **`valid_to`** (bez roka se NE prikazuje).
+- **`plz` MORA biti pravi PLZ.** Ako fali, upiše se `00000` („svi gradovi"), ali pretraga
+  traži tačan PLZ → takva ponuda se NIKAD ne vidi. (Popraviti kad pređemo na regije.)
+- Scraper više ne briše ručne redove (`delete ... and source='scraper'`).
+- Slike agregatora (marktguru/kaufda/bonial) se namjerno odbacuju.
+
+### SLIKE — svjesna odluka: HOTLINK, ne kopiranje
+- Sve 4 prodavnice se povlače s TUĐIH CDN-ova; kod nas se ništa ne čuva.
+- Pravno je hotlink SIGURNIJI od skidanja (nema umnožavanja po §16 UrhG); sudska praksa
+  (Svensson/BestWater/Paperboy) drži da linkovanje na slobodno objavljen sadržaj ne traži dozvolu.
+- Zato `images:download` NAMJERNO nije uključen u workflow. Ne uključivati bez odluke korisnika.
+- `scraper/src/checkImages.ts` (`images:check`) čisti MRTVE linkove → red postaje „bez slike"
+  → `images:enrich` (Open Food Facts) ga popuni. Ide PRIJE enrich koraka u workflow-u.
+- ⚠️ Admin kolona „sa slikom %" broji samo da URL POSTOJI, ne da se otvara.
+
+### LIDL — šta se može a šta ne (provjereno 2026-08-01)
+- **Namirnice: NE.** Prospekt je flipbook od 70 SLIKA — izvučen tekst daje samo navigaciju.
+- **Online/non-food: DA.** ESMARA/SILVERCREST/PARKSIDE imaju naziv, staru cijenu, procent
+  i „auch in der Filiale 27.07. - 01.08." kao TEKST. robots.txt dozvoljava
+  (ali zabranjuje `*?offset=*`, `*sort=*`, `*id=*` → ne smije se listati kroz stranice).
+- Za sada ide preko JSON uvoza. Lidl je NACIONALAN — iste cijene svugdje, pa se jedan
+  set artikala preslika na sve naše PLZ-ove.
 
 ### Google
 - Google Analytics: NEXT_PUBLIC_GA_ID postavljen u Vercelu (radi).

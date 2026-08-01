@@ -1,8 +1,19 @@
+/**
+ * Gdje ponude nekog lanca vrijede.
+ *  'DE'         = cijela Njemačka (Kaufland, Lidl, Netto, Penny, dm, OBI…)
+ *  'aldi-sued'  / 'aldi-nord' = dvije polovine Njemačke
+ *  (kasnije)    rewe-<regija>, edeka-<regija> po Bundeslandu
+ * Umjesto 8.200 kopija istih podataka čuvamo ih jednom po regiji.
+ */
+export type Scope = 'DE' | 'aldi-sued' | 'aldi-nord';
+
 export interface ScrapedStore {
   name: string;
   slug: string;
   url: string | null;
   logoUrl?: string | null;
+  /** regija u kojoj ponude ovog lanca vrijede */
+  scope?: Scope;
 }
 
 export interface ScrapedOffer {
