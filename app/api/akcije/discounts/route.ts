@@ -23,6 +23,29 @@ export const revalidate = 120;
  *
  * Isti artikal = ista prodavnica + isti naziv + ista nova cijena.
  */
+/** Današnji dan po Berlinu ("2026-08-01"). Vercel radi u UTC-u. */
+function danasBerlin(): string {
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Berlin" }).format(new Date());
+}
+
+/**
+ * VAŽENJE: sedmicu skinemo jednom, ali prikazujemo dan po dan — ponuda se
+ * "upali" kad počne i nestane kad istekne. Prazan datum = uvijek važi
+ * (npr. Aldi "Dauerhaft günstige Produkte" ili stariji uvozi bez datuma).
+ *
+ * Isti filter postoji i u bazi (supabase/akcije-datumi.sql). Ovdje je zato
+ * što stranica mora biti tačna i prije nego se ta migracija pokrene.
+ */
+function vaziDanas(items: Array<Record<string, unknown>>, danas: string): Array<Record<string, unknown>> {
+  return items.filter((item) => {
+    const od = item.valid_from ? String(item.valid_from).slice(0, 10) : null;
+    const doo = item.valid_to ? String(item.valid_to).slice(0, 10) : null;
+    if (od && danas < od) return false;
+    if (doo && danas > doo) return false;
+    return true;
+  });
+}
+
 function bezDuplikata(items: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
   const vidjeno = new Set<string>();
   return items.filter((item) => {
@@ -64,7 +87,7 @@ export async function GET(req: Request) {
     const totalIzBaze = rows.length > 0 ? Number(rows[0].total_count) : 0;
 
     const svi = rows.map(({ total_count: _drop, ...item }) => item);
-    const items = bezDuplikata(svi);
+    const items = bezDuplikata(vaziDanas(svi, danasBerlin()));
     // Umanji i ukupan broj za izbačene (inače bi pisalo "72 artikala", a vidjelo
     // bi se 60). Tačno je dok sve stane u jednu stranicu (limit 300 > broj ponuda).
     const total = Math.max(0, totalIzBaze - (svi.length - items.length));

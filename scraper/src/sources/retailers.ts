@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { config } from '../config.js';
+import { procitajPeriod } from '../datumi.js';
 import { cleanProductName, normalizeCategory, parsePrice } from '../normalize.js';
 import { fetchRobots, isAllowed, type RobotsRules } from '../robots.js';
 import type { ScrapedOffer, ScrapedStore, Source } from '../types.js';
@@ -35,6 +36,12 @@ interface RetailerDef {
   dotDecimal: boolean;
   /** Samo ovi PLZ-ovi (regija lanca). Prazno = svi (nacionalno, npr. Kaufland). */
   plz?: string[];
+  /**
+   * Zadnji dan prodajne sedmice (0=ned … 6=sub) — koristi se SAMO kad lanac
+   * napiše početak bez kraja ("Angebote ab Donnerstag 30.7.").
+   * Aldi: subota. Kaufland: srijeda (njihova sedmica ide čet–srijeda).
+   */
+  krajSedmice: number;
 }
 
 // Aldi Süd (jug/zapad) i Aldi Nord (sjever/istok) NE postoje na istom mjestu,
@@ -53,6 +60,7 @@ const RETAILERS: RetailerDef[] = [
     oldPrice: 'del',
     dotDecimal: false,
     plz: JUG,
+    krajSedmice: 6, // Aldi: sedmica ide do subote
   },
   {
     name: 'Aldi Nord',
@@ -65,6 +73,7 @@ const RETAILERS: RetailerDef[] = [
     oldPrice: '.strike-price',
     dotDecimal: true,
     plz: SJEVER,
+    krajSedmice: 6,
   },
   {
     name: 'Kaufland',
@@ -75,6 +84,7 @@ const RETAILERS: RetailerDef[] = [
     newPrice: '.k-price-tag__price',
     oldPrice: '.k-price-tag__old-price-line-through',
     dotDecimal: true,
+    krajSedmice: 3, // Kaufland: sedmica ide čet–srijeda
   },
 ];
 
@@ -83,6 +93,8 @@ interface RawTile {
   np: string;
   op: string;
   src: string;
+  /** sirovi naslov sekcije s periodom ("Gültig vom 30.07. bis 05.08.") */
+  period: string;
 }
 
 export class RetailersSource implements Source {
@@ -143,10 +155,44 @@ export class RetailersSource implements Source {
       await page.waitForTimeout(2500);
       await autoScroll(page);
 
-      const raw = (await page.$$eval(
-        def.tile,
-        (tiles, sel) =>
-          tiles.map((t) => {
+      const raw = (await page.evaluate((sel: {
+        tile: string;
+        nameSel: string;
+        brandSel: string;
+        newPrice: string;
+        oldPrice: string;
+      }) => {
+        // PERIOD VAŽENJA: lanci ga pišu u naslovu SEKCIJE iznad artikala
+        // ("Gültig vom 30.07. bis 05.08.", "Angebote ab Donnerstag 30.7.",
+        // "Aktion Mo. 27.7."), NIKAD u samoj kartici. Zato prolazimo kroz
+        // dokument REDOM: pamtimo zadnji viđeni naslov s datumom i lijepimo
+        // ga na svaki artikal koji poslije njega naiđe.
+        const IMA_DATUM = /\d{1,2}\.\s*\d{1,2}\./;
+        const NAJAVA = /(g[üu]ltig|wochenangebot|angebot|aktion|wochenende|\bab\b|\bnur\b)/i;
+        // "Dauerhaft günstige Produkte" nisu sedmična akcija — tu period
+        // prestaje da važi, inače bi naslijedili tuđi datum.
+        const RESET = /(dauerhaft|st[äa]ndig|immer\s+g[üu]nstig|preis-?hit)/i;
+
+        const tiles = Array.from(document.querySelectorAll(sel.tile));
+        const tileSet = new Set(tiles);
+        let period = '';
+        const out: Array<{ name: string; np: string; op: string; src: string; period: string }> = [];
+
+        for (const el of Array.from(document.querySelectorAll('*'))) {
+          if (!tileSet.has(el)) {
+            // naslovi/labele: samo elementi bez djece i van kartica
+            if (el.children.length === 0 && !el.closest(sel.tile)) {
+              const txt = (el.textContent ?? '').trim().replace(/\s+/g, ' ');
+              if (txt.length > 3 && txt.length < 140) {
+                if (RESET.test(txt)) period = '';
+                else if (IMA_DATUM.test(txt) && NAJAVA.test(txt)) period = txt;
+              }
+            }
+            continue;
+          }
+
+          const t = el;
+          {
             const img = t.querySelector('img');
             const nameEl = sel.nameSel ? t.querySelector(sel.nameSel) : null;
             const brandEl = sel.brandSel ? t.querySelector(sel.brandSel) : null;
@@ -180,10 +226,17 @@ export class RetailersSource implements Source {
               src = url;
               break;
             }
-            return { name, np, op, src };
-          }),
-        { nameSel: def.nameSel, brandSel: def.brandSel ?? '', newPrice: def.newPrice, oldPrice: def.oldPrice },
-      )) as RawTile[];
+            out.push({ name, np, op, src, period });
+          }
+        }
+        return out;
+      }, {
+        tile: def.tile,
+        nameSel: def.nameSel,
+        brandSel: def.brandSel ?? '',
+        newPrice: def.newPrice,
+        oldPrice: def.oldPrice,
+      })) as RawTile[];
 
       // Ako je 0 artikala u pravom radu — u dry-runu snimi stranicu da se vidi
       // je li lanac promijenio raspored (ili nas dočekao drugačijom stranicom).
@@ -209,6 +262,17 @@ export class RetailersSource implements Source {
       const sample = offers.find((o) => o.imageUrl)?.imageUrl ?? '—';
       console.log(
         `    [slike] ${def.name}: ${offers.length} artikala, ${withImg} sa slikom | primjer: ${sample.slice(0, 90)}`,
+      );
+
+      // DIJAGNOSTIKA DATUMA — ovo se ne može isprobati iz sandboxa (nema mreže
+      // do lanaca), pa se prvi pravi run provjerava OVDJE u GitHub Actions logu.
+      // Ako je "sa datumom" ≈ 0, lanac je promijenio naslove sekcija.
+      const saDatumom = offers.filter((o) => o.validTo).length;
+      const periodi = [...new Set(raw.map((r) => r.period).filter(Boolean))].slice(0, 4);
+      console.log(
+        `    [datumi] ${def.name}: ${saDatumom}/${offers.length} sa datumom | sekcije: ${
+          periodi.join(' · ') || '—'
+        }`,
       );
 
       this.offersCache.set(store.url, offers);
@@ -310,14 +374,18 @@ function toOffer(row: RawTile, def: RetailerDef, sourceUrl: string): ScrapedOffe
   const oldPriceRaw = parsePrice(normPriceText(row.op, def.dotDecimal));
   const oldPrice = oldPriceRaw !== null && oldPriceRaw > newPrice ? oldPriceRaw : null;
 
+  // Period iz naslova sekcije ("Gültig vom …", "Angebote ab Donnerstag 30.7.").
+  // Kad ga nema, oba datuma ostaju null = ponuda se tretira kao "uvijek važi".
+  const { validFrom, validTo } = procitajPeriod(row.period, def.krajSedmice);
+
   return {
     productName,
     newPrice,
     oldPrice,
     category: normalizeCategory(null, productName),
     imageUrl: row.src ? absoluteUrl(row.src, sourceUrl) : null,
-    validFrom: null,
-    validTo: null,
+    validFrom,
+    validTo,
     sourceUrl,
     externalId: null,
     ean: null,
