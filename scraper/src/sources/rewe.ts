@@ -101,16 +101,42 @@ export class ReweSource implements Source {
         // Bez JS-a nema ni cookie-banera ni čekanja — sadržaj je već u HTML-u.
 
         const podaci = (await page.evaluate(() => {
+          // ⚠️ Ovdje smiju SAMO anonimne funkcije (unutar .map i sl.).
+          // Strelica pridružena konstanti bi je tsx/esbuild umotao u pomoćnik
+          // __name, kojeg u stranici nema → ReferenceError u browseru.
           const tab = document.querySelector('button[data-week="current"]');
           const kutija = document.querySelector('div[data-week="current"]');
           const plocice = kutija ? Array.from(kutija.querySelectorAll('.cor-offer-renderer-tile')) : [];
           return {
             tab: (tab?.textContent ?? '').trim(),
-            artikli: plocice.map((t) => ({
-              naziv: (t.querySelector('.cor-offer-information__title')?.textContent ?? '').trim(),
-              cijena: (t.querySelector('.cor-offer-price__tag-price')?.textContent ?? '').trim(),
-              slika: t.querySelector('img')?.getAttribute('src') ?? '',
-            })),
+            artikli: plocice.map((t) => {
+              // ⚠️ PRVA <img> u pločici je često REWE Bonus logo (24×24), a ne
+              // proizvod — na 10 od 23 pločice. Prava slika ima data-testid.
+              const im = t.querySelector('img[data-testid="offer-image"]');
+              // ⚠️ Bez JS-a slike su lijene: pravi URL je u data-src/srcset,
+              // a `src` uopšte ne postoji (13 od 23 pločice).
+              const kandidati = [
+                im?.getAttribute('data-src'),
+                im?.getAttribute('data-srcset'),
+                im?.getAttribute('srcset'),
+                im?.getAttribute('src'),
+              ];
+              let slika = '';
+              for (const k of kandidati) {
+                if (!k) continue;
+                // srcset je "url 1x, url2 2x" → uzmi prvi URL
+                const url = k.split(',')[0]?.trim().split(/\s+/)[0] ?? '';
+                if (url && /^https?:\/\//.test(url)) {
+                  slika = url;
+                  break;
+                }
+              }
+              return {
+                naziv: (t.querySelector('.cor-offer-information__title')?.textContent ?? '').trim(),
+                cijena: (t.querySelector('.cor-offer-price__tag-price')?.textContent ?? '').trim(),
+                slika,
+              };
+            }),
           };
         })) as { tab: string; artikli: SirovaPlocica[] };
 
