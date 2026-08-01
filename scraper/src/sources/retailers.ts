@@ -27,11 +27,20 @@ interface RetailerDef {
   tile: string;
   /** naziv unutar kartice (rezerva; primarno se uzima img alt) */
   nameSel: string;
+  /** Aldi Nord: puno ime = marka + h2, pa spajamo brand + naziv */
+  brandSel?: string;
   newPrice: string;
   oldPrice: string;
-  /** Kaufland cijenu piše kao "1.99" (tačka) → prebacimo u "1,99" prije parsiranja */
+  /** Kaufland/Aldi Nord cijenu pišu kao "1.99" (tačka) → prebacimo u "1,99" */
   dotDecimal: boolean;
+  /** Samo ovi PLZ-ovi (regija lanca). Prazno = svi (nacionalno, npr. Kaufland). */
+  plz?: string[];
 }
+
+// Aldi Süd (jug/zapad) i Aldi Nord (sjever/istok) NE postoje na istom mjestu,
+// pa svaki ide samo u svoje gradove. Kaufland je nacionalan (svi PLZ-ovi).
+const JUG = ['85737', '80331', '80807', '70173', '60311']; // München, Stuttgart, Frankfurt, Ismaning
+const SJEVER = ['10115']; // Berlin
 
 const RETAILERS: RetailerDef[] = [
   {
@@ -43,6 +52,19 @@ const RETAILERS: RetailerDef[] = [
     newPrice: 'ins.base-price__discounted',
     oldPrice: 'del',
     dotDecimal: false,
+    plz: JUG,
+  },
+  {
+    name: 'Aldi Nord',
+    slug: 'aldi-nord',
+    offersUrl: 'https://www.aldi-nord.de/angebote.html',
+    tile: 'div.product-tile',
+    nameSel: 'h2',
+    brandSel: '.product-tile__content__upper__brand-name',
+    newPrice: '.tag__label--price',
+    oldPrice: '.strike-price',
+    dotDecimal: true,
+    plz: SJEVER,
   },
   {
     name: 'Kaufland',
@@ -77,8 +99,14 @@ export class RetailersSource implements Source {
     this.dryRun = opts.dryRun;
   }
 
-  async listStores(_plz: string): Promise<ScrapedStore[]> {
-    return RETAILERS.map((r) => ({ name: r.name, slug: r.slug, url: r.offersUrl, logoUrl: null }));
+  async listStores(plz: string): Promise<ScrapedStore[]> {
+    // Regionalni lanci idu samo u svoje gradove; nacionalni (bez plz) svuda.
+    return RETAILERS.filter((r) => !r.plz || r.plz.includes(plz)).map((r) => ({
+      name: r.name,
+      slug: r.slug,
+      url: r.offersUrl,
+      logoUrl: null,
+    }));
   }
 
   async listOffers(store: ScrapedStore, _plz: string): Promise<ScrapedOffer[]> {
@@ -115,10 +143,16 @@ export class RetailersSource implements Source {
           tiles.map((t) => {
             const img = t.querySelector('img');
             const nameEl = sel.nameSel ? t.querySelector(sel.nameSel) : null;
+            const brandEl = sel.brandSel ? t.querySelector(sel.brandSel) : null;
             const alt = (img?.getAttribute('alt') ?? '').trim();
-            const name = alt || (nameEl?.textContent ?? '').trim();
-            const np = (t.querySelector(sel.newPrice)?.textContent ?? '').trim();
-            const op = (t.querySelector(sel.oldPrice)?.textContent ?? '').trim();
+            const nm = (nameEl?.textContent ?? '').trim();
+            const brand = (brandEl?.textContent ?? '').trim();
+            // img alt je puno ime (Aldi Süd/Kaufland); Aldi Nord nema alt, pa
+            // spajamo marku + naziv ("BIO Speisemöhren").
+            const name = alt || [brand, nm].filter(Boolean).join(' ');
+            // Aldi Nord lijepi fusnotu na cijenu ("1.49**") — skidamo zvjezdice.
+            const np = (t.querySelector(sel.newPrice)?.textContent ?? '').replace(/\*+/g, '').trim();
+            const op = (t.querySelector(sel.oldPrice)?.textContent ?? '').replace(/\*+/g, '').trim();
             // PRAVA slika je u data-src / srcset (lijeno učitavanje); "src" je
             // često placeholder (kod Kauflanda njihov sivi "fallback" logo).
             // Gledamo prvo data-src/srcset, uzimamo zadnji (najveći) URL, i
@@ -142,7 +176,7 @@ export class RetailersSource implements Source {
             }
             return { name, np, op, src };
           }),
-        { nameSel: def.nameSel, newPrice: def.newPrice, oldPrice: def.oldPrice },
+        { nameSel: def.nameSel, brandSel: def.brandSel ?? '', newPrice: def.newPrice, oldPrice: def.oldPrice },
       )) as RawTile[];
 
       // Ako je 0 artikala u pravom radu — u dry-runu snimi stranicu da se vidi
