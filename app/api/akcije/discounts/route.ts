@@ -11,6 +11,29 @@ import { db, jsonCached, jsonError, plzOf, textOf, numOf, intOf, sortOf } from "
 
 export const revalidate = 120;
 
+/**
+ * DUPLIKATI: Kaufland (i drugi lanci) isti artikal znaju staviti na stranicu
+ * više puta — jednom u "Top", jednom u kategoriji, jednom u letku. U snapshotu
+ * to postanu 2-3 identična reda, pa se na sajtu vide dvije iste kartice jedna
+ * do druge (primjer: DENVER Beamer x2, KINDER Choco x3).
+ *
+ * Scraper od sada ne upisuje duplikate, ali OVDJE ih ipak izbacujemo iz odgovora:
+ *  - današnji snapshot je već u bazi s duplikatima (čisti se tek sljedećim runom),
+ *  - i ubuduće nas štiti ako neki novi izvor propusti duplikat.
+ *
+ * Isti artikal = ista prodavnica + isti naziv + ista nova cijena.
+ */
+function bezDuplikata(items: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
+  const vidjeno = new Set<string>();
+  return items.filter((item) => {
+    const naziv = String(item.product_name ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+    const kljuc = `${String(item.store_slug ?? item.store ?? "")}|${naziv}|${String(item.new_price ?? "")}`;
+    if (vidjeno.has(kljuc)) return false;
+    vidjeno.add(kljuc);
+    return true;
+  });
+}
+
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
 
@@ -38,16 +61,22 @@ export async function GET(req: Request) {
     if (error) throw error;
 
     const rows = (data ?? []) as Array<Record<string, unknown>>;
-    const total = rows.length > 0 ? Number(rows[0].total_count) : 0;
+    const totalIzBaze = rows.length > 0 ? Number(rows[0].total_count) : 0;
+
+    const svi = rows.map(({ total_count: _drop, ...item }) => item);
+    const items = bezDuplikata(svi);
+    // Umanji i ukupan broj za izbačene (inače bi pisalo "72 artikala", a vidjelo
+    // bi se 60). Tačno je dok sve stane u jednu stranicu (limit 300 > broj ponuda).
+    const total = Math.max(0, totalIzBaze - (svi.length - items.length));
 
     return jsonCached({
       plz,
       date: (rows[0]?.date as string | undefined) ?? null,
       total,
-      count: rows.length,
+      count: items.length,
       limit,
       offset,
-      items: rows.map(({ total_count: _drop, ...item }) => item),
+      items,
     });
   } catch {
     // Ako baza ne odgovara ili šema još nije postavljena — prazna lista,

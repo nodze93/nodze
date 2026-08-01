@@ -69,7 +69,9 @@ export default function HomePage() {
           <h2>
             <IconStar size={17} style={{ color: '#f5a524' }} /> Top ponude danas
           </h2>
-          <Link href="/akcije/ponude?percent=30">
+          {/* `top=1` samo da odredišna stranica zna da nosi naslov „Top ponude
+              danas" (ne „Sve akcije") — korisnik je došao s te trake. */}
+          <Link href="/akcije/ponude?percent=30&top=1">
             Pogledaj sve <IconChevron size={13} style={{ verticalAlign: -2 }} />
           </Link>
         </div>

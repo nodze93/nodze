@@ -189,9 +189,18 @@ export class RetailersSource implements Source {
       // je li lanac promijenio raspored (ili nas dočekao drugačijom stranicom).
       if (this.dryRun && raw.length === 0) await this.dumpDebug(def.slug, page);
 
-      const offers = raw
+      const svi = raw
         .map((row) => toOffer(row, def, store.url!))
         .filter((o): o is ScrapedOffer => o !== null);
+
+      // DUPLIKATI: lanci isti artikal stave na stranicu više puta (jednom u
+      // "Top ponude", jednom u kategoriji, jednom u letku). Bez ovoga u bazu
+      // odu 2-3 identična reda, pa se na sajtu vide dvije iste kartice jedna
+      // do druge. Isti artikal = isti naziv + ista nova cijena.
+      const offers = dedup(svi);
+      if (svi.length !== offers.length) {
+        console.log(`    [dupli] ${def.name}: izbačeno ${svi.length - offers.length} duplikata`);
+      }
 
       // DIJAGNOSTIKA (vidi se u GitHub Actions logu): koliko je artikala
       // dobilo PRAVU sliku. Ako je "sa slikom" ≈ 0 za neki lanac, znaci da
@@ -269,6 +278,21 @@ export class RetailersSource implements Source {
 // ---------------------------------------------------------------------
 // Pomoćne funkcije
 // ---------------------------------------------------------------------
+
+/**
+ * Izbaci ponovljene artikle iz jednog lanca. Ključ: naziv (bez razlike u
+ * velikim/malim slovima i razmacima) + nova cijena. Zadržava se PRVI —
+ * redoslijed sa stranice ostaje netaknut.
+ */
+export function dedup(offers: ScrapedOffer[]): ScrapedOffer[] {
+  const vidjeno = new Set<string>();
+  return offers.filter((o) => {
+    const kljuc = `${o.productName.trim().toLowerCase().replace(/\s+/g, ' ')}|${o.newPrice}`;
+    if (vidjeno.has(kljuc)) return false;
+    vidjeno.add(kljuc);
+    return true;
+  });
+}
 
 /** "1.99" (Kaufland) → "1,99" da parsePrice tačku ne shvati kao hiljade. */
 export function normPriceText(text: string, dotDecimal: boolean): string {
