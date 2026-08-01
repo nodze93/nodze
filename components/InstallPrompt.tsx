@@ -107,6 +107,16 @@ export default function InstallPrompt() {
     } catch {}
     setMode(null);
   }
+  // iPhone NIKAD ne šalje „appinstalled" event, a Safari i app imaju odvojen
+  // localStorage — pa mi nemamo načina saznati da korisnik VEĆ ima aplikaciju.
+  // Zato mu damo da to sam kaže: klik → trajno isto što i prava instalacija.
+  function imamApp() {
+    dismissedRef.current = true;
+    try {
+      localStorage.setItem("kodnas-install-done", "1");
+    } catch {}
+    setMode(null);
+  }
 
   if (!mode) return null;
 
@@ -141,6 +151,7 @@ export default function InstallPrompt() {
           <div className="ipb-step">
             <span className="ipb-n">2</span> Izaberi <b>„Dodaj na početni ekran"</b>
           </div>
+          <button className="ipb-have" onClick={imamApp}>Već imam aplikaciju</button>
         </div>
       )}
 
@@ -174,6 +185,7 @@ export default function InstallPrompt() {
         .ipb-n { width: 20px; height: 20px; border-radius: 50%; background: #EAF7EE; color: #1a8a4a; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .ipb-share { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; }
         .ipb-share svg { width: 20px; height: 20px; }
+        .ipb-have { align-self: flex-start; margin-top: 5px; padding: 7px 2px; background: none; border: none; color: #9AA1A9; font-size: 12.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
       `}</style>
     </div>
   );
