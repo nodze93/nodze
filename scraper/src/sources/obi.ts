@@ -185,8 +185,12 @@ export class ObiSource implements Source {
       const rezultati = await Promise.all(
         grupa.map(async ([url, k]) => {
           try {
+            // Isti UA kao listing — OBI ne renderuje za nepoznate UA-ove.
             const res = await fetch(url, {
-              headers: { 'User-Agent': config.userAgent, 'Accept-Language': 'de-DE,de;q=0.9' },
+              headers: {
+                'User-Agent': config.browserUserAgent,
+                'Accept-Language': 'de-DE,de;q=0.9',
+              },
               signal: AbortSignal.timeout(config.timeoutMs),
             });
             if (!res.ok) return null;

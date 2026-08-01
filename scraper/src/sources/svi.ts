@@ -35,10 +35,12 @@ export class SviLanciSource implements Source {
     // REWE dijeli browser sa RetailersSource, ali BEZ JavaScripta:
     // njihov sadržaj je već u HTML-u, a kad se skripta izvrši pregazi listu
     // (traži izbor marketa) pa ostane prazno — zato `true`.
-    this.rewe = new ReweSource(() => this.retailers.novaStranica(true));
+    this.rewe = new ReweSource(() => this.retailers.novaStranica({ bezJs: true }));
     // OBI obrnuto od REWE-a: listing se BEZ JavaScripta uopšte ne prikaže
     // (Baqend Speed Kit kroz Service Worker), pa mu treba pun browser.
-    this.obi = new ObiSource(() => this.retailers.novaStranica());
+    // `browserUa` jer njihov keš sloj ne renderuje sadržaj za `kodnas-bot` UA
+    // — prvi pokušaj je zato istekao na waitForSelector sa 0 artikala.
+    this.obi = new ObiSource(() => this.retailers.novaStranica({ browserUa: true }));
   }
 
   async listStores(plz: string): Promise<ScrapedStore[]> {

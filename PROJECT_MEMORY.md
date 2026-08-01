@@ -168,6 +168,19 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
 - Osnova preuzeta iz korisnikovog `prospekt-bot` (Python) i prevedena u TS da
   radi kao ostali lanci — jedan workflow, jedan snapshot, isti logovi.
 
+### USER-AGENT — svjesna odluka, ne mijenjati bez razloga
+- Podrazumijevano: `kodnas-bot/1.0 (+kontakt: info@kodnas.de)` — Aldi ×2,
+  Kaufland, Lidl i REWE rade s tim.
+- SAMO OBI dobija browser UA (`config.browserUserAgent`), jer njihov Baqend
+  Speed Kit ne renderuje sadržaj za nepoznate UA-ove → 0 artikala i alarm.
+  I taj UA na kraju nosi `(+kodnas.de)`.
+- **Zašto se uopšte predstavljamo:** skrivanje ne smanjuje rizik. Sajt ima
+  Impressum s imenom i adresom, GitHub-ovi IP opsezi su javni, a slike se
+  povlače s njihovih CDN-ova — ko pogleda, zna ko smo za deset sekundi.
+  Pošten UA + poštovanje robots.txt + pauze = dobra vjera, što je i pravno
+  na našoj strani i praktično jeftinije (mejl umjesto Abmahnunga).
+- Ne uvoditi rotaciju IP-a ni potpuno anonimni UA.
+
 ### LIDL — šta se može a šta ne (provjereno 2026-08-01)
 - **Namirnice: NE.** Prospekt je flipbook od 70 SLIKA — izvučen tekst daje samo navigaciju.
 - **Online/non-food: DA.** ESMARA/SILVERCREST/PARKSIDE imaju naziv, staru cijenu, procent

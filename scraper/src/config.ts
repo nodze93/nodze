@@ -69,6 +69,24 @@ export const config = {
   userAgent:
     process.env.SCRAPER_USER_AGENT ??
     'kodnas-bot/1.0 (+kontakt: info@kodnas.de)',
+  /**
+   * UA običnog browsera — koristi ga SAMO OBI.
+   *
+   * Zašto: njihov Baqend Speed Kit ne renderuje sadržaj za nepoznate UA-ove,
+   * pa stranica ostane prazna i `waitForSelector` istekne (prvi pokušaj:
+   * 0 artikala). Aldi, Kaufland, Lidl i REWE rade normalno sa `kodnas-bot`.
+   *
+   * NAMJERNO ostaje `(+kodnas.de)` na kraju: provjera skoro sigurno gleda
+   * samo "Chrome", a mi ostajemo prepoznatljivi svakome ko pogleda logove.
+   * Skrivanje nam ne bi ni pomoglo — sajt ima Impressum s imenom i adresom,
+   * a GitHub-ovi IP opsezi su javni. Predstaviti se je i pravno u našu korist
+   * (dobra vjera) i praktično: prije Abmahnunga nas mogu jednostavno mejlom
+   * zamoliti da prestanemo.
+   */
+  browserUserAgent:
+    process.env.SCRAPER_BROWSER_USER_AGENT ??
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+      '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 (+kodnas.de)',
   timeoutMs: Number(process.env.SCRAPER_TIMEOUT_MS ?? 30_000),
 
   kaufda: {

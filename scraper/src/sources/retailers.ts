@@ -117,8 +117,8 @@ export class RetailersSource implements Source {
   readonly name = 'retailers';
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
-  /** kontekst bez JavaScripta — koristi ga REWE (vidi `novaStranica`) */
-  private contextBezJs: BrowserContext | null = null;
+  /** posebni konteksti (bez JS-a za REWE, browser-UA za OBI) — vidi `novaStranica` */
+  private konteksti = new Map<string, BrowserContext>();
   private robots = new Map<string, RobotsRules | null>();
   // Nacionalno → povučemo jednom po lancu, pa isti rezultat vrijedi za sve PLZ-ove.
   private offersCache = new Map<string, ScrapedOffer[]>();
@@ -353,22 +353,27 @@ export class RetailersSource implements Source {
    * JS izvrši, skripta pregazi listu (traži izbor marketa) pa ostane prazno.
    * Bez JS-a se čita čist HTML — isto što vidi i običan `curl`.
    */
-  async novaStranica(bezJs = false): Promise<Page> {
-    if (!bezJs) {
+  async novaStranica(opts: { bezJs?: boolean; browserUa?: boolean } = {}): Promise<Page> {
+    const kljuc = `${opts.bezJs ? 'nojs' : 'js'}|${opts.browserUa ? 'chrome' : 'bot'}`;
+    if (kljuc === 'js|bot') {
       const ctx = await this.ensureBrowser();
       return ctx.newPage();
     }
-    if (!this.contextBezJs) {
+
+    let ctx = this.konteksti.get(kljuc);
+    if (!ctx) {
       await this.ensureBrowser(); // podigni browser ako već nije
-      this.contextBezJs = await this.browser!.newContext({
-        userAgent: config.userAgent,
+      ctx = await this.browser!.newContext({
+        userAgent: opts.browserUa ? config.browserUserAgent : config.userAgent,
         locale: 'de-DE',
         timezoneId: 'Europe/Berlin',
-        javaScriptEnabled: false,
+        viewport: { width: 1440, height: 900 },
+        javaScriptEnabled: !opts.bezJs,
       });
-      this.contextBezJs.setDefaultTimeout(config.timeoutMs);
+      ctx.setDefaultTimeout(config.timeoutMs);
+      this.konteksti.set(kljuc, ctx);
     }
-    return this.contextBezJs.newPage();
+    return ctx.newPage();
   }
 
   private async dumpDebug(slug: string, page: Page): Promise<void> {
@@ -383,10 +388,10 @@ export class RetailersSource implements Source {
   }
 
   async close(): Promise<void> {
-    await this.contextBezJs?.close();
+    for (const ctx of this.konteksti.values()) await ctx.close();
+    this.konteksti.clear();
     await this.context?.close();
     await this.browser?.close();
-    this.contextBezJs = null;
     this.context = null;
     this.browser = null;
   }
