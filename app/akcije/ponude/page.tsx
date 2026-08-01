@@ -14,6 +14,7 @@ function Inner() {
   return (
     <OffersBrowser
       title="Sve akcije"
+      openFilters={params.get('filteri') === '1'}
       initial={{
         q: params.get('q') ?? '',
         store: params.get('store') ?? '',

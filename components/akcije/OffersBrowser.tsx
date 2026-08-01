@@ -26,13 +26,15 @@ interface Props {
   storeSlug?: string;
   storeName?: string;
   initial?: Partial<Omit<Filters, 'plz'>>;
+  /** otvori filter-sheet odmah pri učitavanju (npr. dolazak s dugmeta „Filteri") */
+  openFilters?: boolean;
 }
 
 /**
  * Zajednicki prikaz liste ponuda: kategorijski chipovi + grid + bottom sheet
  * sa svim filterima. Koristi ga i /ponude i /prodavnica/[slug].
  */
-export default function OffersBrowser({ title, storeSlug, storeName, initial }: Props) {
+export default function OffersBrowser({ title, storeSlug, storeName, initial, openFilters }: Props) {
   const { plz } = usePlz();
   const nazad = useNazad();
   const [state, setState] = useState<Omit<Filters, 'plz'>>({
@@ -40,7 +42,7 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial }: 
     ...initial,
     store: storeSlug ?? initial?.store ?? '',
   });
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(Boolean(openFilters));
 
   const filters: Filters = useMemo(() => ({ ...state, plz }), [state, plz]);
   const { items, total, loading, error } = useOffers(filters);

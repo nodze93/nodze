@@ -69,7 +69,7 @@ export default function HomePage() {
           <h2>
             <IconStar size={17} style={{ color: '#f5a524' }} /> Top ponude danas
           </h2>
-          <Link href="/akcije/ponude">
+          <Link href="/akcije/ponude?percent=30">
             Pogledaj sve <IconChevron size={13} style={{ verticalAlign: -2 }} />
           </Link>
         </div>
@@ -112,7 +112,7 @@ export default function HomePage() {
           <section className="sec">
             <div className="sec-hd">
               <h2>Sve akcije u PLZ {plz}</h2>
-              <Link href="/akcije/ponude">
+              <Link href="/akcije/ponude?filteri=1">
                 Filteri <IconChevron size={13} style={{ verticalAlign: -2 }} />
               </Link>
             </div>
