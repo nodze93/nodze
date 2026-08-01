@@ -154,7 +154,13 @@ export async function replaceSnapshot(
   const client = await pool.connect();
   try {
     await client.query('begin');
-    await client.query('delete from ak_discounts where plz = $1 and date = $2', [plz, date]);
+    // VAŽNO: brišemo SAMO svoje redove. Ručno uvezene ponude (JSON uvoz iz
+    // admina, source='manual') ostaju — inače bi ih scraper svako jutro
+    // pobrisao. Kolonu `source` uvodi supabase/akcije-uvoz.sql.
+    await client.query(
+      "delete from ak_discounts where plz = $1 and date = $2 and source = 'scraper'",
+      [plz, date],
+    );
 
     let inserted = 0;
     const CHUNK = 500;

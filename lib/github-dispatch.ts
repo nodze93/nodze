@@ -20,9 +20,21 @@ export interface DispatchRezultat {
  * (nova verzija bot-cron.yml). Bez GITHUB_TOKEN vraća grešku.
  */
 export async function dispatchBot(inputs?: BotInputs): Promise<DispatchRezultat> {
+  return dispatchWorkflow(process.env.GITHUB_WORKFLOW || "bot-cron.yml", inputs);
+}
+
+/**
+ * Pokreni BILO KOJI workflow iz repa (npr. "akcije-scraper.yml").
+ * Koristi ga admin dugme "Povuci slike sada" — scrape + trajni sloj +
+ * Open Food Facts slike rade na GitHub Actions, ne na Vercelu (tamo bi
+ * 60-sekundni limit ubio posao).
+ */
+export async function dispatchWorkflow(
+  workflow: string,
+  inputs?: Record<string, string>,
+): Promise<DispatchRezultat> {
   const token = process.env.GITHUB_TOKEN;
   const repo = process.env.GITHUB_REPO || "nodze93/nodze";
-  const workflow = process.env.GITHUB_WORKFLOW || "bot-cron.yml";
   const ref = process.env.GITHUB_REF || "main";
 
   if (!token) {

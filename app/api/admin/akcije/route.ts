@@ -115,9 +115,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Neispravan JSON" }, { status: 400 });
   }
 
-  const list: OfferInput[] = Array.isArray((body as { offers?: unknown }).offers)
-    ? ((body as { offers: OfferInput[] }).offers)
-    : [body as OfferInput];
+  // Prihvati SVA tri oblika. Prije je goli niz "[ {...}, {...} ]" završavao
+  // kao JEDAN artikal (pa "upisano 0, preskočeno 1"), iako primjer u adminu
+  // pokazuje baš takav niz.
+  //   [ {...}, {...} ]          ← goli niz
+  //   { "offers": [ ... ] }     ← omotan
+  //   { ...jedna ponuda... }    ← jedan objekat
+  const omotac = body as { offers?: unknown; items?: unknown; data?: unknown };
+  const ugnijezdjen = [omotac?.offers, omotac?.items, omotac?.data].find(Array.isArray);
+  const list: OfferInput[] = Array.isArray(body)
+    ? (body as OfferInput[])
+    : ((ugnijezdjen as OfferInput[] | undefined) ?? [body as OfferInput]);
 
   if (list.length === 0) return NextResponse.json({ error: "Nema ponuda" }, { status: 400 });
   if (list.length > 500) return NextResponse.json({ error: "Najviše 500 odjednom" }, { status: 400 });
@@ -136,8 +144,14 @@ export async function POST(req: Request) {
     const oldPrice = num(o.oldPrice ?? o.old_price);
     const plz = cleanPlz(o.plz);
 
+    // Reci ŠTA fali — inače korisnik dobije samo "preskočeno 1" i nagađa.
     if (!productName || !storeName || newPrice === null) {
-      preskoceno.push(productName || "(bez naziva)");
+      const fali = [
+        !productName ? "naziv (productName/product/title)" : null,
+        !storeName ? "prodavnica (store/publisherName)" : null,
+        newPrice === null ? "nova cijena (newPrice/price/mainPrice)" : null,
+      ].filter(Boolean).join(", ");
+      preskoceno.push(`${productName || "(bez naziva)"} — fali: ${fali}`);
       continue;
     }
 

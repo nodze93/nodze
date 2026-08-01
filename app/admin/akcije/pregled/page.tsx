@@ -75,6 +75,24 @@ export default function AkcijePregled() {
     setAkcijaBusy(false);
   }
 
+  /**
+   * Poslije JSON uvoza: pali GitHub Actions posao koji usput dopuni slike
+   * sa Open Food Facts, da se ne čeka noćni prolaz. Traje 15-40 min.
+   */
+  async function povuciSlike() {
+    if (!confirm("Pokrenuti scrape + dopunu slika na GitHub Actions?\n\nTraje 15–40 minuta.")) return;
+    setAkcijaBusy(true);
+    setAkcijaMsg("");
+    try {
+      const r = await fetch("/api/admin/akcije/pokreni", { method: "POST" });
+      const j = await r.json();
+      setAkcijaMsg(j.ok ? j.poruka : `Greška: ${j.error}`);
+    } catch (e) {
+      setAkcijaMsg("Greška: " + (e as Error).message);
+    }
+    setAkcijaBusy(false);
+  }
+
   const load = useCallback(async (p?: string) => {
     setLoading(true);
     const url = "/api/admin/akcije/dashboard" + (p ? `?plz=${p}` : "");
@@ -223,14 +241,18 @@ export default function AkcijePregled() {
           <button className="pg-rr-btn" onClick={applyLayer} disabled={akcijaBusy}>
             {akcijaBusy ? "Radim…" : "🖼️ Primijeni sloj slika (apply layer)"}
           </button>
+          <button className="pg-rr-btn" onClick={povuciSlike} disabled={akcijaBusy}>
+            {akcijaBusy ? "Radim…" : "⬇️ Povuci slike sada (poslije JSON uvoza)"}
+          </button>
           <a className="pg-rr-link" href={AKCIJE_WORKFLOW} target="_blank" rel="noopener noreferrer">
-            📈 Pokreni scrape / enrich (GitHub) ↗
+            📈 Log na GitHubu ↗
           </a>
         </div>
         {akcijaMsg && <div className={"pg-rr-msg" + (akcijaMsg.startsWith("Greška") ? " bad" : "")}>{akcijaMsg}</div>}
         <div className="pg-rr-note">
-          „Apply layer" popuni prazne slike iz trajnog sloja (Open Food Facts) i primijeni skrivanja.
-          Scrape i enrich rade u GitHub Actions cronu (dnevno).
+          „Apply layer" popuni prazne slike iz trajnog sloja i primijeni skrivanja — radi odmah.
+          „Povuci slike sada" pali GitHub Actions (15–40 min): skine ponude i dopuni slike sa
+          Open Food Facts — koristi poslije JSON uvoza da uvezeni artikli dobiju fotografije.
         </div>
       </div>
 
