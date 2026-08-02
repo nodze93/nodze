@@ -1,243 +1,111 @@
-'use client';
+// ============================================================
+//  DETALJ PONUDE — server omotač zbog DIJELJENJA
+// ------------------------------------------------------------
+//  Sam prikaz je klijentski (`PonudaKlijent`), ali WhatsApp, Facebook,
+//  Viber i Telegram NE izvršavaju JavaScript — oni pročitaju samo HTML
+//  koji server pošalje. Zato je pregled linka ranije ispadao kao logo
+//  sajta: klijentska komponenta ne može postaviti og:image.
+//
+//  Ovdje se ponuda dohvati NA SERVERU i og: oznake se popune pravim
+//  podacima — fotografija proizvoda, naziv, cijena, prodavnica i rok.
+// ============================================================
 
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
-import { usePlz } from '@/components/akcije/PlzProvider';
-import ProductImage from '@/components/akcije/ProductImage';
-import StoreLogo from '@/components/akcije/StoreLogo';
-import {
-  IconBack,
-  IconCalendar,
-  IconChevron,
-  IconHeart,
-  IconShare,
-  IconStock,
-  IconStore,
-  IconTag,
-} from '@/components/akcije/icons';
-import { api } from '@/lib/akcije/api';
-import { favoriteKey, useFavorites } from '@/lib/akcije/favorites';
-import { daysLeftLabel, formatLongDate, formatPercent, formatPrice } from '@/lib/akcije/format';
-import type { Discount } from '@/lib/akcije/types';
+import type { Metadata } from 'next';
+import { db } from '@/lib/akcije-server';
+import PonudaKlijent from './PonudaKlijent';
 
-/** Deep link / PWA: ako nema historije, "nazad" vodi na /akcije umjesto van sajta. */
-function useNazad() {
-  const router = useRouter();
-  return useCallback(() => {
-    if (typeof window !== 'undefined' && window.history.length > 1) router.back();
-    else router.push('/akcije');
-  }, [router]);
+export const revalidate = 120;
+
+interface Ponuda {
+  product_name?: string;
+  // Postgres `numeric` zna stići kao TEKST, ne broj — zato oba tipa.
+  new_price?: number | string;
+  old_price?: number | string | null;
+  discount_percent?: number | string | null;
+  store?: string;
+  image_url?: string | null;
+  valid_to?: string | null;
 }
 
-export default function OfferDetailPage() {
-  const params = useParams<{ id: string }>();
-  const id = String(params.id ?? '');
-  const nazad = useNazad();
-  const { plz } = usePlz();
-  const { has, toggle } = useFavorites();
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://kodnas.de';
 
-  const [item, setItem] = useState<Discount | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [shared, setShared] = useState<string | null>(null);
+function broj(v: unknown): number | null {
+  // PAZI: Number(null) je 0, a Number('') je 0 — bez ove provjere bi artikal
+  // bez stare cijene („Angebot") u pregledu ispao kao „umjesto 0,00 €".
+  if (v === null || v === undefined || v === '') return null;
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
+}
 
-  useEffect(() => {
-    let active = true;
-    api
-      .discount(id)
-      .then((data) => {
-        if (active) setItem(data);
-      })
-      .catch((err: Error) => {
-        if (active) setError(err.message);
-      });
-    return () => {
-      active = false;
-    };
-  }, [id]);
+async function dajPonudu(id: string): Promise<Ponuda | null> {
+  if (!/^\d{1,18}$/.test(id)) return null;
+  try {
+    const { data, error } = await db().rpc('ak_discount_by_id', { p_id: Number(id) });
+    if (error) return null;
+    const item = Array.isArray(data) ? data[0] : data;
+    return (item as Ponuda) ?? null;
+  } catch {
+    return null;
+  }
+}
 
-  const share = async () => {
-    const url = window.location.href;
-    const text = item ? `${item.product_name} — ${formatPrice(item.new_price)} u ${item.store}` : '';
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: item?.product_name, text, url });
-        return;
-      }
-      await navigator.clipboard.writeText(`${text} ${url}`);
-      setShared('Link kopiran.');
-    } catch {
-      setShared('Dijeljenje nije uspjelo.');
-    }
+function eur(v: unknown): string | null {
+  const n = broj(v);
+  return n === null ? null : `${n.toFixed(2).replace('.', ',')} €`;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const p = await dajPonudu(id);
+
+  // Ponuda ne postoji (istekla, pogrešan link) → vrijedi podrazumijevani
+  // opis sajta umjesto praznog pregleda.
+  if (!p?.product_name) return {};
+
+  const nova = eur(p.new_price);
+  const stara = eur(p.old_price);
+  const pct = broj(p.discount_percent);
+  const procenat = pct !== null ? `−${Math.round(pct)}% · ` : '';
+
+  const naslov = `${p.product_name} — ${nova ?? ''}${p.store ? ` u ${p.store}` : ''}`.trim();
+  const opis = [
+    procenat + (stara ? `umjesto ${stara}` : 'akcijska cijena'),
+    p.valid_to ? `vrijedi do ${p.valid_to.split('-').reverse().join('.')}.` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  const url = `${SITE}/akcije/ponuda/${id}`;
+  // Slika je na CDN-u lanca (hotlink, isto kao na sajtu). Bez nje pregled
+  // pada nazad na logo — to je jedino što stvarno rješava problem.
+  const slike = p.image_url ? [{ url: p.image_url, alt: p.product_name }] : undefined;
+
+  return {
+    title: naslov,
+    description: opis,
+    alternates: { canonical: url },
+    openGraph: {
+      title: naslov,
+      description: opis,
+      url,
+      siteName: 'kodnas.de',
+      locale: 'bs_BA',
+      type: 'article',
+      images: slike,
+    },
+    twitter: {
+      card: slike ? 'summary_large_image' : 'summary',
+      title: naslov,
+      description: opis,
+      images: p.image_url ? [p.image_url] : undefined,
+    },
   };
+}
 
-  if (error) {
-    return (
-      <>
-        <div className="pagetop">
-          <button type="button" className="back" aria-label="Nazad" onClick={nazad}>
-            <IconBack />
-          </button>
-          <h1>Detalj ponude</h1>
-        </div>
-        <div className="state">
-          <h2>Ponuda nije dostupna</h2>
-          <p>
-            {error}. Ponude se osvježavaju svaki dan, pa je moguće da je ova iz starijeg dana i da je
-            zamijenjena novom.
-          </p>
-          <Link href="/akcije/ponude" className="btn">
-            Sve aktuelne akcije
-          </Link>
-        </div>
-      </>
-    );
-  }
-
-  if (!item) {
-    return (
-      <>
-        <div className="pagetop">
-          <button type="button" className="back" aria-label="Nazad" onClick={nazad}>
-            <IconBack />
-          </button>
-          <h1>Detalj ponude</h1>
-        </div>
-        <div className="skel" style={{ height: 232, marginTop: 14 }} />
-      </>
-    );
-  }
-
-  const key = favoriteKey(item);
-  const favorite = has(key);
-  const validity = daysLeftLabel(item.valid_to);
-
-  return (
-    <>
-      <div className="pagetop">
-        <button type="button" className="back" aria-label="Nazad" onClick={nazad}>
-          <IconBack />
-        </button>
-        <h1>Detalj ponude</h1>
-        <button
-          type="button"
-          className={`icon-btn${favorite ? ' on' : ''}`}
-          aria-label={favorite ? 'Izbaci iz favorita' : 'Dodaj u favorite'}
-          aria-pressed={favorite}
-          onClick={() => toggle(key)}
-        >
-          <IconHeart filled={favorite} />
-        </button>
-      </div>
-
-      <div className="detail-hero">
-        <StoreLogo slug={item.store_slug} name={item.store} size="md" />
-        {item.discount_percent !== null ? (
-          <span className="badge-pct">{formatPercent(item.discount_percent)}</span>
-        ) : (
-          <span className="badge-ang">Angebot</span>
-        )}
-        <ProductImage
-          imageUrl={item.image_url}
-          category={item.category}
-          productName={item.product_name}
-          artSize={214}
-        />
-        {item.image_exact === false ? (
-          // Napomena stoji U OKVIRU slike, kao na pravim njemackim letcima:
-          // Nutella 250 g i 750 g nisu ista tegla, pa fotografija nije tacna.
-          <span className="img-note">Abbildung ähnlich</span>
-        ) : null}
-        {item.image_attribution ? (
-          <span className="img-credit">{item.image_attribution}</span>
-        ) : null}
-      </div>
-
-      <h2 className="h-title">{item.product_name}</h2>
-      <p className="h-sub">
-        {item.store}
-        {item.category ? ` · ${item.category}` : ''}
-      </p>
-
-      <div className="pricebox">
-        {item.old_price !== null ? (
-          <>
-            <div>
-              <p className="lab">Redovna cijena</p>
-              <span className="v-old">{formatPrice(item.old_price)}</span>
-            </div>
-            <span className="sep" />
-            <div style={{ textAlign: 'right' }}>
-              <p className="lab">Akcijska cijena</p>
-              <span className="v-new">{formatPrice(item.new_price)}</span>
-            </div>
-            <p className="saveline">
-              Ušteda: {formatPrice(item.savings ?? 0)} ({Math.round(item.discount_percent ?? 0)}%)
-            </p>
-            {item.rabatt_quelle === 'berechnet' ? (
-              <p className="calc-inline">
-                Naš pregled: najniža cijena u {item.store} u 30 dana &mdash; nije zvanična akcija.
-              </p>
-            ) : null}
-          </>
-        ) : (
-          <>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <p className="lab">Akcijska cijena</p>
-              <span className="v-new">{formatPrice(item.new_price)}</span>
-            </div>
-            <p className="saveline warn">
-              Ova prodavnica ne objavljuje staru cijenu, pa se procent i ušteda ne mogu izračunati.
-              Artikal je zato „Angebot“ i ne ulazi u filtere po procentu i ušteđi.
-            </p>
-          </>
-        )}
-      </div>
-
-      <div className="meta-list">
-        {item.valid_to ? (
-          <div className="meta-row">
-            <IconCalendar size={19} />
-            Važi do
-            <b>
-              {formatLongDate(item.valid_to)}
-              {validity ? ` (${validity})` : ''}
-            </b>
-          </div>
-        ) : null}
-        <Link href={`/akcije/prodavnica/${item.store_slug}`} className="meta-row">
-          <IconStore size={19} />
-          Trgovina
-          <b>
-            {item.store} <IconChevron size={13} style={{ verticalAlign: -2 }} />
-          </b>
-        </Link>
-        {item.category ? (
-          <Link href={`/akcije/ponude?category=${encodeURIComponent(item.category)}`} className="meta-row">
-            <IconTag size={19} />
-            Kategorija
-            <b>
-              {item.category} <IconChevron size={13} style={{ verticalAlign: -2 }} />
-            </b>
-          </Link>
-        ) : null}
-        <div className="meta-row">
-          <IconStock size={19} />
-          Dostupnost
-          <b>Dok traju zalihe</b>
-        </div>
-      </div>
-
-      <div className="detail-actions">
-        <button type="button" className="btn" onClick={share}>
-          <IconShare size={19} /> Podijeli
-        </button>
-        <Link href={`/akcije/prodavnica/${item.store_slug}`} className="btn btn-ghost">
-          Sve akcije u {item.store}
-        </Link>
-      </div>
-
-      {shared ? <p className="note">{shared}</p> : null}
-    </>
-  );
+export default function Stranica() {
+  return <PonudaKlijent />;
 }
