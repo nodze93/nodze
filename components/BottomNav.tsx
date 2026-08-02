@@ -93,7 +93,9 @@ export default function BottomNav() {
             background: #ffffff;
             border-top: 1px solid #e5e7eb;
             box-shadow: 0 -1px 10px rgba(0,0,0,0.06);
-            padding-bottom: env(safe-area-inset-bottom);
+            /* 6px podiže dugmad od samog ruba ekrana — bila su "previše
+               dole skroz" (posebno na telefonima bez safe-area). */
+            padding-bottom: calc(6px + env(safe-area-inset-bottom));
           }
           .botnav-item {
             flex: 1;
@@ -107,16 +109,17 @@ export default function BottomNav() {
             font-size: 11px;
             font-weight: 600;
           }
-          .botnav-lbl { white-space: nowrap; }
+          /* 10px: da i najduži natpis ("Brutto-Netto") stane ISPISAN CIO
+             i na uskim telefonima — sjeklo je "netto" dio. */
+          .botnav-lbl { white-space: nowrap; font-size: 10px; }
           .botnav-item.active { color: #1a8a4a; }
           .botnav-item:active { background: #f3f4f6; }
           .botnav-ico { width: 24px; height: 24px; }
           .botnav-ico svg { width: 24px; height: 24px; display: block; }
           /* Razmak na dnu da sadržaj ne bude ispod trake.
-             62px = stvarna visina trake (ikona 24 + label 11×1.2 + padding
-             8+7 + border 1 ≈ 60,6px) + mala rezerva — sa 58px su zadnja
-             2 piksela sadržaja bila stalno sakrivena. */
-          body { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+             68px = visina trake sa podignutom dugmadi (6px) — mora se
+             slagati sa BnFrame.tsx i AdminModeracija.tsx. */
+          body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
         }
         /* Sa 4 kartice "Brutto-Netto" je najduži natpis — na uskim
            telefonima se slova malo stisnu da ne pređe u dva reda. */

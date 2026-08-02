@@ -37,8 +37,18 @@ export default function BnFrame() {
     frame.style.height = `${visina}px`;
     frame.style.transformOrigin = 'top left';
     frame.style.transform = `scale(${scale})`;
-    // centriraj vodoravno kad ostane prostora
+    // centriraj (i vodoravno i uspravno) kad ostane prostora
     frame.style.marginLeft = `${Math.max(0, (w - sirina * scale) / 2)}px`;
+    frame.style.marginTop = `${Math.max(0, (h - visina * scale) / 2)}px`;
+
+    // Pozadina OKO kalkulatora = pozadina SAMOG kalkulatora, pa se rubovi
+    // ne vide (bez sivih traka lijevo/desno — izgledalo je neprofesionalno).
+    const bg =
+      getComputedStyle(doc.body).backgroundColor ||
+      getComputedStyle(doc.documentElement).backgroundColor;
+    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+      wrap.style.background = bg;
+    }
   }, []);
 
   useEffect(() => {
@@ -95,9 +105,10 @@ export default function BnFrame() {
           border: none;
           display: block;
         }
-        /* Na telefonu ostavi mjesta za donju nav traku (62px = njena visina) */
+        /* Na telefonu ostavi mjesta za donju nav traku (68px = njena visina
+           sa podignutom dugmadi) */
         @media (max-width: 768px) {
-          .bn-wrap { bottom: calc(62px + env(safe-area-inset-bottom)); }
+          .bn-wrap { bottom: calc(68px + env(safe-area-inset-bottom)); }
         }
       `}</style>
     </div>

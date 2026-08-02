@@ -59,7 +59,7 @@ export default function AdminModeracija() {
       {/* ADMIN TRAKA (dole, fiksna). Na telefonu sjedi IZNAD donje app-trake
           (BottomNav, 62px) — ranije ju je prekrivala (z-index 9998 vs 1000),
           pa admin na telefonu nije imao navigaciju. */}
-      <div style={{ position: "fixed", left: 0, right: 0, bottom: isMobile ? "calc(62px + env(safe-area-inset-bottom))" : 0, zIndex: 9998, background: "#111827", color: "white", display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "10px 12px" : "8px 16px", fontSize: 13, gap: 10, flexWrap: "wrap" }}>
+      <div style={{ position: "fixed", left: 0, right: 0, bottom: isMobile ? "calc(68px + env(safe-area-inset-bottom))" : 0, zIndex: 9998, background: "#111827", color: "white", display: "flex", alignItems: "center", justifyContent: "space-between", padding: isMobile ? "10px 12px" : "8px 16px", fontSize: 13, gap: 10, flexWrap: "wrap" }}>
         {!isMobile && (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ background: "#1D9E75", padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>⚙️ Admin</span>

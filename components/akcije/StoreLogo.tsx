@@ -44,9 +44,10 @@ export default function StoreLogo({ slug, name, logoUrl, size = 'lg' }: Props) {
 
   const brand = storeBrand(slug, name);
   const text = size === 'sm' ? brand.short : brand.label;
-  // Duga imena (Kaufland = 8 znakova) moraju stati u kvadratnu pločicu od
-  // ~46px unutrašnje širine — na 9.5px se "Kaufland" sjekao u "Kauflan".
-  const fontSize = size === 'sm' ? undefined : text.length > 7 ? 8.5 : text.length > 5 ? 10.5 : 12.5;
+  // Duga imena (Kaufland = 8 znakova) moraju stati u pločicu ISPISANA
+  // CIJELA — želja korisnika: „nebitno što je smanjeno". Uz padding 6px
+  // pločica ima ~52px unutrašnje širine, pa "Kaufland" staje na 9px.
+  const fontSize = size === 'sm' ? undefined : text.length > 7 ? 9 : text.length > 5 ? 10.5 : 12.5;
 
   // BOJE, ALI NAŠA TIPOGRAFIJA (odluka korisnika, 2.8.2026): pločica nosi
   // prepoznatljive boje lanca (Lidl žuto-plavo, Kaufland crveno…), ali ime

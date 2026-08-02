@@ -264,7 +264,8 @@
     place-items: center;
     width: 100%;
     aspect-ratio: 1;
-    padding: 9px;
+    /* 6px umjesto 9px: da duga imena (Kaufland) stanu ISPISANA cijela */
+    padding: 6px;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 13px;
