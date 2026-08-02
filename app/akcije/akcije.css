@@ -272,8 +272,10 @@
     overflow: hidden;
 }
 .ak .wordmark {
-  display: grid;
-    place-items: center;
+  /* block + ellipsis umjesto grid: sa grid-om text-overflow NE radi, pa se
+     "Kaufland" sjekao nasred slova ("Kauflan") u pločici trake. */
+  display: block;
+    text-align: center;
     max-width: 100%;
     padding: 4px 8px;
     font-size: 11.5px;

@@ -86,7 +86,10 @@ export default function OfferCard({ item, hideStore = false, variant = 'grid' }:
           <div className="card-meta">
             {hideStore ? null : <StoreLogo slug={item.store_slug} name={item.store} size="sm" />}
             {/* u uzanoj kartici nema mjesta za ime prodavnice - logo ga vec kaze */}
-            {rail ? null : <span>{hideStore ? (kategorijaNaziv(item.category) || '—') : item.store}</span>}
+            {/* U mreži ime prodavnice NE pišemo pored pločice — na telefonu
+                (kartica ~165px) je "KAU Kaufla… Važi do 05.…" sjeklo i ime i
+                DATUM. Pločica već kaže ko je; puni naziv je na detalju. */}
+            {rail || !hideStore ? null : <span>{kategorijaNaziv(item.category) || '—'}</span>}
             {validTo ? (
               <span style={{ marginLeft: 'auto' }}>{rail ? `do ${validTo}` : `Važi do ${validTo}`}</span>
             ) : null}

@@ -45,7 +45,9 @@ export default function StoreLogo({ slug, name, logoUrl, size = 'lg' }: Props) {
   const brand = storeBrand(slug, name);
   const text = size === 'sm' ? brand.short : brand.label;
   const neutral = LOGO_MODE !== 'brand';
-  const fontSize = size === 'sm' ? undefined : text.length > 7 ? 9.5 : text.length > 5 ? 11 : 12.5;
+  // Duga imena (Kaufland = 8 znakova) moraju stati u kvadratnu pločicu od
+  // ~46px unutrašnje širine — na 9.5px se "Kaufland" sjekao u "Kauflan".
+  const fontSize = size === 'sm' ? undefined : text.length > 7 ? 8.5 : text.length > 5 ? 10.5 : 12.5;
 
   return (
     <span className={className} aria-label={name} title={name}>

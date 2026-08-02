@@ -185,7 +185,13 @@ export class LidlSource implements Source {
           productName: naziv,
           newPrice: Math.round(nova * 100) / 100,
           oldPrice: stara !== null && stara > nova ? Math.round(stara * 100) / 100 : null,
-          category: normalizeCategory(o.category ?? null, naziv),
+          // Lidl API zna poslati "Store" kao kategoriju — to je naziv sekcije
+          // u NJIHOVOJ aplikaciji, ne kategorija artikla (na sajtu se vidio
+          // chip "Store 26"). Takvo smeće se baca, pa kategoriju pogađa naziv.
+          category: normalizeCategory(
+            o.category && !/^store$/i.test(o.category.trim()) ? o.category : null,
+            naziv,
+          ),
           imageUrl: o.imageUrl ?? null,
           validFrom: validFrom.length === 10 ? validFrom : null,
           validTo,

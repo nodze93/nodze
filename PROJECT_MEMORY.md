@@ -159,7 +159,17 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
   na „Sve akcije" čim korisnik skine ≥30% filter.
 - REWE NEDJELJOM: potvrđeno korisniku i drugi put — prazan REWE nedjeljom je
   ritam izvora, vraća se ponedjeljkom ~6:30. Ne „popravljati".
-- Mobilni VIZUELNI pas (iframe 390px kroz Chrome) čeka deploy ovih izmjena.
+- Mobilni VIZUELNI pas (iframe 390px kroz Chrome) URAĐEN poslije deploya.
+  Potvrđeno uživo: regije rade (Köln = Aldi Süd 60), OBI van opštih lista,
+  umlauti („Gemüse/Getränke/Tiefkühl"), sticky dugmad sheeta, padeži
+  („82 artikla"), pretraga, 2 kolone bez overflow-a. Nađeno i popravljeno:
+  wordmark „Kauflan" (grid → block + manji font za duga imena), meta red
+  kartice sjekao datum (ime prodavnice van mreže — pločica dovoljna),
+  Lidl chip „Store" (smeće iz njihovog API-ja → baca se, pogađa naziv).
+  ALDI NORD NEDJELJOM = 0 (kao REWE): sljedeća sedmica im se učita tek na
+  klik, pa nedjeljom nema pločica → alarm „na nuli" nedjeljom uveče za
+  Aldi Nord/REWE je OČEKIVAN, ne kvar. Detalj-linkovi umiru na re-scrape
+  (novi id-jevi) — empty-state to lijepo objasni; poznato, ne dirati.
 
 ### SQL MIGRACIJE (redoslijed pokretanja u Supabaseu)
 1. `akcije.sql` ✅  2. `akcije-trajni-sloj.sql` ✅
