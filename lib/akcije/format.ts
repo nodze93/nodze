@@ -13,6 +13,13 @@ export function mnozina(n: number, jedan: string, dvaCetiri: string, vise: strin
   return `${n} ${vise}`;
 }
 
+/** Današnji datum kao 'YYYY-MM-DD' po LOKALNOM satu (ne UTC — u ponoć po
+ *  našem vremenu UTC još pokazuje jučerašnji dan, pa bi „NOVO" kasnilo). */
+export function danasIso(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export const formatPrice = (value: number): string => euro.format(value);
 
 export const formatPercent = (value: number): string => `-${Math.round(value)}%`;

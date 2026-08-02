@@ -171,6 +171,22 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
   Aldi Nord/REWE je OČEKIVAN, ne kvar. Detalj-linkovi umiru na re-scrape
   (novi id-jevi) — empty-state to lijepo objasni; poznato, ne dirati.
 
+2026-08-02 (treći krug — želje korisnika):
+- **„NOVO" oznaka**: OfferCard pokazuje zelenu NOVO pločicu kad je
+  valid_from = DANAS (lokalni datum, danasIso() u format.ts — namjerno ne
+  UTC); na naslovnoj „Top ponude danas" nove-danas idu NA POČETAK trake
+  (novoPrvo() u app/akcije/page.tsx). Pali se samo na dane kad sedmica
+  počinje (pon: Lidl/REWE/Aldi, čet: Kaufland) — to je ispravno.
+- **Brutto-Netto na jedan ekran**: components/BnFrame.tsx mjeri stvarnu
+  veličinu kalkulatora (isti origin) i SKALIRA iframe da sve stane — bez
+  odsijecanja desne strane i bez skrolanja. Korisnikov dizajn u
+  public/kalkulator-app/ NIJE diran (i dalje se ne dira).
+- **Pločice u bojama lanaca** (odluka korisnika): StoreLogo sada uvijek
+  boji pločicu bojama iz lib/akcije/stores.ts (Lidl žuto-plavo, Kaufland
+  crveno…), ali ime ostaje NAŠIM fontom — ne crta se njihov logotip.
+  BrandLogo SVG-ovi i dalje isključeni iza env prekidača. Korisniku
+  rečeno uz „nisam pravnik" ogradu.
+
 ### SQL MIGRACIJE (redoslijed pokretanja u Supabaseu)
 1. `akcije.sql` ✅  2. `akcije-trajni-sloj.sql` ✅
 3. `akcije-datumi.sql` ✅ (filter po datumu)

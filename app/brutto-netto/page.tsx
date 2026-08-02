@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import BnFrame from "@/components/BnFrame";
 
 // ============================================================
 // BRUTTO-NETTO KALKULATOR — /brutto-netto
 // ============================================================
 // Kalkulator je samostalna mini-aplikacija (statični fajlovi u
-// public/kalkulator-app/). Ovdje ga ugrađujemo preko iframe-a da
-// donja nav traka sajta ostane vidljiva oko njega.
+// public/kalkulator-app/ — korisnikov dizajn, NE dira se). Ovdje ga
+// ugrađujemo preko iframe-a; BnFrame ga automatski SKALIRA da cijeli
+// stane na jedan ekran (bez odsijecanja desne strane i bez skrolanja
+// oko kalkulatora — vidi components/BnFrame.tsx).
 
 export const metadata: Metadata = {
   title: "Brutto-Netto Rechner 2026 — izračunaj neto platu | kodnas.de",
@@ -15,32 +18,5 @@ export const metadata: Metadata = {
 };
 
 export default function BruttoNettoPage() {
-  return (
-    <div className="bn-wrap">
-      <iframe
-        src="/kalkulator-app/index.html"
-        title="Brutto-Netto Rechner"
-        allow="web-share; clipboard-write"
-        className="bn-frame"
-      />
-
-      <style>{`
-        .bn-wrap {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: #F0F4FF;
-        }
-        .bn-frame {
-          width: 100%;
-          height: 100%;
-          border: none;
-          display: block;
-        }
-        /* Na telefonu ostavi mjesta za donju nav traku */
-        @media (max-width: 768px) {
-          .bn-wrap { bottom: calc(58px + env(safe-area-inset-bottom)); }
-        }
-      `}</style>
-    </div>
-  );
+  return <BnFrame />;
 }

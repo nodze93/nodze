@@ -8,7 +8,7 @@ import PlzSheet from '@/components/akcije/PlzSheet';
 import Recommendation from '@/components/akcije/Recommendation';
 import StoreStrip from '@/components/akcije/StoreStrip';
 import { IconCart, IconChevron, IconStar } from '@/components/akcije/icons';
-import { formatPrice, mnozina } from '@/lib/akcije/format';
+import { danasIso, formatPrice, mnozina } from '@/lib/akcije/format';
 import type { Filters } from '@/lib/akcije/types';
 import { useFacets, useOffers } from '@/lib/akcije/useOffers';
 
@@ -30,8 +30,15 @@ export default function HomePage() {
 
   // "Top ponude danas" = najveći popusti. Prikaži one ≥30% (fallback: top 12
   // po popustu ako ih je malo taj dan) → traka je uvijek puna i stvarno "top".
-  const jakiPopust = items.filter((i) => (i.discount_percent ?? 0) >= 30);
-  const top = (jakiPopust.length >= 8 ? jakiPopust : items).slice(0, 12);
+  // „NOVO" IDE PRVO: ponude koje POČINJU danas (valid_from = danas) na
+  // početak trake — ko svrati svaki dan, prvo vidi šta je od jutros novo.
+  const danas = danasIso();
+  const novoPrvo = (lista: typeof items) => [
+    ...lista.filter((i) => i.valid_from === danas),
+    ...lista.filter((i) => i.valid_from !== danas),
+  ];
+  const jakiPopust = novoPrvo(items.filter((i) => (i.discount_percent ?? 0) >= 30));
+  const top = (jakiPopust.length >= 8 ? jakiPopust : novoPrvo(items)).slice(0, 12);
   // Ispod: NAREDNE ponude koje NISU u "Top" (da se lista ne ponavlja).
   const topIds = new Set(top.map((t) => t.id));
   const rest = items.filter((i) => !topIds.has(i.id)).slice(0, 12);

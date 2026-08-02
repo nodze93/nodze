@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { favoriteKey, useFavorites } from '@/lib/akcije/favorites';
-import { formatPercent, formatPrice, formatShortDate } from '@/lib/akcije/format';
+import { danasIso, formatPercent, formatPrice, formatShortDate } from '@/lib/akcije/format';
 import { kategorijaNaziv } from '@/lib/akcije/kategorije';
 import type { Discount } from '@/lib/akcije/types';
 import ProductImage from './ProductImage';
@@ -32,6 +32,10 @@ export default function OfferCard({ item, hideStore = false, variant = 'grid' }:
   // je niza, pa u ekran stane 6 artikala.
   const showFooter = rail || !hideStore;
 
+  // Ponuda koja POČINJE danas — nova je od jutros (npr. REWE/Lidl sedmica
+  // od ponedjeljka, Kaufland od četvrtka). Dobija zelenu „NOVO" oznaku.
+  const novo = item.valid_from === danasIso();
+
   return (
     <article className={`card${rail ? ' card-rail' : ''}`}>
       {item.discount_percent !== null ? (
@@ -41,6 +45,7 @@ export default function OfferCard({ item, hideStore = false, variant = 'grid' }:
         // Takav artikal ne ulazi u filtere po procentu i ustedi.
         <span className="badge-ang">Angebot</span>
       )}
+      {novo ? <span className="badge-novo">NOVO</span> : null}
 
       <button
         type="button"

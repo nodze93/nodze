@@ -44,18 +44,23 @@ export default function StoreLogo({ slug, name, logoUrl, size = 'lg' }: Props) {
 
   const brand = storeBrand(slug, name);
   const text = size === 'sm' ? brand.short : brand.label;
-  const neutral = LOGO_MODE !== 'brand';
   // Duga imena (Kaufland = 8 znakova) moraju stati u kvadratnu pločicu od
   // ~46px unutrašnje širine — na 9.5px se "Kaufland" sjekao u "Kauflan".
   const fontSize = size === 'sm' ? undefined : text.length > 7 ? 8.5 : text.length > 5 ? 10.5 : 12.5;
 
+  // BOJE, ALI NAŠA TIPOGRAFIJA (odluka korisnika, 2.8.2026): pločica nosi
+  // prepoznatljive boje lanca (Lidl žuto-plavo, Kaufland crveno…), ali ime
+  // je ispisano NAŠIM običnim fontom — ne crta se njihov logotip niti
+  // oponaša njihovo pismo. Navođenje imena je opisna upotreba žiga, a
+  // izbjegavanje njihovog vizuala drži rizik nisko (vidi docs/pravno.md).
+  // Crtani SVG logotipi (BrandLogo) ostaju IZA env prekidača, isključeni.
   return (
     <span className={className} aria-label={name} title={name}>
       <span
-        className={`wordmark${neutral ? ' wordmark-neutral' : ''}`}
+        className="wordmark"
         style={{
-          background: neutral ? undefined : brand.bg,
-          color: neutral ? undefined : brand.fg,
+          background: brand.bg,
+          color: brand.fg,
           fontSize: fontSize ? `${fontSize}px` : undefined,
         }}
       >
