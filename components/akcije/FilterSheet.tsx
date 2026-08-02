@@ -135,7 +135,7 @@ export default function FilterSheet({
       {filters.percent > 0 || filters.savings > 0 ? (
         <p className="note">
           Artikli bez stare cijene („Angebot“) se ne prikazuju dok je aktivan filter po procentu ili
-          ušteđi — za njih se popust ne može izračunati.
+          uštedi — za njih se popust ne može izračunati.
         </p>
       ) : null}
 

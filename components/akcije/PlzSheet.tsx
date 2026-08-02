@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { usePlz } from './PlzProvider';
 import Sheet from './Sheet';
 
-const SUGGESTIONS = ['85737', '80331', '10115'];
+// Brzi odabir pokriva različite krajeve zemlje — od regija (faza 2) SVAKI
+// PLZ vraća ponude (nacionalne + svoju Aldi regiju), pa primjeri smiju
+// biti raznovrsni: München, Berlin, Hamburg, Köln, Stuttgart.
+const SUGGESTIONS = ['80331', '10115', '20095', '50667', '70173'];
 
 export default function PlzSheet({ onClose }: { onClose: () => void }) {
   const { plz, setPlz } = usePlz();

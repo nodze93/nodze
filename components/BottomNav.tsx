@@ -112,8 +112,11 @@ export default function BottomNav() {
           .botnav-item:active { background: #f3f4f6; }
           .botnav-ico { width: 24px; height: 24px; }
           .botnav-ico svg { width: 24px; height: 24px; display: block; }
-          /* Razmak na dnu da sadržaj ne bude ispod trake */
-          body { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
+          /* Razmak na dnu da sadržaj ne bude ispod trake.
+             62px = stvarna visina trake (ikona 24 + label 11×1.2 + padding
+             8+7 + border 1 ≈ 60,6px) + mala rezerva — sa 58px su zadnja
+             2 piksela sadržaja bila stalno sakrivena. */
+          body { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
         }
         /* Sa 4 kartice "Brutto-Netto" je najduži natpis — na uskim
            telefonima se slova malo stisnu da ne pređe u dva reda. */

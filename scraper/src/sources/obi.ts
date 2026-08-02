@@ -31,7 +31,7 @@
  */
 import type { Page } from 'playwright';
 import { config } from '../config.js';
-import { cleanProductName, normalizeCategory, parsePrice } from '../normalize.js';
+import { cleanProductName, parsePrice } from '../normalize.js';
 import type { ScrapedOffer, ScrapedStore, Source } from '../types.js';
 import { NACIONALNI_PLZ } from './retailers.js';
 
@@ -79,6 +79,36 @@ function pauza(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+/**
+ * OBI-jeve VLASTITE grupe (njemačke, kao i sve kategorije na sajtu).
+ *
+ * Zašto ne normalizeCategory: ona je pisana za PREHRANU, pa je "Gasgrill"
+ * slala pod "Fleisch" (meso), a "Kühlschrank" pod "Gemuese" — majstorski
+ * dućan je na sajtu imao meso, povrće i bebe. OBI zato dobija svoj mali
+ * klasifikator: prvi pogodak pobjeđuje, redoslijed je bitan (npr.
+ * "LED-Sonnensegel" mora u Garten prije nego što "LED" povuče u Elektro,
+ * a "Gartenstuhl" u Garten prije nego što "Stuhl" povuče u Möbel).
+ * Sve što ne pogodi nijedno pravilo ostaje "Baumarkt".
+ */
+const OBI_GRUPE: Array<[RegExp, string]> = [
+  [/kühlschrank|kuehlschrank|gefrier|waschmaschine|trockner|geschirrspül|staubsauger|mikrowelle|kaffeemaschine|heizlüfter|heizung|ventilator|klimagerät|klimaanlage|luftentfeuchter/i, 'Haushaltsgeräte'],
+  [/grill|smoker|bbq/i, 'Grill'],
+  [/zelt|camping|luftbett|schlafsack|laterne|gästebett|gaestebett|isomatte|kühlbox|kuehlbox|feldbett/i, 'Camping'],
+  [/garten|pflanz|rasen|mäh|maeh|sonnensegel|sonnenschirm|markise|terrass|balkon|beet|hecke|teich|pool|bewässer|bewaesser|gieß|giess|blumen|kompost|zaun|pavillon|gewächshaus|gewaechshaus|outdoor|abspannlein|balkonbespannung/i, 'Garten'],
+  [/werkzeug|bohr|schraub|säge|saege|schleif|akku|hochdruckreiniger|leiter\b|fräse|fraese|kompressor|zange|messgerät|messgeraet/i, 'Werkzeug & Maschinen'],
+  [/led|lampe|leuchte|strahler|kabel|steckdose|batterie|beamer|kopfhörer|kopfhoerer|lautsprecher|steuerung/i, 'Elektro & Licht'],
+  [/schrank|regal|tisch\b|stuhl|sessel|sofa|matratze|bett\b|kommode/i, 'Möbel & Wohnen'],
+  [/dusch|badewanne|\bwc\b|armatur|waschbecken|spiegel/i, 'Bad & Sanitär'],
+  [/farbe|lack|tapete|fliese|laminat|parkett|zement|dämm|daemm|silikon/i, 'Farben & Bauen'],
+];
+
+export function kategorijaObi(naziv: string): string {
+  for (const [pattern, grupa] of OBI_GRUPE) {
+    if (pattern.test(naziv)) return grupa;
+  }
+  return 'Baumarkt';
+}
+
 export class ObiSource implements Source {
   readonly name = 'obi';
   private kes: ScrapedOffer[] | null = null;
@@ -101,6 +131,7 @@ export class ObiSource implements Source {
     // 1) LISTING kroz browser — po URL-u proizvoda, da se dvije stranice ne dupliraju
     const poUrlu = new Map<string, SirovaKartica>();
     let ukupnoKartica = 0;
+    const paliListinzi: string[] = [];
 
     for (const { url, oznaka } of LISTINGS) {
       const page = await this.dajStranicu();
@@ -179,9 +210,17 @@ export class ObiSource implements Source {
         console.log(`    [obi] ${oznaka}: ${kartice.length} pločica, ${sPopustom} s popustom`);
       } catch (greska) {
         console.log(`    [obi] ${oznaka} nije prošao: ${(greska as Error).message.slice(0, 80)}`);
+        paliListinzi.push(oznaka);
       } finally {
         await page.close();
       }
+    }
+
+    // Pad listinga NE SMIJE proći kao "ok s upola manje artikala" — ranije
+    // se upisivao okrnjen snapshot bez retry-ja i bez alarma (ispod praga
+    // od 40%). Bačena greška pušta withRetry u index.ts da pokuša ponovo.
+    if (paliListinzi.length > 0) {
+      throw new Error(`OBI: listing ${paliListinzi.join(' i ')} nije prošao — probaj ponovo`);
     }
 
     // 2) ROKOVI sa stranica proizvoda — običan fetch, bez browsera
@@ -224,11 +263,7 @@ export class ObiSource implements Source {
           productName: naziv,
           newPrice: nova,
           oldPrice: stara !== null && stara > nova ? stara : null,
-          // OBI je Baumarkt — kategorija se NE pogađa iz naziva artikla.
-          // Ranije je normalizeCategory(naziv) "Gasgrill" slao pod "Fleisch"
-          // (meso), pa je majstorski dućan na sajtu imao "Fleisch 13",
-          // "Obst 2" i "Tiefkuehl 1". Sve što OBI prodaje je Baumarkt.
-          category: 'Baumarkt',
+          category: kategorijaObi(naziv),
           imageUrl: r.k.slika && /^https?:\/\//.test(r.k.slika) ? r.k.slika : null,
           validFrom: r.rok.validFrom,
           validTo: r.rok.validTo,

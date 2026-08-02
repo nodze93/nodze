@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
-import { formatPrice } from '@/lib/akcije/format';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { formatPrice, mnozina } from '@/lib/akcije/format';
 import { kategorijaNaziv } from '@/lib/akcije/kategorije';
 import { EMPTY_FILTERS, type Filters, type SortKey } from '@/lib/akcije/types';
 import { useFacets, useOffers } from '@/lib/akcije/useOffers';
@@ -29,14 +29,21 @@ interface Props {
   initial?: Partial<Omit<Filters, 'plz'>>;
   /** otvori filter-sheet odmah pri učitavanju (npr. dolazak s dugmeta „Filteri") */
   openFilters?: boolean;
+  /**
+   * Dolazak s trake „Top ponude danas": naslov ostaje „Top ponude danas"
+   * SAMO dok stoji filter ≥30% — čim ga korisnik skine, ovo je opet
+   * obična lista i naslov se vraća na „Sve akcije".
+   */
+  topMode?: boolean;
 }
 
 /**
  * Zajednicki prikaz liste ponuda: kategorijski chipovi + grid + bottom sheet
  * sa svim filterima. Koristi ga i /ponude i /prodavnica/[slug].
  */
-export default function OffersBrowser({ title, storeSlug, storeName, initial, openFilters }: Props) {
-  const { plz } = usePlz();
+export default function OffersBrowser({ title, storeSlug, storeName, initial, openFilters, topMode }: Props) {
+  const { plz, ready } = usePlz();
+  const router = useRouter();
   const nazad = useNazad();
   const [state, setState] = useState<Omit<Filters, 'plz'>>({
     ...EMPTY_FILTERS,
@@ -44,10 +51,36 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
     store: storeSlug ?? initial?.store ?? '',
   });
   const [sheetOpen, setSheetOpen] = useState(Boolean(openFilters));
+  // "Prikaži još": umjesto tvrdog reza na 300 ("piše 412, vidi se 300"),
+  // svaki klik podiže limit — bez ikakve promjene na API-ju.
+  const [limit, setLimit] = useState(300);
 
-  const filters: Filters = useMemo(() => ({ ...state, plz }), [state, plz]);
-  const { items, total, loading, error } = useOffers(filters);
-  const { stores, categories } = useFacets(plz, storeSlug);
+  // Prije nego što se sazna snimljeni PLZ, ne šalje se NIŠTA — ranije je
+  // prvi render uvijek povukao podatke za 85737 pa ih bacio (bljesak +
+  // uzaludan zahtjev za svakog korisnika van Ismaninga).
+  const aktivniPlz = ready ? plz : '';
+  const filters: Filters = useMemo(() => ({ ...state, plz: aktivniPlz }), [state, aktivniPlz]);
+  const { items, total, loading, error } = useOffers(filters, limit);
+  const { stores, categories } = useFacets(aktivniPlz, storeSlug);
+
+  // Filteri žive i u URL-u: "nazad" sa artikla vraća ISTE filtere (ranije se
+  // sve resetovalo), a stanje se može podijeliti linkom. `replace` umjesto
+  // `push` da svaki dodir filtera ne puni historiju pregledača.
+  useEffect(() => {
+    const qs = new URLSearchParams();
+    if (!storeSlug && state.store) qs.set('store', state.store);
+    if (state.category) qs.set('category', state.category);
+    if (state.percent) qs.set('percent', String(state.percent));
+    if (state.savings) qs.set('savings', String(state.savings));
+    if (state.q) qs.set('q', state.q);
+    if (state.sort !== 'percent') qs.set('sort', state.sort);
+    if (topMode && state.percent >= 30) qs.set('top', '1');
+    const next = qs.toString();
+    const trenutni = window.location.search.replace(/^\?/, '');
+    if (next !== trenutni) {
+      router.replace(`${window.location.pathname}${next ? `?${next}` : ''}`, { scroll: false });
+    }
+  }, [state, storeSlug, topMode, router]);
 
   const patch = useCallback((next: Partial<Filters>) => {
     setState((previous) => ({ ...previous, ...next, ...(storeSlug ? { store: storeSlug } : {}) }));
@@ -72,7 +105,7 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
         {storeSlug && storeName ? (
           <StoreLogo slug={storeSlug} name={storeName} size="md" />
         ) : null}
-        <h1>{title}</h1>
+        <h1>{topMode ? (state.percent >= 30 ? 'Top ponude danas' : 'Sve akcije') : title}</h1>
         <button
           type="button"
           className={`icon-btn${activeCount > 0 ? ' on' : ''}`}
@@ -81,6 +114,16 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
         >
           <IconFilter />
         </button>
+      </div>
+
+      <div className="srch">
+        <input
+          type="search"
+          value={state.q}
+          placeholder="Pretraži artikle — npr. kafa, deterdžent…"
+          aria-label="Pretraga artikala"
+          onChange={(event) => patch({ q: event.target.value })}
+        />
       </div>
 
       <div className="chips">
@@ -106,7 +149,7 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
       </div>
 
       <div className="summary">
-        <b>{loading && items.length === 0 ? 'Učitavam…' : `${total} artikala`}</b>
+        <b>{loading && items.length === 0 ? 'Učitavam…' : mnozina(total, 'artikal', 'artikla', 'artikala')}</b>
         <span className="dot" />
         <span>PLZ {plz}</span>
         {state.percent > 0 ? (
@@ -167,11 +210,23 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
           </button>
         </div>
       ) : (
-        <div className="grid" style={{ opacity: loading ? 0.55 : 1, transition: 'opacity .15s' }}>
-          {items.map((item) => (
-            <OfferCard key={item.id} item={item} hideStore={Boolean(storeSlug)} />
-          ))}
-        </div>
+        <>
+          <div className="grid" style={{ opacity: loading ? 0.55 : 1, transition: 'opacity .15s' }}>
+            {items.map((item) => (
+              <OfferCard key={item.id} item={item} hideStore={Boolean(storeSlug)} />
+            ))}
+          </div>
+          {items.length < total ? (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              style={{ marginTop: 14 }}
+              onClick={() => setLimit((prethodni) => prethodni + 300)}
+            >
+              Prikaži još ({total - items.length})
+            </button>
+          ) : null}
+        </>
       )}
 
       {sheetOpen ? (

@@ -103,6 +103,7 @@ export class ReweSource implements Source {
 
     const poKljucu = new Map<string, ScrapedOffer>();
     let praznihKategorija = 0;
+    let palihKategorija = 0; // greške (timeout/mreža), NE legitimno prazne
     let period = '';
 
     for (const [slug, kategorija] of Object.entries(KATEGORIJE)) {
@@ -198,9 +199,17 @@ export class ReweSource implements Source {
         }
       } catch {
         praznihKategorija += 1;
+        palihKategorija += 1;
       } finally {
         await page.close();
       }
+    }
+
+    // Par kategorija smije zakazati (upozorenje kroz alarm-pad), ali kad
+    // padne ČETVRTINA i više, snapshot bi bio ozbiljno okrnjen a status
+    // svejedno "ok" — bolje baciti grešku i pustiti retry u index.ts.
+    if (palihKategorija >= 4) {
+      throw new Error(`REWE: ${palihKategorija}/${Object.keys(KATEGORIJE).length} kategorija palo — probaj ponovo`);
     }
 
     const ponude = [...poKljucu.values()];

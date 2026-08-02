@@ -1,5 +1,18 @@
 const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
 
+/**
+ * Bosanski padeži uz broj: 1 artikal · 2–4 artikla · 5+ artikala
+ * (izuzetak 11–14 uvijek ide na treći oblik; 21, 101… idu na prvi/drugi)
+ */
+export function mnozina(n: number, jedan: string, dvaCetiri: string, vise: string): string {
+  const zadnjaDva = n % 100;
+  const zadnja = n % 10;
+  if (zadnjaDva >= 11 && zadnjaDva <= 14) return `${n} ${vise}`;
+  if (zadnja === 1) return `${n} ${jedan}`;
+  if (zadnja >= 2 && zadnja <= 4) return `${n} ${dvaCetiri}`;
+  return `${n} ${vise}`;
+}
+
 export const formatPrice = (value: number): string => euro.format(value);
 
 export const formatPercent = (value: number): string => `-${Math.round(value)}%`;

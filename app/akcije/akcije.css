@@ -457,25 +457,6 @@
     background: var(--angebot-soft);
     border-radius: 6px;
 }
-/* „NOVO" = ponuda počinje DANAS. Stoji ISPOD srca (gore desno), da ne
-   pokrije badge popusta koji je gore lijevo. */
-.ak .badge-novo {
-  position: absolute;
-    top: 40px;
-    right: 8px;
-    z-index: 2;
-    padding: 3px 6px;
-    font-size: 9.5px;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    color: #fff;
-    background: var(--brand);
-    border-radius: 5px;
-}
-.ak .card-rail .badge-novo {
-  top: 34px; right: 6px; padding: 2px 5px; font-size: 9px;
-}
-
 .ak .heart {
   position: absolute;
     top: 6px;
@@ -842,6 +823,22 @@
     border-radius: var(--r-lg); max-height: 84vh; box-shadow: var(--shadow-lift);
   }
 }
+/* --- polje za pretragu (components/akcije/OffersBrowser.tsx) --- */
+.ak .srch { margin: 10px 0 2px; }
+.ak .srch input {
+  width: 100%;
+  padding: 11px 14px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  outline: none;
+}
+.ak .srch input:focus { border-color: var(--brand); }
+.ak .srch input::placeholder { color: var(--ink-3); }
+
 .ak .sheet-grip {
   width: 40px; height: 4px; margin: 6px auto 14px; background: var(--line-strong); border-radius: 3px;
 }
@@ -861,6 +858,13 @@
 }
 .ak .sheet-actions {
   display: flex; gap: 10px; margin-top: 22px;
+  /* Dugmad uvijek na ekranu: sheet se skroluje, a "Prikaži rezultate" je
+     ranije na manjim telefonima bilo ISPOD pregiba — korisnik ga ne vidi. */
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+  padding: 10px 0 4px;
+  box-shadow: 0 -8px 12px -10px rgba(0, 0, 0, 0.25);
 }
 .ak .sheet-actions .btn {
   margin-top: 0;

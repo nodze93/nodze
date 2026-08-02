@@ -11,13 +11,15 @@ function Inner() {
   const params = useSearchParams();
   const sortParam = params.get('sort');
 
-  // Dolazak s trake „Top ponude danas" (link nosi top=1) → i ovdje piše isto,
-  // da naslov ne skoči na „Sve akcije" iako je filter ostao ≥30%.
-  const naslov = params.get('top') === '1' ? 'Top ponude danas' : 'Sve akcije';
+  // Dolazak s trake „Top ponude danas" (link nosi top=1): naslov „Top ponude
+  // danas" stoji dok god stoji i filter ≥30% — a čim ga korisnik skine,
+  // OffersBrowser sam vrati naslov na „Sve akcije" (topMode logika).
+  const topMode = params.get('top') === '1';
 
   return (
     <OffersBrowser
-      title={naslov}
+      title="Sve akcije"
+      topMode={topMode}
       openFilters={params.get('filteri') === '1'}
       initial={{
         q: params.get('q') ?? '',

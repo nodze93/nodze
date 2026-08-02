@@ -126,8 +126,40 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
   (87/87 prolazi). ⚠️ `npm test` glob hvata samo dio — puni prolaz:
   `npx tsx --test src/*.test.ts src/sources/*.test.ts`.
 - NIJE dirano (svjesno): smrzavanje /akcije (korisniku radi; test na telefonu kad
-  stigne), Aldi regije (PLAN-REGIJE faza 2), SQL brojači (dedup na upisu ih čini
-  tačnim od sutra).
+  stigne), SQL brojači (dedup na upisu ih čini tačnim od sutra).
+
+2026-08-02 (drugi krug) — REGIJE FAZA 2 + OBI politika + otpornost + UX:
+- **⚠️ SQL: `akcije-regije-2.sql` MORA SE POKRENUTI u Supabaseu** (poslije
+  akcije-regije.sql; bezopasno više puta). Donosi: `ak_plz_region` (Aldi-ekvator
+  po PLZ RASPONIMA, ~26 redova) + `ak_aldi_scope(plz)` + sve 4 funkcije uče
+  regiju → **SVAKI PLZ u Njemačkoj dobija svoj Aldi**. Granica izvedena iz
+  filialen.aldi-sued.de po gradovima (NRW/Hessen šavovi ručno; uz samu granicu
+  moguća sitna greška — ispravka = UPDATE u ak_plz_region).
+- **OBI SAMO NA KLIK** (odluka korisnika): u istoj migraciji — OBI ispada iz
+  opštih lista/kategorija (`p_store is not null or s.slug <> 'obi'`), ostaje u
+  ak_stores_list (pločica s brojem) i kad je izričito izabran. Razlog: UVP
+  „−77%" gušio Top ponude.
+- **OBI VLASTITE GRUPE** (`kategorijaObi` u obi.ts): Garten, Grill, Camping,
+  Werkzeug & Maschinen, Haushaltsgeräte, Elektro & Licht, Möbel & Wohnen,
+  Bad & Sanitär, Farben & Bauen, ostalo Baumarkt. (Frižider → Haushaltsgeräte,
+  NE „Gemuese".) Redoslijed pravila bitan (LED-Sonnensegel → Garten).
+- **Scraper regije**: retailers.ts — Aldi Süd/Nord se povlače JEDNOM pod
+  '00000' sa scope 'aldi-sued'/'aldi-nord' (kao Kaufland); JUG/SJEVER liste
+  uklonjene; **plz.txt = samo 00000**. ⚠️ REDOSLIJED KOD KORISNIKA: prvo SQL,
+  pa push — bota ne pokretati između (inače Aldi nestane dok SQL ne prođe).
+- **Otpornost**: retailers waitForSelector BEZ .catch (timeout → retry, ne
+  keširana prazna lista); open() zatvara page na grešku (curenje memorije);
+  OBI baca grešku ako listing padne; REWE baca ako padne ≥4/16 kategorija.
+- **UX**: filteri žive u URL-u (nazad ih čuva; replace, ne push); „Prikaži još"
+  umjesto reza na 300; polje za pretragu (q) na listama; sheet dugmad sticky;
+  admin traka na telefonu IZNAD donje trake; body padding 58→62px; padeži
+  (mnozina() u format.ts: artikal/artikla/artikala, akcija/akcije); „uštedi"
+  pravopis; PLZ bez bljeska 85737 (ready-gate, nema uzaludnog prvog zahtjeva);
+  brzi odabir PLZ: München/Berlin/Hamburg/Köln/Stuttgart; top=1 naslov se vraća
+  na „Sve akcije" čim korisnik skine ≥30% filter.
+- REWE NEDJELJOM: potvrđeno korisniku i drugi put — prazan REWE nedjeljom je
+  ritam izvora, vraća se ponedjeljkom ~6:30. Ne „popravljati".
+- Mobilni VIZUELNI pas (iframe 390px kroz Chrome) čeka deploy ovih izmjena.
 
 ### SQL MIGRACIJE (redoslijed pokretanja u Supabaseu)
 1. `akcije.sql` ✅  2. `akcije-trajni-sloj.sql` ✅

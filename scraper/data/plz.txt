@@ -1,22 +1,15 @@
 # PLZ-ovi za koje skupljamo akcije. Jedan po liniji, # je komentar.
 #
-# Svaki dodatni PLZ produžava dnevni posao za par minuta, pa dodajemo
-# postepeno — kad vidimo da ljudi traže neki grad, doda se ovdje jedan red
-# i sutradan ujutro podaci su tu.
+# Od FAZE 2 (regije, 2.8.2026) ovdje stoji SAMO nacionalna kanta:
+# svi lanci — Kaufland, Lidl, REWE, OBI, Aldi Süd i Aldi Nord — povlače
+# se JEDNOM i upisuju pod '00000'. Aldi nosi scope svoje regije
+# ('aldi-sued'/'aldi-nord'), a koji PLZ pripada kojoj regiji zna baza
+# (ak_plz_region, supabase/akcije-regije-2.sql). Time SVAKI grad u
+# Njemačkoj dobija svoje ponude — gradovi se ovdje više ne nabrajaju.
 #
-# VAŽNO: 85737 je i podrazumijevani PLZ na sajtu (PlzProvider), pa mora ostati.
+# Redove za gradove dodavati SAMO ako se ikad pojavi lanac čije se
+# ponude stvarno razlikuju po gradu (a ne po regiji).
 #
-# 00000 NIJE grad — to je "kanta" za NACIONALNE ponude (Kaufland, Lidl…).
-# One se povuku JEDNOM i vrijede za svih ~8.200 njemačkih PLZ-ova, pa ih ne
-# treba prepisivati po gradovima. Ostali redovi ispod su samo za REGIONALNE
-# lance (Aldi jug/sjever), dok ne napravimo mapu PLZ→regija.
-# Ne brisati 00000 — bez njega nema nacionalnih ponuda.
+# Ne brisati 00000 — bez njega nema nijedne ponude.
 
-00000   # NACIONALNO (nije grad) — Kaufland, Lidl…
-
-85737   # Ismaning (podrazumijevani na sajtu)
-80331   # München — centar
-80807   # München — Schwabing/Freimann
-70173   # Stuttgart
-60311   # Frankfurt am Main
-10115   # Berlin — Mitte
+00000   # NACIONALNO (nije grad) — svi lanci, jednom po lancu

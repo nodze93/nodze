@@ -1,6 +1,22 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { njemackiDatumUIso, rokIzPayloada } from './obi.js';
+import { kategorijaObi, njemackiDatumUIso, rokIzPayloada } from './obi.js';
+
+test('OBI grupe: majstorski artikli idu u SVOJE grupe, ne u hranu', () => {
+  // Ranije: "Gasgrill" → Fleisch (meso), "Kühlschrank" → Gemuese (povrće)!
+  assert.equal(kategorijaObi('Char-Broil Evolve Gasgrill mit Dualzone'), 'Grill');
+  assert.equal(kategorijaObi('Kühlschrank 120 l mit Gefrierfach'), 'Haushaltsgeräte');
+  assert.equal(kategorijaObi('Dreieckiges, graues LED-Sonnensegel Belvedere'), 'Garten');
+  assert.equal(kategorijaObi('Blaues Igluzelt für 2 Personen aus Polyester'), 'Camping');
+  assert.equal(kategorijaObi('Blaue LED-Laterne für Camping & Garten'), 'Camping');
+  assert.equal(kategorijaObi('Akku-Bohrschrauber 18 V'), 'Werkzeug & Maschinen');
+  assert.equal(kategorijaObi('Jamestown Einzelschrank Modul für KNOX Outdoorküche'), 'Garten');
+  assert.equal(kategorijaObi('DENVER Mini-LED-Beamer PR-2500K'), 'Elektro & Licht');
+  assert.equal(kategorijaObi('Gartenstuhl Pacora in Anthrazit mit Armlehnen'), 'Garten');
+  assert.equal(kategorijaObi('Wandfliese Weiß 30x60'), 'Farben & Bauen');
+  // ništa ne pogodi → ostaje Baumarkt
+  assert.equal(kategorijaObi('Sonstiges Zeug XY-123'), 'Baumarkt');
+});
 
 test('njemački datum → ISO', () => {
   assert.equal(njemackiDatumUIso('03.08.2026'), '2026-08-03');

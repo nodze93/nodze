@@ -35,13 +35,12 @@ interface RetailerDef {
   /** Kaufland/Aldi Nord cijenu pišu kao "1.99" (tačka) → prebacimo u "1,99" */
   dotDecimal: boolean;
   /**
-   * Gdje ponude vrijede. 'DE' = cijela Njemačka → povuče se JEDNOM i upiše
-   * pod NACIONALNI_PLZ, pa vrijedi za svih ~8.200 PLZ-ova.
-   * Regionalni lanci (Aldi) i dalje idu po gradovima iz `plz`.
+   * Gdje ponude vrijede. Svi lanci se povlače JEDNOM i upisuju pod
+   * NACIONALNI_PLZ: 'DE' vrijedi za sve PLZ-ove direktno, a
+   * 'aldi-sued'/'aldi-nord' baza preslika na PLZ preko ak_plz_region
+   * (supabase/akcije-regije-2.sql).
    */
   scope: Scope;
-  /** Samo ovi PLZ-ovi — vrijedi SAMO za regionalne lance (scope != 'DE'). */
-  plz?: string[];
   /**
    * Zadnji dan prodajne sedmice (0=ned … 6=sub) — koristi se SAMO kad lanac
    * napiše početak bez kraja ("Angebote ab Donnerstag 30.7.").
@@ -57,10 +56,13 @@ interface RetailerDef {
  */
 export const NACIONALNI_PLZ = '00000';
 
-// Aldi Süd (jug/zapad) i Aldi Nord (sjever/istok) NE postoje na istom mjestu,
-// pa svaki ide samo u svoje gradove — dok ne napravimo mapu PLZ→regija.
-const JUG = ['85737', '80331', '80807', '70173', '60311']; // München, Stuttgart, Frankfurt, Ismaning
-const SJEVER = ['10115']; // Berlin
+// REGIJE (faza 2): Aldi Süd i Aldi Nord se — kao i Kaufland — povlače
+// JEDNOM i upisuju pod NACIONALNI_PLZ, ali sa scope-om svoje regije
+// ('aldi-sued' / 'aldi-nord'). Koji PLZ pripada kojoj regiji zna baza
+// (tabela ak_plz_region + ak_aldi_scope(), supabase/akcije-regije-2.sql),
+// pa SVAKI grad u Njemačkoj dobija svoj Aldi — ne više samo 6 uzoraka.
+// Ponude su unutar jedne Aldi regije iste svugdje (provjereno ranije:
+// 33 filijale → identičnih 69 ponuda), pa je jedno povlačenje dovoljno.
 
 const RETAILERS: RetailerDef[] = [
   {
@@ -73,7 +75,6 @@ const RETAILERS: RetailerDef[] = [
     oldPrice: 'del',
     scope: 'aldi-sued',
     dotDecimal: false,
-    plz: JUG,
     krajSedmice: 6, // Aldi: sedmica ide do subote
   },
   {
@@ -87,7 +88,6 @@ const RETAILERS: RetailerDef[] = [
     oldPrice: '.strike-price',
     scope: 'aldi-nord',
     dotDecimal: true,
-    plz: SJEVER,
     krajSedmice: 6,
   },
   {
@@ -130,13 +130,13 @@ export class RetailersSource implements Source {
   }
 
   async listStores(plz: string): Promise<ScrapedStore[]> {
-    // NACIONALNI_PLZ ('00000') je posebna "kanta" u koju ide sve što vrijedi
-    // za cijelu Njemačku — povuče se jednom umjesto po svakom gradu.
-    // Ostali PLZ-ovi dobijaju samo regionalne lance (Aldi jug/sjever).
-    const nacionalni = plz === NACIONALNI_PLZ;
-    return RETAILERS.filter((r) =>
-      nacionalni ? r.scope === 'DE' : r.scope !== 'DE' && (!r.plz || r.plz.includes(plz)),
-    ).map((r) => ({
+    // SVE ide u nacionalnu "kantu" ('00000'): i pravi nacionalni lanci
+    // (scope 'DE') i Aldi regije (scope 'aldi-sued'/'aldi-nord') — svaki
+    // se povuče JEDNOM, a baza regionalne servira po ak_plz_region mapi.
+    // Za obične PLZ-ove retailers više ne vraća ništa (nema po-gradskog
+    // dupliranja).
+    if (plz !== NACIONALNI_PLZ) return [];
+    return RETAILERS.map((r) => ({
       name: r.name,
       slug: r.slug,
       url: r.offersUrl,
@@ -161,7 +161,11 @@ export class RetailersSource implements Source {
     const page = await this.open(store.url);
     try {
       // Sacekaj da se kartice uopste pojave (sadrzaj se cesto puni tek uz JS).
-      await page.waitForSelector(def.tile, { timeout: config.timeoutMs }).catch(() => {});
+      // ⚠️ NAMJERNO BEZ .catch(): kad selektor istekne, greška MORA izaći —
+      // ranije je progutani timeout keširao PRAZNU listu za lanac, pa je
+      // jedan zastoj brisao lanac iz SVIH gradova taj dan, a retry u
+      // index.ts se nikad ne bi okinuo (ništa nije bačeno).
+      await page.waitForSelector(def.tile, { timeout: config.timeoutMs });
       await autoScroll(page);
       // Natjeraj lijene slike da povuku PRAVI src prije čitanja. Inače dio
       // ostane na placeholderu → prazna slika → ilustracija na sajtu.
@@ -339,9 +343,16 @@ export class RetailersSource implements Source {
   private async open(url: string): Promise<Page> {
     const ctx = await this.ensureBrowser();
     const page = await ctx.newPage();
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: config.timeoutMs });
-    await dismissCookieBanner(page);
-    return page;
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: config.timeoutMs });
+      await dismissCookieBanner(page);
+      return page;
+    } catch (greska) {
+      // Bez ovoga bi timeout na goto OSTAVIO otvorenu stranicu — uz retry
+      // (do 4 pokušaja) po lancu, to je curilo memoriju do kraja prolaza.
+      await page.close().catch(() => {});
+      throw greska;
+    }
   }
 
   /**
