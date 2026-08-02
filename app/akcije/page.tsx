@@ -9,7 +9,7 @@ import Recommendation from '@/components/akcije/Recommendation';
 import StoreStrip from '@/components/akcije/StoreStrip';
 import { IconCart, IconChevron, IconStar } from '@/components/akcije/icons';
 import { formatPrice } from '@/lib/akcije/format';
-import type { Filters } from '@/lib/akcije/types';
+import type { Discount, Filters } from '@/lib/akcije/types';
 import { useFacets, useOffers } from '@/lib/akcije/useOffers';
 
 export default function HomePage() {
@@ -24,10 +24,23 @@ export default function HomePage() {
   const { items, total, loading, error } = useOffers(filters);
   const { stores } = useFacets(plz);
 
-  // "Top ponude danas" = najveći popusti. Prikaži one ≥30% (fallback: top 12
-  // po popustu ako ih je malo taj dan) → traka je uvijek puna i stvarno "top".
-  const jakiPopust = items.filter((i) => (i.discount_percent ?? 0) >= 30);
-  const top = (jakiPopust.length >= 8 ? jakiPopust : items).slice(0, 12);
+  // "Top ponude danas": ono što DANAS počinje ide PRVO (s oznakom NOVO),
+  // ostatak popune najveći popusti koji još traju.
+  //
+  // Zašto ne samo današnji početci: njemački lanci ne kreću svaki dan —
+  // Aldi ponedjeljkom i četvrtkom, Kaufland četvrtkom, REWE ponedjeljkom.
+  // Utorkom i srijedom ne počinje ništa, pa bi traka bila prazna. Ovako se
+  // svaki dan vidi šta je novo, a nikad nema praznog mjesta.
+  const danas = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  const jePopust = (i: Discount) => (i.discount_percent ?? 0) >= 30;
+
+  const novoDanas = items.filter((i) => i.valid_from === danas);
+  const novoIds = new Set(novoDanas.map((i) => i.id));
+
+  const jakiPopust = items.filter((i) => !novoIds.has(i.id) && jePopust(i));
+  const ostatak = jakiPopust.length >= 6 ? jakiPopust : items.filter((i) => !novoIds.has(i.id));
+
+  const top = [...novoDanas, ...ostatak].slice(0, 12);
   // Ispod: NAREDNE ponude koje NISU u "Top" (da se lista ne ponavlja).
   const topIds = new Set(top.map((t) => t.id));
   const rest = items.filter((i) => !topIds.has(i.id)).slice(0, 12);
@@ -101,7 +114,12 @@ export default function HomePage() {
         ) : (
           <div className="rail">
             {top.map((item) => (
-              <OfferCard key={item.id} item={item} variant="rail" />
+              <OfferCard
+                key={item.id}
+                item={item}
+                variant="rail"
+                novo={item.valid_from === danas}
+              />
             ))}
           </div>
         )}

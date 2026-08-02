@@ -18,9 +18,11 @@ interface Props {
    * "grid" = kartica u mrezi (2 kolone), cijene lijevo/desno.
    */
   variant?: 'rail' | 'grid';
+  /** ponuda počinje DANAS — dobija zelenu oznaku „NOVO" */
+  novo?: boolean;
 }
 
-export default function OfferCard({ item, hideStore = false, variant = 'grid' }: Props) {
+export default function OfferCard({ item, hideStore = false, variant = 'grid', novo = false }: Props) {
   const { has, toggle } = useFavorites();
   const key = favoriteKey(item);
   const favorite = has(key);
@@ -40,6 +42,9 @@ export default function OfferCard({ item, hideStore = false, variant = 'grid' }:
         // Takav artikal ne ulazi u filtere po procentu i ustedi.
         <span className="badge-ang">Angebot</span>
       )}
+
+      {/* Oznaka stoji uz srce (gore desno) da ne pokrije badge popusta lijevo. */}
+      {novo ? <span className="badge-novo">NOVO</span> : null}
 
       <button
         type="button"
