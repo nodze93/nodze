@@ -55,6 +55,23 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
   // svaki klik podiže limit — bez ikakve promjene na API-ju.
   const [limit, setLimit] = useState(300);
 
+  // KLIK „POGLEDAJ SVE" SA VEĆ POSJEĆENE LISTE — pravi uzrok „baci me na
+  // sve ponude kao ranije": Next-ov ruter NE remountuje stranicu kad se
+  // promijene samo parametri u URL-u, pa useState zadrži STARE filtere iz
+  // prošle posjete (bez ≥30%). Zato: kad filteri iz URL-a stvarno postanu
+  // drugačiji od stanja (dolazak izvana), preuzmi ih. Naš vlastiti upis
+  // stanja u URL proizvodi identične vrijednosti, pa se ne vrti u krug.
+  const initialKljuc = JSON.stringify(initial ?? {});
+  useEffect(() => {
+    setState({
+      ...EMPTY_FILTERS,
+      ...(initial ?? {}),
+      store: storeSlug ?? initial?.store ?? '',
+    });
+    setLimit(300);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialKljuc, storeSlug]);
+
   // Prije nego što se sazna snimljeni PLZ, ne šalje se NIŠTA — ranije je
   // prvi render uvijek povukao podatke za 85737 pa ih bacio (bljesak +
   // uzaludan zahtjev za svakog korisnika van Ismaninga).
@@ -66,20 +83,24 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
   // Filteri žive i u URL-u: "nazad" sa artikla vraća ISTE filtere (ranije se
   // sve resetovalo), a stanje se može podijeliti linkom. `replace` umjesto
   // `push` da svaki dodir filtera ne puni historiju pregledača.
+  // Mala zadrška (250ms) da kucanje u pretragu ne gađa ruter svakim slovom.
   useEffect(() => {
-    const qs = new URLSearchParams();
-    if (!storeSlug && state.store) qs.set('store', state.store);
-    if (state.category) qs.set('category', state.category);
-    if (state.percent) qs.set('percent', String(state.percent));
-    if (state.savings) qs.set('savings', String(state.savings));
-    if (state.q) qs.set('q', state.q);
-    if (state.sort !== 'percent') qs.set('sort', state.sort);
-    if (topMode && state.percent >= 30) qs.set('top', '1');
-    const next = qs.toString();
-    const trenutni = window.location.search.replace(/^\?/, '');
-    if (next !== trenutni) {
-      router.replace(`${window.location.pathname}${next ? `?${next}` : ''}`, { scroll: false });
-    }
+    const tajmer = setTimeout(() => {
+      const qs = new URLSearchParams();
+      if (!storeSlug && state.store) qs.set('store', state.store);
+      if (state.category) qs.set('category', state.category);
+      if (state.percent) qs.set('percent', String(state.percent));
+      if (state.savings) qs.set('savings', String(state.savings));
+      if (state.q) qs.set('q', state.q);
+      if (state.sort !== 'percent') qs.set('sort', state.sort);
+      if (topMode && state.percent >= 30) qs.set('top', '1');
+      const next = qs.toString();
+      const trenutni = window.location.search.replace(/^\?/, '');
+      if (next !== trenutni) {
+        router.replace(`${window.location.pathname}${next ? `?${next}` : ''}`, { scroll: false });
+      }
+    }, 250);
+    return () => clearTimeout(tajmer);
   }, [state, storeSlug, topMode, router]);
 
   const patch = useCallback((next: Partial<Filters>) => {
