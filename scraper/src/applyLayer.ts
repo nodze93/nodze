@@ -41,17 +41,53 @@ export async function applyLayer(plz?: string): Promise<LayerResult> {
  * Tekst alarma, ili null kad je sve u redu.
  * Čista funkcija da se može testirati bez baze.
  */
-export function alarmText(
-  health: Array<{ store: string | null; plz: string; today: number; yesterday: number; changePct: number | null; broken: boolean }>,
-): string | null {
-  const bad = health.filter((h) => h.broken);
-  if (bad.length === 0) return null;
-  const lines = bad.map((h) => {
-    const who = `${h.store ?? 'nepoznata prodavnica'} (${h.plz})`;
-    if (h.today === 0) return `• ${who}: 0 artikala (juče ${h.yesterday})`;
-    return `• ${who}: ${h.today} artikala, juče ${h.yesterday} (${h.changePct}%)`;
-  });
-  return `kodnas.de — scraper: ${bad.length} problem(a)\n${lines.join('\n')}`;
+export interface AlarmRed {
+  store: string | null;
+  plz: string;
+  today: number;
+  yesterday: number;
+  changePct: number | null;
+  broken: boolean;
+}
+
+export interface AlarmIshod {
+  /** tekst za mejl/log, ili null kad nema ništa za javiti */
+  tekst: string | null;
+  /** true SAMO kad je neka prodavnica na NULI — tada posao pada (kod 3) */
+  kvar: boolean;
+}
+
+/**
+ * Razdvaja PRAVI kvar od normalnog sedmičnog ritma.
+ *
+ *  • 0 artikala   → KVAR. Lanac je promijenio stranicu ili nas blokirao.
+ *  • veliki pad   → samo upozorenje. Nedjeljom je to očekivano: Aldijeve
+ *    sedmične ponude ističu u subotu, pa ostanu samo „Dauerhaft" artikli
+ *    (23 → 12, −48%). Kad bi to obaralo posao, alarm bi lagao svake
+ *    nedjelje — a lažan alarm koji se ponavlja prestane se čitati.
+ *    Uz to bi koraci sa slikama ostali nepokrenuti.
+ */
+export function alarmText(health: AlarmRed[]): AlarmIshod {
+  const nula = health.filter((h) => h.broken && h.today === 0);
+  const pad = health.filter((h) => h.broken && h.today > 0);
+  if (nula.length === 0 && pad.length === 0) return { tekst: null, kvar: false };
+
+  const dijelovi: string[] = [];
+  if (nula.length > 0) {
+    dijelovi.push(
+      `kodnas.de — scraper: ${nula.length} PRODAVNICA NA NULI`,
+      ...nula.map((h) => `• ${h.store ?? 'nepoznata prodavnica'} (${h.plz}): 0 artikala (juče ${h.yesterday})`),
+    );
+  }
+  if (pad.length > 0) {
+    dijelovi.push(
+      `${nula.length ? '\n' : ''}Upozorenje — velik pad (nedjeljom je normalno):`,
+      ...pad.map(
+        (h) => `• ${h.store ?? 'nepoznata prodavnica'} (${h.plz}): ${h.today} artikala, juče ${h.yesterday} (${h.changePct}%)`,
+      ),
+    );
+  }
+  return { tekst: dijelovi.join('\n'), kvar: nula.length > 0 };
 }
 
 async function main(): Promise<void> {
@@ -61,18 +97,20 @@ async function main(): Promise<void> {
   log(`Slike prelivene: ${r.byEan} po EAN-u, ${r.byKey} po nazivu. Sakriveno: ${r.hidden}.`);
 
   const health = await scrapeHealth();
-  const alarm = alarmText(health);
-  if (alarm) {
+  const { tekst, kvar } = alarmText(health);
+  if (tekst) {
     // Namjerno na stderr: cron ovo šalje na mejl bez ikakve dodatne
     // konfiguracije. Telegram/webhook se dodaje kasnije na isto mjesto.
-    console.error(`\n${alarm}\n`);
-    log('ALARM: scraper ima problema (vidi gore).');
+    console.error(`\n${tekst}\n`);
+    log(kvar ? 'ALARM: prodavnica na nuli (vidi gore).' : 'Upozorenje: velik pad, ali nije nula.');
   } else {
     log(`Zdravlje scrapera: sve u redu (${health.length} prodavnica).`);
   }
 
   await closePool();
-  if (alarm) process.exitCode = 3; // cron/monitoring vidi da nije čisto
+  // Posao pada SAMO na pravi kvar (nula artikala). Velik pad je često
+  // normalan sedmični ritam — ne smije obarati korake sa slikama.
+  if (kvar) process.exitCode = 3;
 }
 
 if (process.argv[1] && /applyLayer\.(ts|js)$/.test(process.argv[1])) {

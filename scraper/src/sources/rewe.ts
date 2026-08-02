@@ -9,8 +9,12 @@
  *  ⚠️ Rok važenja NIJE na pločici artikla nego u tabu IZNAD liste:
  *      <button data-week="current">Diese Woche 27.7. bis 2.8.</button>
  *      <div    data-week="current"> …pločice… </div>
- *  Zato prvo pročitamo tab, pa tek onda artikle ispod njega. Stranica
- *  pokazuje i SLJEDEĆU sedmicu (data-week="next") — nju namjerno preskačemo.
+ *  Zato svaka pločica nosi tekst SVOG taba, pa se rok računa po artiklu.
+ *
+ *  ⚠️ ČITAMO OBJE SEDMICE. U NEDJELJU REWE isprazni "current" (tab i dalje
+ *  piše stari period, ali pločica nema NIJEDNE) i sve prebaci u "next".
+ *  Sljedeća sedmica ima validFrom u budućnosti → filter po datumu je krije
+ *  dok ne počne, pa se u ponedjeljak sama upali.
  *
  *  OGRANIČENJE IZVORA: REWE ne objavljuje staru cijenu. Svi artikli zato
  *  ispadnu kao „Angebot" bez procenta i ne ulaze u „Top ponude". To nije
@@ -54,6 +58,8 @@ const KATEGORIJE: Record<string, string> = {
 };
 
 interface SirovaPlocica {
+  /** tekst taba te sedmice ("Diese Woche27.7. bis 2.8.") — rok je po artiklu */
+  tab: string;
   naziv: string;
   cijena: string;
   slika: string;
@@ -101,15 +107,25 @@ export class ReweSource implements Source {
         // Bez JS-a nema ni cookie-banera ni čekanja — sadržaj je već u HTML-u.
 
         const podaci = (await page.evaluate(() => {
+          // ⚠️ ČITAMO OBJE SEDMICE, ne samo tekuću.
+          // REWE u NEDJELJU (zadnji dan sedmice) isprazni "current" — tab i
+          // dalje piše "27.7. bis 2.8.", ali pločica ima NULA; sve je već
+          // prebačeno u "next" (3.8. bis 9.8.). Bez ovoga nedjeljom dobijemo 0.
+          // Sljedeća sedmica ima validFrom u budućnosti, pa je filter po datumu
+          // drži skrivenu dok ne počne — i tada se sama upali.
           // ⚠️ Ovdje smiju SAMO anonimne funkcije (unutar .map i sl.).
           // Strelica pridružena konstanti bi je tsx/esbuild umotao u pomoćnik
           // __name, kojeg u stranici nema → ReferenceError u browseru.
-          const tab = document.querySelector('button[data-week="current"]');
-          const kutija = document.querySelector('div[data-week="current"]');
-          const plocice = kutija ? Array.from(kutija.querySelectorAll('.cor-offer-renderer-tile')) : [];
-          return {
-            tab: (tab?.textContent ?? '').trim(),
-            artikli: plocice.map((t) => {
+          const sedmice = ['current', 'next'];
+          const izlaz: Array<{ tab: string; naziv: string; cijena: string; slika: string }> = [];
+
+          for (const w of sedmice) {
+            const tab = document.querySelector(`button[data-week="${w}"]`);
+            const kutija = document.querySelector(`div[data-week="${w}"]`);
+            const plocice = kutija ? Array.from(kutija.querySelectorAll('.cor-offer-renderer-tile')) : [];
+            const tabTekst = (tab?.textContent ?? '').trim();
+
+            izlaz.push(...plocice.map((t) => {
               // ⚠️ PRVA <img> u pločici je često REWE Bonus logo (24×24), a ne
               // proizvod — na 10 od 23 pločice. Prava slika ima data-testid.
               const im = t.querySelector('img[data-testid="offer-image"]');
@@ -132,29 +148,31 @@ export class ReweSource implements Source {
                 }
               }
               return {
+                tab: tabTekst,
                 naziv: (t.querySelector('.cor-offer-information__title')?.textContent ?? '').trim(),
                 cijena: (t.querySelector('.cor-offer-price__tag-price')?.textContent ?? '').trim(),
                 slika,
               };
-            }),
-          };
-        })) as { tab: string; artikli: SirovaPlocica[] };
+            }));
+          }
+          return izlaz;
+        })) as SirovaPlocica[];
 
-        const { validFrom, validTo } = periodIzTaba(podaci.tab);
-        if (podaci.tab) period = podaci.tab.replace(/\s+/g, ' ');
+        if (podaci.length === 0) praznihKategorija += 1;
 
-        // Bez roka ponuda se ne bi prikazala — nema smisla je upisivati.
-        if (!validTo) {
-          praznihKategorija += 1;
-          continue;
-        }
+        for (const a of podaci) {
+          // Svaka pločica nosi tekst SVOG taba — tekuća i sljedeća sedmica
+          // imaju različit period, pa se rok računa po artiklu, ne po stranici.
+          const { validFrom, validTo } = periodIzTaba(a.tab);
+          if (!validTo) continue; // bez roka se ponuda ne bi ni prikazala
+          if (a.tab) period = a.tab.replace(/\s+/g, ' ');
 
-        for (const a of podaci.artikli) {
           const naziv = cleanProductName(a.naziv);
           const cijena = parsePrice(a.cijena);
           if (!naziv || cijena === null) continue;
 
-          const kljuc = `${naziv.toLowerCase()}|${cijena}`;
+          // Ključ nosi i rok: isti artikal može biti i ove i sljedeće sedmice.
+          const kljuc = `${naziv.toLowerCase()}|${cijena}|${validTo}`;
           if (poKljucu.has(kljuc)) continue;
 
           poKljucu.set(kljuc, {
@@ -166,7 +184,7 @@ export class ReweSource implements Source {
             validFrom,
             validTo,
             sourceUrl: `${BASE}${slug}/`,
-            externalId: `rewe-${validTo.replace(/-/g, '')}-${kljuc.slice(0, 60)}`,
+            externalId: `rewe-${validTo.replace(/-/g, '')}-${kljuc.slice(0, 50)}`,
             ean: null,
           });
         }
