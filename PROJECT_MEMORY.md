@@ -94,6 +94,40 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 ## AKTUELNO — sve URAĐENO i push-ovano na main
 Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstall · akcije (temelj)
 2026-08-01: duplikati · datumi važenja · JSON uvoz popravljen · Lidl · provjera slika
+2026-08-02: veliki pregled bugova (lista: kodnas-bugovi.md kod korisnika) + popravke:
+- **datumi.ts**: čita i datum BEZ završne tačke („27.7 bis 2.8" — REWE tab) i više NE
+  guta dvocifren broj iza datuma kao godinu („30.7. 20% Rabatt" ≠ godina 2020).
+  Dvocifrena godina namjerno izbačena (nigdje se ne piše).
+- **REWE = 0 nedjeljom je NORMALNO**: REWE u nedjelju isprazni „current" tab, novi
+  redovi (next week) imaju validFrom sutra → sajt nedjeljom nema REWE, u ponedjeljak
+  ujutro se sam vrati. NE dirati — nije kvar.
+- **obi.ts**: kategorija je fiksno 'Baumarkt' (ranije pogađanje iz naziva slalo
+  Gasgrill pod „Fleisch", pa je OBI imao „Fleisch 13", „Obst 2"…).
+- **db.ts `bezDuplihRedova()`**: dedup na upisu (store+naziv+cijena+rok) — rješava
+  „traka kaže 131, stranica 118". REWE-ove 2 sedmice istog artikla ostaju (rok u ključu).
+- **checkImages.ts**: 429/403/5xx/mreža = „preskoči" (provjeri sutra), briše se SAMO
+  404/410 i HTML-na-200; octet-stream je živa slika; pauza 300ms između grupa.
+- **images.ts (OFF)**: prolazna greška se NE kešira kao {url:null} — ranije je jedan
+  429 artikal ZAUVIJEK ostavljao bez slike (keš preživi kroz Actions cache).
+- **JSON uvoz**: `valid_to` OBAVEZAN (bez njega se red nikad ne prikaže — sad se
+  preskoči uz objašnjenje); dedup unutar uvoza; isti `externalId` = osvježi (delete
+  pa insert), ne dupliraj.
+- **/api/admin/upload**: NAMJERNO ISKLJUČEN (501) — odluka korisnika: slike se NE
+  čuvaju kod nas, samo hotlink. Editor ima dugme „URL slike". NE „popravljati" u
+  pravi upload bez izričite odluke korisnika.
+- **/api/ai-chat**: UGAŠEN (410) — javno trošio Anthropic tokene, niko ga ne koristi.
+- **/api/hero**: s-maxage=120 (bio no-store — najveći nepotrebni CPU trošak).
+- **/api/og/thumbnail**: s-maxage=1god (isti parametri = ista slika) + `slika` param
+  ograničen na unsplash/supabase/kodnas.de hostove.
+- **Kategorije OSTAJU NJEMAČKE** (izričita odluka korisnika — NE prevoditi). Samo
+  kozmetika prikaza: `lib/akcije/kategorije.ts` → „Getraenke"→„Getränke" itd.
+  (baza/URL ostaju ASCII).
+- Novi testovi: rewe.test.ts, db.test.ts, checkImages.test.ts + dopune datumi.test.ts
+  (87/87 prolazi). ⚠️ `npm test` glob hvata samo dio — puni prolaz:
+  `npx tsx --test src/*.test.ts src/sources/*.test.ts`.
+- NIJE dirano (svjesno): smrzavanje /akcije (korisniku radi; test na telefonu kad
+  stigne), Aldi regije (PLAN-REGIJE faza 2), SQL brojači (dedup na upisu ih čini
+  tačnim od sutra).
 
 ### SQL MIGRACIJE (redoslijed pokretanja u Supabaseu)
 1. `akcije.sql` ✅  2. `akcije-trajni-sloj.sql` ✅

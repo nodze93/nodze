@@ -1,5 +1,6 @@
 'use client';
 
+import { kategorijaNaziv } from '@/lib/akcije/kategorije';
 import { EMPTY_FILTERS, type CategoryItem, type Filters, type SortKey, type StoreItem } from '@/lib/akcije/types';
 import Sheet from './Sheet';
 
@@ -79,7 +80,7 @@ export default function FilterSheet({
                 aria-pressed={filters.category === category.category}
                 onClick={() => onChange({ category: category.category })}
               >
-                {category.category} <span className="chip-count">{category.offers}</span>
+                {kategorijaNaziv(category.category)} <span className="chip-count">{category.offers}</span>
               </button>
             ))}
           </div>

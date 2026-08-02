@@ -152,6 +152,9 @@ export async function POST(req: Request) {
 
   let upisano = 0;
   const preskoceno: string[] = [];
+  // Dedup unutar JEDNOG uvoza: isti JSON zalijepljen s duplim redovima (ili
+  // ista ponuda dvaput u fajlu) ne smije napraviti dva reda u bazi.
+  const uOvomUvozu = new Set<string>();
 
   for (const o of list) {
     const productName = String(o.productName ?? o.product ?? o.title ?? "").trim();
@@ -159,13 +162,18 @@ export async function POST(req: Request) {
     const newPrice = num(o.newPrice ?? o.price ?? o.mainPrice);
     const oldPrice = num(o.oldPrice ?? o.old_price);
     const plz = cleanPlz(o.plz);
+    const validTo = normalizeDate(o.validTo ?? o.validUntil);
 
     // Reci ŠTA fali — inače korisnik dobije samo "preskočeno 1" i nagađa.
-    if (!productName || !storeName || newPrice === null) {
+    // `valid_to` je OBAVEZAN: ručni red bez roka prođe upis, ali ga pretraga
+    // NIKAD ne prikaže (pravilo u bazi) — pa korisnik unese 50 ponuda, dobije
+    // "upisano 50", a na sajtu nula i ne zna zašto.
+    if (!productName || !storeName || newPrice === null || !validTo) {
       const fali = [
         !productName ? "naziv (productName/product/title)" : null,
         !storeName ? "prodavnica (store/publisherName)" : null,
         newPrice === null ? "nova cijena (newPrice/price/mainPrice)" : null,
+        !validTo ? "rok važenja (validTo/validUntil — bez njega se ponuda ne prikazuje)" : null,
       ].filter(Boolean).join(", ");
       preskoceno.push(`${productName || "(bez naziva)"} — fali: ${fali}`);
       continue;
@@ -183,10 +191,29 @@ export async function POST(req: Request) {
     }
 
     const imageUrl = cleanImageUrl(o.imageUrl ?? o.image);
-    const validTo = normalizeDate(o.validTo ?? o.validUntil);
     const validFrom = normalizeDate(o.validFrom ?? o.validSince);
     const externalId = externalIdOf(o.externalId ?? o.offerId);
     const sourceUrl = cleanUrl(o.sourceUrl ?? o.offerUrl);
+
+    // isti red u istom uvozu → preskoči (ključ kao i na sajtu + rok i PLZ)
+    const kljucReda =
+      externalId ?? `${slugify(storeName)}|${productName.toLowerCase()}|${newPrice}|${validTo}|${plz}`;
+    if (uOvomUvozu.has(kljucReda)) {
+      preskoceno.push(`${productName} (duplikat u istom uvozu)`);
+      continue;
+    }
+    uOvomUvozu.add(kljucReda);
+
+    // Isti JSON uvezen DVAPUT ranije je pravio duple redove ("piše 131, ima
+    // 118"). Ako ponuda ima externalId, stari ručni red s istim ID-em se
+    // obriše pa upiše svjež — uvoz postaje "osvježi", ne "dupliraj".
+    if (externalId) {
+      await db
+        .from("ak_discounts")
+        .delete()
+        .eq("source", "manual")
+        .eq("external_id", externalId);
+    }
 
     const { error } = await db.from("ak_discounts").insert({
       product_name: productName.slice(0, 200),

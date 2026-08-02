@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
+import { kategorijaNaziv } from '@/lib/akcije/kategorije';
 import type { Discount } from '@/lib/akcije/types';
 import { IconChevron, IconSpark } from './icons';
 
@@ -54,11 +55,11 @@ export default function Recommendation({ items }: { items: Discount[] }) {
         <p>
           Najveći popusti su u <b>{text.store.key}</b> (prosječno{' '}
           {Math.round(text.store.avg)}% na {text.store.count} artikala), a po kategorijama najbolje
-          stoji <b>{text.category.key}</b>
+          stoji <b>{kategorijaNaziv(text.category.key)}</b>
           {text.secondCategory ? (
             <>
               {' '}
-              i <b>{text.secondCategory.key}</b>
+              i <b>{kategorijaNaziv(text.secondCategory.key)}</b>
             </>
           ) : null}
           .

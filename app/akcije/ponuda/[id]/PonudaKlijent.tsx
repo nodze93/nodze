@@ -18,6 +18,7 @@ import {
 } from '@/components/akcije/icons';
 import { api } from '@/lib/akcije/api';
 import { favoriteKey, useFavorites } from '@/lib/akcije/favorites';
+import { kategorijaNaziv } from '@/lib/akcije/kategorije';
 import { daysLeftLabel, formatLongDate, formatPercent, formatPrice } from '@/lib/akcije/format';
 import type { Discount } from '@/lib/akcije/types';
 
@@ -156,7 +157,7 @@ export default function PonudaKlijent() {
       <h2 className="h-title">{item.product_name}</h2>
       <p className="h-sub">
         {item.store}
-        {item.category ? ` · ${item.category}` : ''}
+        {item.category ? ` · ${kategorijaNaziv(item.category)}` : ''}
       </p>
 
       <div className="pricebox">
@@ -217,7 +218,7 @@ export default function PonudaKlijent() {
             <IconTag size={19} />
             Kategorija
             <b>
-              {item.category} <IconChevron size={13} style={{ verticalAlign: -2 }} />
+              {kategorijaNaziv(item.category)} <IconChevron size={13} style={{ verticalAlign: -2 }} />
             </b>
           </Link>
         ) : null}

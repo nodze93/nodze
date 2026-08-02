@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { formatPrice } from '@/lib/akcije/format';
+import { kategorijaNaziv } from '@/lib/akcije/kategorije';
 import { EMPTY_FILTERS, type Filters, type SortKey } from '@/lib/akcije/types';
 import { useFacets, useOffers } from '@/lib/akcije/useOffers';
 import FilterSheet from './FilterSheet';
@@ -99,7 +100,7 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
             aria-pressed={state.category === category.category}
             onClick={() => patch({ category: category.category })}
           >
-            {category.category}
+            {kategorijaNaziv(category.category)}
           </button>
         ))}
       </div>

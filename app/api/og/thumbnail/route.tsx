@@ -27,7 +27,19 @@ export async function GET(req: NextRequest) {
 
   const r1 = (searchParams.get("r1") || "").slice(0, 90);
   const r2 = (searchParams.get("r2") || "").slice(0, 60);
-  const slika = searchParams.get("slika") || "";
+
+  // `slika` smije biti samo s izvora koje MI koristimo (Unsplash/Supabase/
+  // vlastiti domen). Bez ovoga bi bilo ko mogao našu javnu rutu tjerati da
+  // učitava proizvoljne URL-ove i troši naš CPU na tuđe slike.
+  let slika = searchParams.get("slika") || "";
+  try {
+    const host = slika ? new URL(slika).hostname : "";
+    if (host && !/(^|\.)unsplash\.com$|(^|\.)supabase\.co$|(^|\.)kodnas\.de$/i.test(host)) {
+      slika = "";
+    }
+  } catch {
+    slika = ""; // neispravan URL → tamni fallback
+  }
 
   // Dinamička veličina naslova (kraće = veće)
   const r1Velicina =
@@ -166,6 +178,13 @@ export async function GET(req: NextRequest) {
     {
       width: 1080,
       height: 1350,
+      // NAJSKUPLJA operacija na sajtu (render slike 1080×1350), a ruta je
+      // javna. Isti parametri = ista slika, pa CDN smije čuvati odgovor
+      // godinu dana — Facebook i admin alat dobiju keširanu kopiju, a
+      // origin (i Vercel CPU) se budi samo za NOVE naslove.
+      headers: {
+        "Cache-Control": "public, s-maxage=31536000, stale-while-revalidate=86400",
+      },
     }
   );
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { favoriteKey, useFavorites } from '@/lib/akcije/favorites';
 import { formatPercent, formatPrice, formatShortDate } from '@/lib/akcije/format';
+import { kategorijaNaziv } from '@/lib/akcije/kategorije';
 import type { Discount } from '@/lib/akcije/types';
 import ProductImage from './ProductImage';
 import StoreLogo from './StoreLogo';
@@ -18,11 +19,9 @@ interface Props {
    * "grid" = kartica u mrezi (2 kolone), cijene lijevo/desno.
    */
   variant?: 'rail' | 'grid';
-  /** ponuda počinje DANAS — dobija zelenu oznaku „NOVO" */
-  novo?: boolean;
 }
 
-export default function OfferCard({ item, hideStore = false, variant = 'grid', novo = false }: Props) {
+export default function OfferCard({ item, hideStore = false, variant = 'grid' }: Props) {
   const { has, toggle } = useFavorites();
   const key = favoriteKey(item);
   const favorite = has(key);
@@ -42,9 +41,6 @@ export default function OfferCard({ item, hideStore = false, variant = 'grid', n
         // Takav artikal ne ulazi u filtere po procentu i ustedi.
         <span className="badge-ang">Angebot</span>
       )}
-
-      {/* Oznaka stoji uz srce (gore desno) da ne pokrije badge popusta lijevo. */}
-      {novo ? <span className="badge-novo">NOVO</span> : null}
 
       <button
         type="button"
@@ -90,7 +86,7 @@ export default function OfferCard({ item, hideStore = false, variant = 'grid', n
           <div className="card-meta">
             {hideStore ? null : <StoreLogo slug={item.store_slug} name={item.store} size="sm" />}
             {/* u uzanoj kartici nema mjesta za ime prodavnice - logo ga vec kaze */}
-            {rail ? null : <span>{hideStore ? (item.category ?? '—') : item.store}</span>}
+            {rail ? null : <span>{hideStore ? (kategorijaNaziv(item.category) || '—') : item.store}</span>}
             {validTo ? (
               <span style={{ marginLeft: 'auto' }}>{rail ? `do ${validTo}` : `Važi do ${validTo}`}</span>
             ) : null}
