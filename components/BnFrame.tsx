@@ -24,25 +24,34 @@ export default function BnFrame() {
     const doc = frame?.contentDocument;
     if (!wrap || !frame || !doc || !doc.body) return;
 
-    // stvarna veličina sadržaja kalkulatora
-    const sirina = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth);
-    const visina = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
-    if (sirina < 50 || visina < 50) return; // još se nije iscrtao
-
     const w = wrap.clientWidth;
     const h = wrap.clientHeight;
-    const scale = Math.min(1, w / sirina, h / visina);
 
-    frame.style.width = `${sirina}px`;
-    frame.style.height = `${visina}px`;
-    frame.style.transformOrigin = 'top left';
-    frame.style.transform = `scale(${scale})`;
-    // centriraj (i vodoravno i uspravno) kad ostane prostora
-    frame.style.marginLeft = `${Math.max(0, (w - sirina * scale) / 2)}px`;
-    frame.style.marginTop = `${Math.max(0, (h - visina * scale) / 2)}px`;
+    // ŠIRINA IDE OD RUBA DO RUBA (izričita želja korisnika — „lijevo desno
+    // do kraja"). Prvo pusti kalkulator na punu širinu (on je responzivan);
+    // SAMO ako mu je sadržaj i dalje širi od ekrana (uski telefoni ~360px,
+    // forma ima min ~375px), skaliraj po ŠIRINI — nikad po visini, jer je
+    // skaliranje po visini sužavalo formu i ostavljalo trake sa strana.
+    frame.style.transform = '';
+    frame.style.width = '100%';
+    frame.style.height = '100%';
+    frame.style.marginLeft = '0';
 
-    // Pozadina OKO kalkulatora = pozadina SAMOG kalkulatora, pa se rubovi
-    // ne vide (bez sivih traka lijevo/desno — izgledalo je neprofesionalno).
+    const docW = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth);
+    if (docW < 50) return; // još se nije iscrtao
+
+    if (docW > w + 2) {
+      const scale = w / docW;
+      frame.style.width = `${docW}px`;
+      // visina = vidljivi prostor preračunat kroz scale: ako je forma viša,
+      // kalkulator se lagano skroluje IZNUTRA (stranica okolo nikad).
+      frame.style.height = `${Math.ceil(h / scale)}px`;
+      frame.style.transformOrigin = 'top left';
+      frame.style.transform = `scale(${scale})`;
+    }
+
+    // Pozadina OKO kalkulatora = pozadina SAMOG kalkulatora, pa se ne vidi
+    // gdje forma prestaje (bez sivih rubova).
     const bg =
       getComputedStyle(doc.body).backgroundColor ||
       getComputedStyle(doc.documentElement).backgroundColor;
@@ -89,7 +98,6 @@ export default function BnFrame() {
         title="Brutto-Netto Rechner"
         allow="web-share; clipboard-write"
         className="bn-frame"
-        scrolling="no"
       />
 
       <style>{`
