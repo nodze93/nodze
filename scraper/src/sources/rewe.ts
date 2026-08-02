@@ -65,14 +65,22 @@ interface SirovaPlocica {
   slika: string;
 }
 
-/** REWE sedmicu piše kao "Diese Woche27.7. bis 2.8." — pretvori u period. */
-export function periodIzTaba(tekst: string | null): { validFrom: string | null; validTo: string | null } {
+/**
+ * REWE sedmicu piše kao "Diese Woche27.7. bis 2.8." — pretvori u period.
+ * Regex namjerno prihvata i datum BEZ završne tačke ("27.7 bis 2.8") —
+ * i parser u datumi.ts to sada zna pročitati (ranije nije → REWE = 0).
+ * `danas` postoji samo radi determinističkih testova.
+ */
+export function periodIzTaba(
+  tekst: string | null,
+  danas: Date = new Date(),
+): { validFrom: string | null; validTo: string | null } {
   if (!tekst) return { validFrom: null, validTo: null };
   const m = tekst.replace(/\s+/g, ' ').match(/(\d{1,2}\.\d{1,2}\.?)\s*bis\s*(\d{1,2}\.\d{1,2}\.?)/i);
   if (!m) return { validFrom: null, validTo: null };
   // `procitajPeriod` traži najavu perioda u tekstu — "Angebote" je zadovoljava,
   // a ostalo (godina, prelaz Nove godine) rješava ista logika kao kod Aldija.
-  return procitajPeriod(`Angebote ${m[1]} bis ${m[2]}`, null);
+  return procitajPeriod(`Angebote ${m[1]} bis ${m[2]}`, null, danas);
 }
 
 export class ReweSource implements Source {

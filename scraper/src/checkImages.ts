@@ -30,13 +30,36 @@ function log(message: string): void {
   console.log(`[${new Date().toISOString().slice(11, 19)}] ${message}`);
 }
 
+export type IshodProvjere = 'ziva' | 'mrtva' | 'preskoci';
+
 /**
- * Vrati true ako URL zaista vraća sliku.
- * Prvo HEAD (jeftino); dio CDN-ova HEAD ne dozvoljava, pa se pada na GET.
+ * Odluka na osnovu odgovora servera — ČISTA funkcija, da se može testirati.
+ *
+ * Pravilo: briše se SAMO ono za šta smo sigurni da je mrtvo (404/410, ili
+ * HTML umjesto slike na 200 — „meki 404"). Sve prolazno — 429 (previše
+ * zahtjeva), 403, 5xx — je „preskoči": URL ostaje u bazi i provjeri se
+ * ponovo sutra. Ranije je i 429 brisao sliku TRAJNO, pa je jedan loš dan
+ * CDN-a mogao obrisati fotografije cijelog lanca — a OFF za ne-hranu
+ * (OBI, Aldi tekstil) nema čime da ih zamijeni.
+ */
+export function ocijeniOdgovor(status: number, contentType: string): IshodProvjere {
+  if (status === 404 || status === 410) return 'mrtva';
+  if (status >= 200 && status < 300) {
+    const tip = contentType.toLowerCase();
+    // octet-stream: dio CDN-ova sliku servira kao generički binarni sadržaj
+    if (tip === '' || tip.startsWith('image/') || tip.includes('octet-stream')) return 'ziva';
+    return 'mrtva'; // 200 sa HTML-om = „meki 404"
+  }
+  return 'preskoci'; // 429/403/5xx i sve ostalo — prolazno, ne briši
+}
+
+/**
+ * Provjeri URL. Prvo HEAD (jeftino); dio CDN-ova HEAD ne dozvoljava
+ * (405/501), pa se pada na GET. Mrežna greška = „preskoči", ne „mrtva".
  * Naše lokalne putanje (/products/...) se ne provjeravaju preko mreže.
  */
-export async function slikaPostoji(url: string): Promise<boolean> {
-  if (!/^https?:\/\//i.test(url)) return true; // lokalna putanja — ne diramo
+export async function provjeriSliku(url: string): Promise<IshodProvjere> {
+  if (!/^https?:\/\//i.test(url)) return 'ziva'; // lokalna putanja — ne diramo
 
   for (const method of ['HEAD', 'GET'] as const) {
     const kontrola = new AbortController();
@@ -45,16 +68,15 @@ export async function slikaPostoji(url: string): Promise<boolean> {
       const res = await fetch(url, { method, signal: kontrola.signal, redirect: 'follow' });
       clearTimeout(tajmer);
       if (res.status === 405 || res.status === 501) continue; // HEAD nije dozvoljen → probaj GET
-      if (!res.ok) return false;
-      const tip = res.headers.get('content-type') ?? '';
-      // Neki serveri na 404 vrate HTML stranicu sa statusom 200 — zato i tip.
-      return tip === '' || tip.startsWith('image/');
+      return ocijeniOdgovor(res.status, res.headers.get('content-type') ?? '');
     } catch {
       clearTimeout(tajmer);
-      if (method === 'GET') return false; // ni GET nije prošao
+      // timeout/mrežna greška: na HEAD-u probaj GET, na GET-u odustani —
+      // ali NE briši: server koji je sad nedostupan nije isto što i 404.
+      if (method === 'GET') return 'preskoci';
     }
   }
-  return false;
+  return 'preskoci';
 }
 
 async function main(): Promise<void> {
@@ -73,16 +95,25 @@ async function main(): Promise<void> {
   log(`Provjeravam ${rows.length} različitih URL-ova…`);
 
   const mrtvi: string[] = [];
+  let preskocenih = 0;
   for (let i = 0; i < rows.length; i += ISTOVREMENO) {
     const grupa = rows.slice(i, i + ISTOVREMENO);
-    const ishodi = await Promise.all(grupa.map((r: { image_url: string }) => slikaPostoji(r.image_url)));
-    ishodi.forEach((ok: boolean, k: number) => {
-      if (!ok) mrtvi.push(grupa[k]!.image_url);
+    const ishodi = await Promise.all(grupa.map((r: { image_url: string }) => provjeriSliku(r.image_url)));
+    ishodi.forEach((ishod: IshodProvjere, k: number) => {
+      if (ishod === 'mrtva') mrtvi.push(grupa[k]!.image_url);
+      else if (ishod === 'preskoci') preskocenih += 1;
     });
+    // Kratka pauza između grupa — 6 paralelnih bez daha zna izazvati baš
+    // onaj 429 zbog kojeg su se slike ranije pogrešno brisale.
+    if (i + ISTOVREMENO < rows.length) await new Promise((r) => setTimeout(r, 300));
+  }
+
+  if (preskocenih > 0) {
+    log(`Preskočeno ${preskocenih} (prolazna greška — 429/403/5xx/mreža): provjeriće se sutra, ništa nije brisano.`);
   }
 
   if (mrtvi.length === 0) {
-    log(`Gotovo. Sve ${rows.length} slika je živo.`);
+    log(`Gotovo. Živih: ${rows.length - preskocenih}, mrtvih: 0.`);
     await closePool();
     return;
   }

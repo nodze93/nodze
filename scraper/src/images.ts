@@ -112,6 +112,11 @@ async function main(): Promise<void> {
     }
 
     let found: CachedImage | undefined = cachedValue(cache, exactKey);
+    // Prolazna greška (429/timeout/5xx) se NE SMIJE keširati: keš se čuva
+    // između pokretanja (GitHub Actions cache), pa bi jedan loš dan OFF-a
+    // artikal ZAUVIJEK obilježio kao "nema slike" — nerazlučivo od pravog
+    // "nema". Zato: greška → bez upisa u keš → sutra se pita ponovo.
+    let prolaznaGreska = false;
     if (found) {
       fromCache += 1;
     } else {
@@ -124,12 +129,14 @@ async function main(): Promise<void> {
       } catch (error) {
         log(`GRESKA za "${exactKey}": ${error instanceof Error ? error.message : String(error)}`);
         found = { url: null, exact: true };
+        prolaznaGreska = true;
       }
       await sleep(DELAY_MS);
 
       // 2. pokusaj: bez velicine ("nutella") - slika je onda PRIBLIZNA.
       // Sa --no-fallback se preskace: bolje ilustracija nego pogresno pakovanje.
-      if (!noFallback && !found.url && looseKey && looseKey !== exactKey) {
+      // Kod prolazne greske se preskace i ovo: OFF je vec posrnuo, ne kucaj opet.
+      if (!noFallback && !prolaznaGreska && !found.url && looseKey && looseKey !== exactKey) {
         const looseHit = cachedValue(cache, looseKey);
         if (looseHit?.url) {
           found = { url: looseHit.url, exact: false };
@@ -152,8 +159,12 @@ async function main(): Promise<void> {
         }
       }
 
-      cache[exactKey] = found;
-      await saveRawCache(cache);
+      if (prolaznaGreska) {
+        log(`   (ne keširam "${exactKey}" — prolazna greška, pita se ponovo u sljedećem prolazu)`);
+      } else {
+        cache[exactKey] = found;
+        await saveRawCache(cache);
+      }
     }
 
     if (!found?.url) {

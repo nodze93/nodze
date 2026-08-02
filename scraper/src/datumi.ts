@@ -34,8 +34,18 @@ const PRAZNO: Period = { validFrom: null, validTo: null };
 /** Tekst mora ličiti na najavu perioda, da ne pokupimo npr. cijenu "1.99". */
 const NAJAVA = /(g[üu]ltig|wochenangebot|angebot|aktion|wochenende|\bab\b|\bnur\b)/i;
 
-/** "30.07.2026", "27.7." … — dan.mjesec s neobaveznom godinom. */
-const DATUM = /(\d{1,2})\.\s*(\d{1,2})\.(?:\s*(\d{4}|\d{2}))?/g;
+/**
+ * "30.07.2026", "27.7.", "2.8" … — dan.mjesec, pri čemu tačka POSLIJE
+ * mjeseca smije faliti: REWE u tabu zna napisati "27.7 bis 2.8" — njihov
+ * regex takav tekst propusti, a ovaj ga ranije nije znao pročitati →
+ * period null → SVI artikli preskočeni (REWE = 0 na cijelom sajtu).
+ *
+ * Godina se prihvata SAMO četverocifrena. Dvocifrena je izbačena namjerno:
+ * "Angebote ab 30.7. 20% Rabatt" bi inače pročitala "20" kao godinu 2020.
+ * i cijelu sekciju tiho poslala u prošlost (sakrivena na sajtu).
+ * (?!\d) čuva da se ne zagrize usred dužeg broja.
+ */
+const DATUM = /(\d{1,2})\.\s*(\d{1,2})(?:\.(?:\s*(\d{4}))?)?(?!\d)/g;
 
 function pad(n: number): string {
   return String(n).padStart(2, '0');
@@ -89,7 +99,7 @@ function izvadiDatume(tekst: string, danas: Date): Nadjen[] {
 
     let godina: number | null;
     if (m[3]) {
-      godina = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
+      godina = Number(m[3]); // regex propušta samo četverocifrenu godinu
       if (!postoji(godina, mjesec, dan)) continue;
     } else {
       godina = pogodiGodinu(mjesec, dan, danas);

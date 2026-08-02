@@ -89,6 +89,34 @@ test('nepostojeći datum se ignoriše', () => {
   assert.deepEqual(procitajPeriod('Angebote ab 31.02.', 6, DANAS), { validFrom: null, validTo: null });
 });
 
+test('REWE — datum BEZ završne tačke ("27.7 bis 2.8") se čita', () => {
+  // Ranije: regex u rewe.ts ovo propusti, parser ne pročita → period null
+  // → SVI artikli preskočeni → REWE = 0 na cijelom sajtu.
+  assert.deepEqual(procitajPeriod('Angebote 27.7 bis 2.8', null, DANAS), {
+    validFrom: '2026-07-27',
+    validTo: '2026-08-02',
+  });
+  // miješano: prvi s tačkom, drugi bez
+  assert.deepEqual(procitajPeriod('Angebote 27.7. bis 2.8', null, DANAS), {
+    validFrom: '2026-07-27',
+    validTo: '2026-08-02',
+  });
+});
+
+test('dvocifren broj iza datuma NIJE godina ("20% Rabatt")', () => {
+  // Ranije: "20" iz "20%" se pročita kao godina 2020. → valid_to u prošlosti
+  // → cijela sekcija tiho sakrivena na sajtu.
+  assert.deepEqual(procitajPeriod('Angebote ab Donnerstag 30.7. 20% Rabatt', 6, DANAS), {
+    validFrom: '2026-07-30',
+    validTo: '2026-08-01',
+  });
+  // četverocifrena godina i dalje radi normalno
+  assert.deepEqual(procitajPeriod('Gültig vom 30.07.2026 bis 05.08.2026 20% auf alles', 6, DANAS), {
+    validFrom: '2026-07-30',
+    validTo: '2026-08-05',
+  });
+});
+
 test('vaziNa — granice su uključive, prazno znači uvijek', () => {
   const p = { validFrom: '2026-07-30', validTo: '2026-08-05' };
   assert.equal(vaziNa(p, '2026-07-29'), false);

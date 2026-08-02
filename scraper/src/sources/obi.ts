@@ -224,7 +224,11 @@ export class ObiSource implements Source {
           productName: naziv,
           newPrice: nova,
           oldPrice: stara !== null && stara > nova ? stara : null,
-          category: normalizeCategory('Baumarkt', naziv),
+          // OBI je Baumarkt — kategorija se NE pogađa iz naziva artikla.
+          // Ranije je normalizeCategory(naziv) "Gasgrill" slao pod "Fleisch"
+          // (meso), pa je majstorski dućan na sajtu imao "Fleisch 13",
+          // "Obst 2" i "Tiefkuehl 1". Sve što OBI prodaje je Baumarkt.
+          category: 'Baumarkt',
           imageUrl: r.k.slika && /^https?:\/\//.test(r.k.slika) ? r.k.slika : null,
           validFrom: r.rok.validFrom,
           validTo: r.rok.validTo,

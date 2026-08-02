@@ -144,6 +144,28 @@ export async function scrapeHealth(dropPct = 40): Promise<HealthRow[]> {
 }
 
 /**
+ * Isti artikal dvaput u istom prolazu (dva OBI listinga s različitim URL-om,
+ * ista ponuda u dvije sekcije…) pravi duple redove u snapshotu. Posljedica
+ * na sajtu: traka piše „OBI 131 akcija", a stranica pokaže 118 — lista
+ * duplikate očisti, brojači u bazi ne. Zato se čisti OVDJE, na zadnjoj
+ * kapiji, istim ključem kojim i sajt čisti prikaz (prodavnica + naziv +
+ * cijena), plus rok važenja — da REWE-ove dvije sedmice istog artikla
+ * ostanu obje.
+ */
+export function bezDuplihRedova(rows: SnapshotRow[]): { ciste: SnapshotRow[]; duplih: number } {
+  const vidjeno = new Set<string>();
+  const ciste: SnapshotRow[] = [];
+  for (const row of rows) {
+    const naziv = row.productName.trim().toLowerCase().replace(/\s+/g, ' ');
+    const kljuc = `${row.storeId}|${naziv}|${row.newPrice}|${row.validTo ?? ''}`;
+    if (vidjeno.has(kljuc)) continue;
+    vidjeno.add(kljuc);
+    ciste.push(row);
+  }
+  return { ciste, duplih: rows.length - ciste.length };
+}
+
+/**
  * Snapshot pristup: za jedan (plz, datum) prvo obrisemo sve, pa upisemo iznova.
  * Sve u jednoj transakciji, pa je ponovno pokretanje scrapera bezbjedno
  * (idempotentno) i nikad nema duplikata ni pola upisanih podataka.
@@ -151,8 +173,13 @@ export async function scrapeHealth(dropPct = 40): Promise<HealthRow[]> {
 export async function replaceSnapshot(
   plz: string,
   date: string,
-  rows: SnapshotRow[],
+  sviRedovi: SnapshotRow[],
 ): Promise<number> {
+  const { ciste: rows, duplih } = bezDuplihRedova(sviRedovi);
+  if (duplih > 0) {
+    console.log(`    [dupli] ${plz}: ${duplih} duplih redova odbačeno prije upisa`);
+  }
+
   const client = await pool.connect();
   try {
     await client.query('begin');
