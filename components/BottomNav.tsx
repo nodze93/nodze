@@ -17,12 +17,13 @@ import { usePathname } from "next/navigation";
 const TABS = [
   {
     href: "/akcije",
-    label: "Početna",
+    label: "Akcije",
     match: (p: string) => p.startsWith("/akcije"),
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 10.5 12 3l9 7.5" />
-        <path d="M5 9.5V21h14V9.5" />
+        <path d="M3 6h2.2l2.1 10.4a1.6 1.6 0 0 0 1.6 1.3h8.3a1.6 1.6 0 0 0 1.6-1.3L20.5 9H6" />
+        <circle cx="9.5" cy="20.5" r="1.2" fill="currentColor" stroke="none" />
+        <circle cx="17" cy="20.5" r="1.2" fill="currentColor" stroke="none" />
       </svg>
     ),
   },
@@ -48,6 +49,25 @@ const TABS = [
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
         <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20" />
+      </svg>
+    ),
+  },
+  // Vijesti SKROZ DESNO (izričita želja korisnika) — više nisu prvi tab
+  // ni početna, ali ostaju dostupne dok se ne ugase.
+  {
+    href: "/",
+    label: "Vijesti",
+    match: (p: string) =>
+      p === "/" ||
+      p.startsWith("/vijesti") ||
+      p.startsWith("/clanak") ||
+      p.startsWith("/kategorija") ||
+      p.startsWith("/de"),
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4.5" width="15" height="15" rx="2" />
+        <path d="M18 8.5h1.5A1.5 1.5 0 0 1 21 10v7a2.5 2.5 0 0 1-2.5 2.5H6" />
+        <path d="M6.5 8.5h8M6.5 12h8M6.5 15.5h5" />
       </svg>
     ),
   },
