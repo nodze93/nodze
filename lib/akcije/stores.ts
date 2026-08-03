@@ -27,6 +27,8 @@ const BRANDS: Record<string, StoreBrand> = {
   mediamarkt: { label: 'MM', short: 'MM', fg: '#ffffff', bg: '#df0000' },
   saturn: { label: 'Saturn', short: 'SAT', fg: '#000000', bg: '#ff8000' },
   norma: { label: 'NORMA', short: 'NOR', fg: '#ffffff', bg: '#e2001a' },
+  obi: { label: 'OBI', short: 'OBI', fg: '#ffffff', bg: '#ff7100' },
+  fressnapf: { label: 'Fressnapf', short: 'FN', fg: '#ffffff', bg: '#e2001a' },
   tegut: { label: 'tegut', short: 'tegut', fg: '#ffffff', bg: '#e2001a' },
   real: { label: 'real', short: 'real', fg: '#ffffff', bg: '#003a80' },
 };

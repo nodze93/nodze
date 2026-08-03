@@ -102,10 +102,31 @@ export function idIzPutanje(putanja: string): string | null {
 }
 
 /**
- * Slika proizvoda: na stranici ih ima 150+ (preporuke, baneri), pa biramo
- * onu čija putanja sadrži ID artikla. Bez toga bismo lako uzeli tuđu.
+ * Slika proizvoda.
+ *
+ * ⚠️ NE UZIMATI `og:image` — kod Fressnapfa je to GENERIČKI LOGO
+ * (`/img/og-fressnapf.jpg`), isti na svakoj stranici.
+ *
+ * 1) schema.org `"image"` — ono što lanac SAM proglasi slikom proizvoda.
+ *    Ovo je pravi izvor: pogodilo 12/12 u probi.
+ * 2) rezerva: među 150+ slika na stranici (preporuke, logotipi marki)
+ *    traži onu čija putanja sadrži ID artikla.
+ *
+ * Zašto rezerva uopšte treba: dio artikala ima ime fajla `hash_hash.jpg`
+ * BEZ ID-a, pa je samo traženje po ID-u promašivalo 3 od 10 — zato je
+ * schema.org sada prvi, a ID drugi.
  */
 export function slikaIzHtml(h: string, id: string | null): string | null {
+  for (const m of h.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/g)) {
+    const blok = m[1] ?? '';
+    if (!blok.includes('"image"')) continue;
+    const niz = blok.match(/"image"\s*:\s*\[\s*"([^"]+)"/);
+    if (niz?.[1]) return niz[1];
+    const jedan = blok.match(/"image"\s*:\s*"([^"]+)"/);
+    if (jedan?.[1]) return jedan[1];
+  }
+
+  if (!id) return null;
   const sve = [
     ...new Set(
       [...h.matchAll(/https?:\/\/media\.os\.fressnapf\.com\/[^"'\s\\]+\.(?:jpg|jpeg|png|webp)/gi)].map(
@@ -113,12 +134,7 @@ export function slikaIzHtml(h: string, id: string | null): string | null {
       ),
     ),
   ];
-  if (sve.length === 0) return null;
-  if (id) {
-    const pogodak = sve.find((u) => u.includes(id));
-    if (pogodak) return pogodak;
-  }
-  return null; // radije ništa nego tuđa slika
+  return sve.find((u) => u.includes(id)) ?? null; // radije ništa nego tuđa slika
 }
 
 export class FressnapfSource implements Source {

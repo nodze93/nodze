@@ -102,6 +102,15 @@ const MARKS: Record<string, Mark> = {
       </>,
     ),
   norma: () => box('#e2001a', text('NORMA', '#ffffff', 19, 900)),
+  obi: () => box('#ff7100', text('OBI', '#ffffff', 30, 900)),
+  fressnapf: () =>
+    box(
+      '#e2001a',
+      <>
+        {text('Fress', '#ffffff', 19, 800, 40)}
+        {text('napf', '#ffffff', 19, 800, 62)}
+      </>,
+    ),
 };
 
 export function hasBrandMark(slug: string): boolean {

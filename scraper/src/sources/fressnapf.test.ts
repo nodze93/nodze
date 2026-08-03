@@ -39,13 +39,29 @@ test('ID artikla iz putanje', () => {
   assert.equal(idIzPutanje('/p/bez-broja/'), null);
 });
 
-test('slika se bira po ID-u artikla, ne prva na stranici', () => {
-  // Stranica ima 150+ slika (preporuke, baneri) — bez ID-a bismo uzeli tuđu.
+test('slika: schema.org "image" ima prednost', () => {
+  // Pravi slučaj: ime fajla NEMA ID artikla, pa bi traženje po ID-u palo.
+  const h = `<script type="application/ld+json">
+    {"@type":"Product","image":["https://media.os.fressnapf.com/products-v2/b/b/bb3e_3d00.jpg"]}
+    </script>
+    <img src="https://media.os.fressnapf.com/logos/royal_canin.jpg">`;
+  assert.equal(
+    slikaIzHtml(h, '1248088'),
+    'https://media.os.fressnapf.com/products-v2/b/b/bb3e_3d00.jpg',
+  );
+});
+
+test('slika: rezerva po ID-u kad schema.org nema image', () => {
   const h = `
     <img src="https://media.os.fressnapf.com/products-v2/a/b/tudja_9999999_0.jpg">
     <img src="https://media.os.fressnapf.com/products-v2/e/4/hash_1110837_11.jpg">`;
   assert.match(slikaIzHtml(h, '1110837')!, /1110837/);
-  // kad ID ne pogodi ništa → radije NIŠTA nego tuđa slika
+  // ID ne pogodi ništa → radije NIŠTA nego tuđa slika
   assert.equal(slikaIzHtml(h, '5555555'), null);
   assert.equal(slikaIzHtml('<html></html>', '1110837'), null);
+});
+
+test('NIKAD og:image — kod Fressnapfa je to generički logo', () => {
+  const h = `<meta property="og:image" content="https://www.fressnapf.de/img/og-fressnapf.jpg">`;
+  assert.equal(slikaIzHtml(h, '1110837'), null, 'og:image se ne smije uzeti');
 });
