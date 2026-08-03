@@ -387,6 +387,60 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
 8. **AKCIJE — admin konzol NAPRAVLJEN** (Pregled/Scraper/Slike/Prodavnice/PLZ/Kategorije/Popusti+JSON uvoz). Korisnik SADA želi JSON uvoz (predomislio se oko ručnog) — upload `.json` radi.
 9. **AKCIJE — REGIJE**: dogovoren prelazak s 8.200 PLZ na model regija (nacionalno + Aldi jug/sjever + kasnije REWE/Edeka). Detaljan plan: **`PLAN-REGIJE.md`**. Sljedeći veći zadatak.
 
+### SPECIJALIZOVANI LANCI — „samo na klik" (OBI, Fressnapf)
+`/akcije` je stranica za **namirnice**. OBI (baumarkt) i Fressnapf (ljubimci)
+imaju stotine artikala sa −50%, pa na „Sve akcije" i u „Preporuci ove sedmice"
+pregaze listu — paradajz i kafa ispadnu ispod hrane za mačke.
+
+Rješenje je **u SQL-u, ne u kodu** (bitno — ne tražiti filter u TypeScriptu):
+`ak_discounts_search` i `ak_categories_list` imaju uslov
+`p_store is not null or s.slug not in ('obi','fressnapf')`.
+Prevod: dok korisnik NE klikne baš na taj lanac, njegovi artikli se ne
+prikazuju; kad klikne pločicu u traci — otvore se svi.
+
+**Namjerno OSTAJU vidljivi** (ne dirati): `ak_stores_list` (pločica s brojem
+u traci) i `ak_meta` (brojači). Bez toga se ne bi imalo na šta kliknuti.
+
+„Preporuka ove sedmice" (`components/akcije/Recommendation.tsx`) prima `items`
+kao prop iz iste pretrage → popravlja se sama, nema zasebne izmjene.
+
+### ZAŠTITA: jedan loš dohvat NE briše lanac sa sajta (2026-08-03)
+**Šta se desilo:** Aldi Nord je u jednom runu 4× zaredom istekao na
+`waitForSelector` (stranica se otvorila, kartice se nisu pojavile u 30 s).
+`withRetry` je vratio null → lanac preskočen → `replaceSnapshot` svejedno
+upisao NOVI snapshot bez njega → **243 ponude nestale sa sajta**, iako su
+jučerašnje mirno stajale u bazi. Sat kasnije: isti kod, isti bot, prošao
+normalno. Dakle prolazno (throttling / spor render), NE kvar koda.
+
+**Trajanje 2m43s je potpis kvara:** `maxRetries=3` → 4 pokušaja × 30 s
+timeout + backoff (5+10+15 s) ≈ 163 s. Kad vidiš lanac koji „pojede" ~2,5
+minute i ne ostavi svoju liniju — to je ovo.
+
+**Riješeno** u `scraper/src/db.ts` (`prenesiZaostale` + `idPrisutnihLanaca`):
+lancu koji danas nije dao NIJEDAN red prepišu se jučerašnji redovi u
+današnji snapshot, u istoj transakciji.
+- ne laže: svaki red nosi `valid_from/valid_to`, sajt filtrira po danu →
+  istekle ponude ispadnu same;
+- prepisuje najviše **3 dana** unazad (`MAX_PRENOS_DANA`) — ako lanac ne radi
+  4+ dana, treba da nestane, to je onda pravi kvar;
+- **alarm i dalje radi**: „Zdravlje scrapera" čita `ak_scrape_runs` (tamo i
+  dalje piše 0 / status `error`), a ne `ak_discounts`;
+- isključivanje: `SCRAPER_CARRY_FORWARD=0`.
+
+### ZAŠTO ALDI SÜD IMA SAMO ~15 PONUDA (a Aldi Nord 250)
+**Nije bug — stranice su različite.** `aldi-nord.de/angebote.html` prikaže
+CIJELU ponudu (~250 kartica). `aldi-sued.de/de/angebote.html` je samo
+**pregledna stranica**: po sekciji pokaže 10-12 kartica i dugme „Alle
+Angebote ab Montag" koje vodi na pravu listu.
+
+Prave liste Aldi Süda su na zasebnim URL-ovima, po danu početka:
+`/angebote/GGGG-MM-DD` (npr. `/angebote/2026-08-03`, `/angebote/2026-08-06`,
+`/angebote/2026-08-07`) + `/produkte/wochenangebote/k/1588161426582123`.
+Ti linkovi stoje u meniju pregledne stranice, pa se mogu pročitati iz nje.
+
+**NIJE URAĐENO** — traži izmjenu `retailers.ts` (Aldi Süd da obiđe podstranice).
+Dogovoriti prije diranja.
+
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.
 - Korisnik radi Commit + Push čim se izmjena napravi (da se verzije ne razilaze).
