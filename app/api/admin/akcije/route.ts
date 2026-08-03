@@ -179,6 +179,16 @@ export async function POST(req: Request) {
       continue;
     }
 
+    // Rok dalji od 60 dana = skoro sigurno greška u JSON-u (tako su probni
+    // uvozi iz aprila "važili" do jeseni i mjesecima kvarili Top ponude —
+    // nijedna prava akcija ne traje toliko). Odbij uz jasno objašnjenje.
+    const maxRok = new Date();
+    maxRok.setDate(maxRok.getDate() + 60);
+    if (validTo > maxRok.toISOString().slice(0, 10)) {
+      preskoceno.push(`${productName} (validTo ${validTo} je dalji od 60 dana — provjeri datum u JSON-u)`);
+      continue;
+    }
+
     const cacheKey = `${slugify(storeName)}|${plz}`;
     let storeId = storeCache.get(cacheKey);
     if (storeId === undefined) {

@@ -93,6 +93,18 @@ export function alarmText(health: AlarmRed[]): AlarmIshod {
 async function main(): Promise<void> {
   const plz = process.argv.slice(2).find((a) => a.startsWith('--plz='))?.slice(6);
 
+  // ČIŠĆENJE RUČNIH UNOSA: scraper svoje redove briše i prepisuje svaki dan,
+  // ali ručne (source='manual') NAMJERNO nikad ne dira — pa su se probni
+  // uvozi iz aprila/maja gomilali dovijeka. Ovo briše ručne kojima je rok
+  // istekao prije više od 30 dana: dovoljno kasno za "vrati mi ga" slučaj,
+  // a baza se ipak sama čisti.
+  const pocisceno = await pool.query(
+    "delete from ak_discounts where source = 'manual' and valid_to is not null and valid_to < current_date - 30",
+  );
+  if ((pocisceno.rowCount ?? 0) > 0) {
+    log(`Obrisano ${pocisceno.rowCount} ručnih unosa isteklih prije 30+ dana.`);
+  }
+
   const r = await applyLayer(plz);
   log(`Slike prelivene: ${r.byEan} po EAN-u, ${r.byKey} po nazivu. Sakriveno: ${r.hidden}.`);
 
