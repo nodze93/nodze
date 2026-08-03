@@ -225,7 +225,7 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
   → `images:enrich` (Open Food Facts) ga popuni. Ide PRIJE enrich koraka u workflow-u.
 - ⚠️ Admin kolona „sa slikom %" broji samo da URL POSTOJI, ne da se otvara.
 
-### LANCI U SCRAPERU (7) — svi kroz `SCRAPER_SOURCE=retailers`
+### LANCI U SCRAPERU (8) — svi kroz `SCRAPER_SOURCE=retailers`
 | Lanac | Kako | Scope | Stara cijena |
 |---|---|---|---|
 | Aldi Süd / Aldi Nord | HTML (Playwright) | regionalno, 6 gradova | da |
@@ -234,6 +234,7 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
 | **REWE** | HTML **BEZ JS-a** | **DE** | **ne** → sve „Angebot" |
 | **OBI** | HTML **SA JS-om** + Nuxt payload | **DE** | da (često UVP) |
 | **Fressnapf** | server HTML, BEZ browsera | **DE** | da (**IZVEDENA**) |
+| **Trinkgut** | server HTML, BEZ browsera | **DE** | **ne** → sve „Angebot" |
 
 ⚠️ REWE i OBI su suprotni slučajevi — lako se zamijene:
 - **REWE bez JS-a**: sadržaj je već u HTML-u; kad se skripta izvrši, pregazi
@@ -529,6 +530,44 @@ koju smo vidjeli za ovaj artikal kod ovog lanca" — bez ijednog tuđeg servisa.
 Trošak je zanemariv (~800 redova dnevno ≈ 25k ukupno).
 
 **NIJE JOŠ NAPRAVLJENO**: sam obračun/prikaz tog minimuma. Dogovoriti prije diranja.
+
+### TRINKGUT (pića, EDEKA grupa) — dodan 03.08.2026
+Najjednostavniji izvor: jedan HTTP zahtjev na `/angebote`, bez browsera i bez
+API-ja. Shopware sa STABILNIM klasama (`.product-box`, `.product-name`,
+`.product-price`), pa se čita regexom.
+
+**TRI ZAMKE (sve provjerene u pravom browseru):**
+1. **Cijena je razbijena tagom:** `<p class="product-price"> 11.<sup>99</sup> </p>`
+   — regex nad tekstom vidi samo „11." i stane. Zato `bezTagova()` PRIJE parsiranja.
+2. **Tačka je decimalni zarez** („11.99"), suprotno od ostatka Njemačke →
+   `normPriceText(txt, true)`, isto kao Kaufland.
+3. **Nema stare cijene ni procenta** (0 precrtanih, 0 „statt"/„UVP") → sve je
+   „Angebot" kao REWE, dakle NE ulazi u „Top ponude danas" ni u preporuku.
+
+Rok stoji JEDNOM za cijelu stranicu („Gültig vom 03.08.2026 bis 08.08.2026").
+Bez njega se NE upisuje ništa — radije prazno nego izmišljen datum.
+Regex prima i „Gueltig" (ue umjesto ü), inače bi tiho vraćao 0.
+
+Slika: iz `srcset` se uzima NAJVEĆA (`products_xl`), ne prva (`products_xs`).
+Provjereno na živoj stranici: **57 blokova → 57 ponuda, 57/57 sa slikom i linkom.**
+
+robots.txt dozvoljava `/angebote`, ali zabranjuje sve putanje s upitnikom —
+zato bez paginacije (a i nema je, `?p=2` vraća isto).
+
+⚠️ Kategorija svih artikala: `Getraenke`. Pločica: crno na žutom (#fce503),
+njihova primarna boja.
+
+### HTML ENTITETI U NAZIVIMA — riješeno 03.08.2026
+Na sajtu se vidjelo `DOG&#39;S LOVE`, `N&amp;D Farmina`, `Adult Maxi &gt;25kg`.
+Uzrok: izvori koji se čitaju REGEXOM iz sirovog HTML-a (Fressnapf, Trinkgut)
+dobiju naziv onakav kakav je u kodu stranice; izvori kroz browser
+(`textContent`) to nemaju jer entitete dekodira sam browser.
+
+Riješeno u `normalize.ts` → `dekodirajEntitete()`, pozvano iz `cleanProductName`
+— JEDNO mjesto kroz koje prolazi svaki naziv iz svakog izvora i iz JSON uvoza.
+Dekodira se u JEDNOM prolazu (replacer funkcija), NE lančano — inače bi
+„&amp;lt;" postalo „<" umjesto „&lt;". Nepoznat entitet ostaje netaknut.
+Stari redovi u bazi se poprave sami sljedećim runom (snapshot se prepisuje).
 
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.

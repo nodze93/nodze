@@ -23,6 +23,7 @@ import { LidlSource } from './lidl.js';
 import { ObiSource } from './obi.js';
 import { RetailersSource } from './retailers.js';
 import { ReweSource } from './rewe.js';
+import { TrinkgutSource } from './trinkgut.js';
 
 export class SviLanciSource implements Source {
   readonly name = 'svi';
@@ -31,6 +32,7 @@ export class SviLanciSource implements Source {
   private readonly rewe: ReweSource;
   private readonly obi: ObiSource;
   private readonly fressnapf: FressnapfSource;
+  private readonly trinkgut: TrinkgutSource;
 
   constructor(opts: { dryRun: boolean }) {
     this.retailers = new RetailersSource(opts);
@@ -46,6 +48,9 @@ export class SviLanciSource implements Source {
     this.obi = new ObiSource(() => this.retailers.novaStranica({ browserUa: true }));
     // Fressnapf ne treba browser — sve je u server HTML-u.
     this.fressnapf = new FressnapfSource();
+    // Trinkgut isto: jedan HTTP zahtjev na /angebote i gotovo (Shopware,
+    // server-rendered). Nema stare cijene → sve „Angebot", kao REWE.
+    this.trinkgut = new TrinkgutSource();
   }
 
   async listStores(plz: string): Promise<ScrapedStore[]> {
@@ -55,6 +60,7 @@ export class SviLanciSource implements Source {
       this.rewe.listStores(plz),
       this.obi.listStores(plz),
       this.fressnapf.listStores(plz),
+      this.trinkgut.listStores(plz),
     ]);
     return grupe.flat();
   }
@@ -64,6 +70,7 @@ export class SviLanciSource implements Source {
     if (store.slug === 'rewe') return this.rewe.listOffers();
     if (store.slug === 'obi') return this.obi.listOffers();
     if (store.slug === 'fressnapf') return this.fressnapf.listOffers();
+    if (store.slug === 'trinkgut') return this.trinkgut.listOffers();
     return this.retailers.listOffers(store, plz);
   }
 

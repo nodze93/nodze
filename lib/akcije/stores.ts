@@ -29,6 +29,9 @@ const BRANDS: Record<string, StoreBrand> = {
   norma: { label: 'NORMA', short: 'NOR', fg: '#ffffff', bg: '#e2001a' },
   obi: { label: 'OBI', short: 'OBI', fg: '#ffffff', bg: '#ff7100' },
   fressnapf: { label: 'Fressnapf', short: 'FN', fg: '#ffffff', bg: '#e2001a' },
+  // trinkgut: njihova primarna boja je žuta (--bs-primary #FCE503 na sajtu),
+  // pa ide crno na žuto — inače bi se bijelo na žutom ne bi vidjelo.
+  trinkgut: { label: 'trinkgut', short: 'TG', fg: '#1a1a1a', bg: '#fce503' },
   tegut: { label: 'tegut', short: 'tegut', fg: '#ffffff', bg: '#e2001a' },
   real: { label: 'real', short: 'real', fg: '#ffffff', bg: '#003a80' },
 };
