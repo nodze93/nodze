@@ -166,6 +166,74 @@ export function bezDuplihRedova(rows: SnapshotRow[]): { ciste: SnapshotRow[]; du
 }
 
 /**
+ * Koliko dana unazad smijemo posuditi ponude za lanac koji danas nije dao
+ * ništa. Namjerno kratko: ako lanac ne radi 4+ dana, treba da NESTANE sa
+ * sajta — to je onda pravi kvar, a ne prolazna greška.
+ */
+const MAX_PRENOS_DANA = 3;
+
+/** Jedinstveni store_id-evi koji su danas STVARNO nešto dali. */
+export function idPrisutnihLanaca(rows: SnapshotRow[]): number[] {
+  return [...new Set(rows.map((r) => r.storeId))];
+}
+
+/**
+ * =====================================================================
+ *  ZAŠTITA: jedan loš dohvat NE briše lanac sa sajta
+ * =====================================================================
+ *  Šta se dogodilo (03.08.2026): Aldi Nord je 4× zaredom istekao na
+ *  `waitForSelector` — stranica se otvorila, ali kartice se nisu
+ *  pojavile u 30 s. `withRetry` je vratio null, lanac je preskočen, a
+ *  `replaceSnapshot` je svejedno upisao NOVI snapshot bez njega. Rezultat:
+ *  243 ponude nestale sa sajta, iako su jučerašnje mirno stajale u bazi.
+ *  Sat kasnije je isti bot, isti kod, prošao normalno.
+ *
+ *  Rješenje: lancu koji danas nije dao NIJEDAN red prepiši jučerašnje
+ *  redove u današnji snapshot.
+ *
+ *  Zašto ovo ne laže korisnika:
+ *   - svaki red nosi valid_from/valid_to, a sajt i baza filtriraju po
+ *     danu → istekle ponude ionako ispadnu same od sebe;
+ *   - prepisuje se najviše MAX_PRENOS_DANA dana unazad;
+ *   - alarm i „Zdravlje scrapera" čitaju ak_scrape_runs (gdje i dalje
+ *     piše 0 i status 'error'), NE ak_discounts — dakle kvar se i dalje
+ *     prijavi, samo sajt ne ostane prazan dok ga ne popravimo.
+ *
+ *  Isključivanje: SCRAPER_CARRY_FORWARD=0
+ */
+async function prenesiZaostale(
+  client: pg.PoolClient,
+  plz: string,
+  date: string,
+  prisutni: number[],
+): Promise<number> {
+  const res = await client.query(
+    `insert into ak_discounts
+       (product_name, old_price, new_price, store_id, category, plz, date,
+        image_url, valid_from, valid_to, source_url, external_id, image_exact,
+        image_source, product_key, ean, scope)
+     select product_name, old_price, new_price, store_id, category, plz, $2::date,
+            image_url, valid_from, valid_to, source_url, external_id, image_exact,
+            image_source, product_key, ean, scope
+       from ak_discounts
+      where plz = $1
+        and source = 'scraper'
+        and store_id is not null
+        -- lanci koji su danas nešto dali se NE diraju
+        and store_id <> all($3::bigint[])
+        -- samo zadnji snapshot prije današnjeg, i to ne stariji od N dana
+        and date = (
+              select max(date) from ak_discounts
+               where plz = $1 and source = 'scraper'
+                 and date < $2::date
+                 and date >= $2::date - $4::int
+            )`,
+    [plz, date, prisutni, MAX_PRENOS_DANA],
+  );
+  return res.rowCount ?? 0;
+}
+
+/**
  * Snapshot pristup: za jedan (plz, datum) prvo obrisemo sve, pa upisemo iznova.
  * Sve u jednoj transakciji, pa je ponovno pokretanje scrapera bezbjedno
  * (idempotentno) i nikad nema duplikata ni pola upisanih podataka.
@@ -233,6 +301,19 @@ export async function replaceSnapshot(
         values,
       );
       inserted += result.rowCount ?? 0;
+    }
+
+    // Tek SADA, kad znamo ko je danas stvarno nešto dao, popuni rupe
+    // jučerašnjim redovima — vidi objašnjenje uz `prenesiZaostale`.
+    if ((process.env.SCRAPER_CARRY_FORWARD ?? 'true') !== 'false') {
+      const preneseno = await prenesiZaostale(client, plz, date, idPrisutnihLanaca(rows));
+      if (preneseno > 0) {
+        console.log(
+          `    [prenos] ${plz}: ${preneseno} redova prepisano od ranije ` +
+            `— lanac danas nije odgovorio, ne brišem ga sa sajta`,
+        );
+        inserted += preneseno;
+      }
     }
 
     await client.query('commit');

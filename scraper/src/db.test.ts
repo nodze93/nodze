@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { bezDuplihRedova, type SnapshotRow } from './db.js';
+import { bezDuplihRedova, idPrisutnihLanaca, type SnapshotRow } from './db.js';
 
 const red = (over: Partial<SnapshotRow> = {}): SnapshotRow => ({
   productName: 'Gasgrill Evolve',
@@ -64,4 +64,29 @@ test('prvi pobjeđuje (zadržava se prvi viđeni red)', () => {
     red({ imageUrl: 'https://bilder.obi.de/druga.jpg' }),
   ]);
   assert.equal(ciste[0]!.imageUrl, 'https://bilder.obi.de/prva.jpg');
+});
+
+// ---------------------------------------------------------------
+// Zaštita "lanac sa 0 se ne briše" — koga smijemo prepisati od juče
+// ---------------------------------------------------------------
+
+test('prisutni lanci: samo oni koji su danas dali red, bez ponavljanja', () => {
+  const ids = idPrisutnihLanaca([
+    red({ storeId: 170 }),
+    red({ storeId: 170, productName: 'Drugi artikal' }),
+    red({ storeId: 42, productName: 'Treci artikal' }),
+  ]);
+  assert.deepEqual([...ids].sort((a, b) => a - b), [42, 170]);
+});
+
+test('lanac koji je danas PAO nije u listi → njega prepisujemo od juče', () => {
+  // Aldi Nord (id 42) je 4× istekao na waitForSelector i nije dao nijedan red.
+  const ids = idPrisutnihLanaca([red({ storeId: 170 }), red({ storeId: 8 })]);
+  assert.ok(!ids.includes(42), 'pali lanac NE smije biti među prisutnima');
+});
+
+test('nijedan lanac nije prošao → prazna lista (prepisuje se sve od juče)', () => {
+  // U SQL-u `store_id <> all('{}')` je TRUE za sve → prepiše se cijeli
+  // jučerašnji snapshot umjesto da sajt ostane prazan.
+  assert.deepEqual(idPrisutnihLanaca([]), []);
 });

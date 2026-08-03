@@ -192,6 +192,11 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
 3. `akcije-datumi.sql` ✅ (filter po datumu)
 4. **`akcije-uvoz.sql`** ✅ — NADOGRAĐUJE #3, uvijek pokreni OVAJ ako ideš iznova.
    Dodaje kolonu `source` i pravilo: scraper redovi po snapshotu, ručni po datumu važenja.
+5. `akcije-regije.sql` ✅ + **`akcije-regije-2.sql`** ✅ — scope/regije + **OBI samo na klik**.
+6. **`akcije-fressnapf.sql`** ⬜ — Fressnapf se ponaša ISTO KAO OBI (samo na klik).
+   Mijenja `ak_discounts_search` i `ak_categories_list`: `s.slug <> 'obi'`
+   → `s.slug not in ('obi','fressnapf')`. Ostatak je 1:1 iz `akcije-regije-2.sql`
+   (Postgres ne zna zakrpiti tijelo funkcije — mora cijela iznova).
 
 ### DATUMI VAŽENJA — kako radi (2026-08-01)
 - `scraper/src/datumi.ts` — parser njemačkih perioda iz naslova sekcija, sa testovima.
