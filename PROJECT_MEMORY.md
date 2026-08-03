@@ -438,8 +438,21 @@ Prave liste Aldi Süda su na zasebnim URL-ovima, po danu početka:
 `/angebote/2026-08-07`) + `/produkte/wochenangebote/k/1588161426582123`.
 Ti linkovi stoje u meniju pregledne stranice, pa se mogu pročitati iz nje.
 
-**NIJE URAĐENO** — traži izmjenu `retailers.ts` (Aldi Süd da obiđe podstranice).
-Dogovoriti prije diranja.
+**RIJEŠENO 2026-08-03** u `retailers.ts`:
+- `RetailerDef.podstranice?: RegExp` + `maxPodstranica` — SAMO Aldi Süd ih ima;
+  Nord i Kaufland su prazni (sve im je na jednoj stranici) → ne diraju se.
+- čitanje jedne stranice izdvojeno u `citajStranicu(page, def)` da se ne kopira kod;
+- `podstraniceIzLinkova(hrefs, obrazac, najvise)` — bira linkove sa pregledne
+  stranice (čisti `#` i završnu `/`, izbacuje ponovljene, reže na 8);
+- `periodIzUrla(url)` — `/angebote/2026-08-03` → `"Angebote ab 03.08.2026"`, što
+  `procitajPeriod` već zna pročitati; koristi se SAMO ako podstranica nema
+  naslov s datumom;
+- ⚠️ svaka podstranica ima SVOJ try/catch — jedna loša NE SMIJE oboriti lanac
+  (to je tačno onaj kvar zbog kojeg je Aldi Nord nestao sa sajta);
+- pregledna stranica NAMJERNO nema catch → greška izlazi i `withRetry` ponavlja.
+
+Robots.txt Aldi Süda dozvoljava (`Disallow` je samo `/tools` i `/*?q=`).
+U logu se vidi `[podstranica] /angebote/2026-08-03: N kartica`.
 
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.
