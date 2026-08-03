@@ -468,6 +468,38 @@ koji i dalje sadrži „(+kodnas.de)" — ne krijemo se).
 („Ab Montag, 3. August (38)") → `najvecaStrana()` čita `?page=N` i obiđe ih do 6.
 Njihov robots.txt to izričito dozvoljava (`Allow: /*?page=*`).
 
+**TREĆI KRUG — PRAVI uzrok: CIJENA, ne stranica i ne UA.** Podstranice su
+proradile i log je pokazao 478 kartica:
+```
+[podstranice] Aldi Süd: 8 za obići
+[podstranica] /angebote/2026-07-31: 126 kartica (3 strane)
+[podstranica] /angebote/2026-08-07: 146 kartica (4 strane)  … itd
+[slike] Aldi Süd: 15 artikala   ← od 478!
+```
+Kartice su se ČITALE, ali im je `np` bio prazan pa ih je `toOffer` bacao.
+Selektor `ins.base-price__discounted` postoji SAMO kod sniženih artikala.
+
+Izmjereno na živoj stranici (Claude in Chrome), simulacijom iste logike:
+
+| | stari selektor | novi |
+|---|---|---|
+| pregledna (52 kartice) | 15 | **52** |
+| /angebote/2026-08-07 (30) | **0** | **30** |
+
+Rješenje: `newPrice: 'ins.base-price__discounted, span.base-price__regular'`.
+
+⚠️ NAZIV VARA: `base-price__regular` NIJE stara cijena — to je TRENUTNA cijena
+u oba slučaja (kod sniženog daje „0,99 €²", isto što i `ins`), a stara je u
+`del`. Zato je svejedno koji selektor querySelector pogodi prvi. Provjereno
+VRIJEDNOSTIMA; provjera samo po postojanju elemenata daje lažnu uzbunu
+(`span.base-price__regular` je prvi u DOM-u kod svih 15 sniženih).
+
+Fusnote `¹`/`²` uz cijenu ne smetaju — `parsePrice("1,00 €¹")` = 1 (testirano).
+
+⚠️ POSLJEDICA: Aldi Süd skače sa 15 na ~400 artikala, ali VEĆINA je bez stare
+cijene (Aktionsartikel — alat, odjeća, baštenski program), pa idu kao „Angebot"
+bez procenta, kao REWE.
+
 ⚠️ POUKA ZA UBUDUĆE: kad lanac vraća SUMNJIVO MALO artikala (a ne 0), prvo
 uporedi broj kartica u pravom browseru sa onim što dobija bot. Ako se razlikuje
 — to je User-Agent, ne selektor.

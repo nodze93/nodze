@@ -95,7 +95,21 @@ const RETAILERS: RetailerDef[] = [
     offersUrl: 'https://www.aldi-sued.de/de/angebote.html',
     tile: 'div.product-tile',
     nameSel: '.product-tile__name',
-    newPrice: 'ins.base-price__discounted',
+    // ⚠️ DVA SELEKTORA, ne jedan. Izmjereno u browseru na živoj stranici
+    // (03.08.2026, 52 kartice):
+    //   • 37 kartica ima SAMO `span.base-price__regular`  (nema sniženja)
+    //   • 15 kartica ima I `ins.base-price__discounted`   (ima sniženje)
+    //   • 0 kartica ima samo `ins`
+    // Ranije je stajao samo `ins`, pa je od 52 kartice prolazilo 15 — a kad
+    // su podstranice dovele 478 kartica, opet 15: kartice su se ČITALE, ali
+    // im je cijena bila prazna pa ih je `toOffer` bacao.
+    //
+    // NAZIV VARA: `base-price__regular` NIJE „stara cijena". To je TRENUTNA
+    // cijena u oba slučaja — kod sniženog artikla daje „0,99 €²", isto što i
+    // `ins`, dok stara („1,11 €") stoji u `del`. Zato je svejedno koji od
+    // dva selektora querySelector pogodi prvi; vrijednost je ista.
+    // (Provjereno vrijednostima, ne samo postojanjem elemenata.)
+    newPrice: 'ins.base-price__discounted, span.base-price__regular',
     oldPrice: 'del',
     scope: 'aldi-sued',
     dotDecimal: false,
