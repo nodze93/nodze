@@ -374,12 +374,51 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
 - **JSON IMPORTER** (`app/admin/akcije/page.tsx` + `api/admin/akcije/route.ts`): lijepljenje ili **upload `.json`**. Prima `productName/store/newPrice/oldPrice/category/imageUrl/validFrom/validTo/plz/offerId/offerUrl`. Za marktguru: **slike agregatora (marktguru/kaufda/bonial) se NAMJERNO preskaču** (`cleanImageUrl`) — za slike se oslanjamo SAMO na OFF (pravni razlog). `offerId→external_id`, `offerUrl→source_url`.
 - marktguru: API traži POJAM PRETRAGE (nije bulk feed) + pravni rizik (§87b) → NIJE dobar besplatan izvor; koristi se samo ručni JSON uvoz ako korisnik želi.
 
-### INSTALL PROMPT — sada na SVAKOJ stranici
+### INSTALL PROMPT — nudi se tek nakon 25 s (03.08.2026)
+Ranije je baner iskakao **2,2 s** nakon učitavanja, dakle svakome ko je samo
+proletio kroz stranicu. Sada se nudi tek onome ko provede **25 sekundi** na
+sajtu (`PRAG_MS` u `components/InstallPrompt.tsx`).
+
+⚠️ Broji se SAMO vrijeme dok je kartica VIDLJIVA (`document.visibilityState`,
+interval od 1 s). Običan `setTimeout(…, 25000)` bi otkucao i kad neko otvori
+sajt u pozadinskoj kartici pa ode na sat — a to nije 25 s pažnje.
+
+Gate stoji u `maybeShow()` (`spremanRef`), pa ga poštuju SVI okidači, uključujući
+`beforeinstallprompt` (koji se i dalje hvata i pamti — samo se ne prikazuje odmah).
+**Izuzetak:** dovršen račun u kalkulatoru odmah otključa baner — jači je signal
+od vremena. Ukloniti `spremanRef.current = true` u `onMsg` ako se to ne želi.
+
+⚠️ OČEKIVANJE: ovo će SMANJITI broj ljudi koji vide baner (a povećati udio
+zainteresovanih). Nije popravka ničega — brojač nije bio pokvaren.
+
+### INSTALL PROMPT — tekst (03.08.2026)
+JEDAN tekst za cijeli sajt, konstante `NASLOV` i `TEKST` u `InstallPrompt.tsx`:
+
+> **Instaliraj kodnas.de** — Akcije, kalkulator i vodiči kao aplikacija — brzo, bez browsera.
+
+Probane su bile varijante po stranici („Dodaj akcije na svoj ekran" na /akcije
+itd.), ali je odluka korisnika: jednostavno i svugdje isto. NE vraćati bez
+dogovora.
+
+⚠️ NAMJERNO se NIGDJE ne obećava rad BEZ INTERNETA — service worker ne kešira
+stranice, pa bi to bila neistina. Ne dodavati bez provjere.
+
+### INSTALL PROMPT — na SVAKOJ stranici
 - `components/InstallPrompt.tsx`: prije se palio SAMO na kalkulatoru (postMessage). Sada je u `app/layout.tsx` (root) i pali se na svakoj stranici ~2s nakon učitavanja (`maybeShow` + timer). Pamti "Kasnije" u `sessionStorage`. Uklonjen duplikat sa `app/brutto-netto/page.tsx`.
 
 ### ⏳ ČEKA KORISNIKA (ručno)
 1. **info@kodnas.de NE RADI još** → Namecheap → Manage kodnas.de → REDIRECT EMAIL → alias `info` → nodze93@gmail.com
-2. Pokrenuti **SQL za app_instalacije** tabelu (gore) → da brojač instalacija radi
+2. ~~Pokrenuti SQL za app_instalacije~~ **GOTOVO** — provjereno 03.08.2026 u
+   adminu: brojač radi i stoji na **17 instalacija**. Tabela postoji u Supabaseu
+   (nije u repou kao .sql fajl — napravljena ručno).
+   ⚠️ DVA OGRANIČENJA tog broja, da se ne čita pogrešno:
+   • `InstallPrompt.tsx` šalje POST BEZ tijela, pa je `platforma` uvijek
+     „unknown" — ne zna se Android/desktop.
+   • iPhone se UOPŠTE ne broji: Safari ne podržava `appinstalled` događaj.
+     Pravi broj instalacija je dakle VEĆI od prikazanog.
+   • `track-install` ruta gubi grešku: supabase-js `.insert()` ne baca izuzetak
+     nego vraća `{error}`, a kod ga ne gleda — ruta uvijek vrati `ok:true`.
+     Da tabela sutra nestane, brojač bi tiho stao bez ijedne greške.
 3. Provjeriti **Vercel → Usage** datum reseta ciklusa (CPU je bio ~81%)
 4. (opciono) cookie-baner za GA pristanak
 5. **AKCIJE — SQL** (`akcije.sql` + `akcije-trajni-sloj.sql`) POKRENUT; `DATABASE_URL` secret POSTAVLJEN; scraper radi, podaci u bazi (Aldi Süd/Nord/Kaufland). GOTOVO.

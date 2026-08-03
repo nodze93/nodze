@@ -11,9 +11,23 @@
 
 import { useEffect, useRef, useState } from "react";
 
+/**
+ * Tekst banera. NAMJERNO JEDAN ZA CIJELI SAJT — probali smo varijante po
+ * stranici (akcije/kalkulator/vodiči), ali odluka korisnika je da bude
+ * jednostavno i svugdje isto.
+ *
+ * NAMJERNO se NE obećava rad bez interneta — service worker ne kešira
+ * stranice, pa bi to bila neistina. Ne dodavati bez provjere.
+ */
+const NASLOV = "Instaliraj kodnas.de";
+const TEKST = "Akcije, kalkulator i vodiči kao aplikacija — brzo, bez browsera.";
+
 export default function InstallPrompt() {
   const deferredRef = useRef<any>(null);
   const dismissedRef = useRef(false);
+  // Baner se NE nudi odmah — tek kad korisnik provede dovoljno vremena na
+  // sajtu (vidi PRAG_MS). Dok je ovo false, nijedan okidač ne pokazuje baner.
+  const spremanRef = useRef(false);
   const [mode, setMode] = useState<null | "android" | "ios">(null);
 
   useEffect(() => {
@@ -21,6 +35,7 @@ export default function InstallPrompt() {
     // čim postane instalabilno (beforeinstallprompt) i kad kalkulator javi.
     function maybeShow() {
       if (dismissedRef.current) return;
+      if (!spremanRef.current) return; // još nije odstajao 25 s — ne dosađuj
       // Ne dosađuj: ako je app već instalirana ILI je baner zatvoren u zadnjih
       // 7 dana → ništa. (Instalirani korisnici tako ne dobijaju stalno „instaliraj".)
       try {
@@ -68,18 +83,44 @@ export default function InstallPrompt() {
     function onMsg(e: MessageEvent) {
       const d: any = e.data;
       if (!d || d.type !== "kodnas-calc-result") return;
+      // Izuzetak od pravila 25 s: ko je DOVRŠIO račun u kalkulatoru je
+      // dokazano zainteresovan — to je jači signal od pukog vremena, pa se
+      // baner nudi odmah. (Ako se ovo ne želi, obriši sljedeći red i
+      // kalkulator će čekati istih 25 s kao i ostatak sajta.)
+      spremanRef.current = true;
       maybeShow();
     }
 
-    // NA SVAKOJ STRANICI: pokaži baner ubrzo nakon učitavanja (ne samo na
-    // kalkulatoru). Kratki delay da se stranica slegne.
-    const timer = window.setTimeout(maybeShow, 2200);
+    // ============================================================
+    //  KOME SE NUDI INSTALACIJA
+    // ============================================================
+    //  Ranije: baner je iskakao 2,2 s nakon učitavanja — dakle svakome ko
+    //  je samo proletio kroz stranicu. To smeta i slabo konvertuje.
+    //  Sada: tek nakon 25 SEKUNDI provedenih na sajtu, jer se instalacija
+    //  nudi onome ko je stvarno zainteresovan.
+    //
+    //  ⚠️ Broji se SAMO vrijeme dok je kartica VIDLJIVA. Obični
+    //  `setTimeout(…, 25000)` bi otkucao i kad korisnik otvori sajt u
+    //  pozadinskoj kartici pa ode na sat vremena — a to nije 25 s pažnje.
+    const PRAG_MS = 25_000;
+    let provedeno = 0;
+    let zadnjiTik = Date.now();
+    const timer = window.setInterval(() => {
+      const sada = Date.now();
+      if (document.visibilityState === "visible") provedeno += sada - zadnjiTik;
+      zadnjiTik = sada;
+      if (provedeno >= PRAG_MS) {
+        window.clearInterval(timer);
+        spremanRef.current = true;
+        maybeShow();
+      }
+    }, 1000);
 
     window.addEventListener("beforeinstallprompt", onBIP);
     window.addEventListener("appinstalled", onInstalled);
     window.addEventListener("message", onMsg);
     return () => {
-      window.clearTimeout(timer);
+      window.clearInterval(timer);
       window.removeEventListener("beforeinstallprompt", onBIP);
       window.removeEventListener("appinstalled", onInstalled);
       window.removeEventListener("message", onMsg);
@@ -126,8 +167,8 @@ export default function InstallPrompt() {
       <div className="ipb-top">
         <span className="ipb-ico"><i /><i /><i /><i /></span>
         <span className="ipb-tx">
-          <b>Instaliraj kodnas.de</b>
-          <span>Kalkulator, vijesti i vodiči kao aplikacija — brzo, bez browsera.</span>
+          <b>{NASLOV}</b>
+          <span>{TEKST}</span>
         </span>
       </div>
 
