@@ -28,21 +28,56 @@
  * =====================================================================
  */
 import { config } from '../config.js';
-import { cleanProductName, normalizeCategory } from '../normalize.js';
+import { cleanProductName } from '../normalize.js';
 import type { ScrapedOffer, ScrapedStore, Source } from '../types.js';
 import { NACIONALNI_PLZ } from './retailers.js';
 
 const BASE = 'https://www.fressnapf.de';
 
-/** Sale kategorije — server-rendered, 48 artikala po stranici. */
-const LISTE = [
-  '/aktionen-angebote/summer-sale/',
-  '/c/hund/sale/',
-  '/c/katze/sale/',
-  '/c/kleintier/sale/',
-  '/c/vogel/sale/',
-  '/c/fisch/sale/',
+/**
+ * Sale liste — server-rendered, 48 artikala po stranici.
+ *
+ * Svaka nosi i KATEGORIJU: sama putanja kaže koja je životinja, što je
+ * pouzdanije od pogađanja iz naziva („Royal Canin" ne kaže je li za psa
+ * ili mačku). `summer-sale` je mješovit, pa tamo kategorija ostaje prazna
+ * i pogađa je `kategorijaFressnapf` iz naziva.
+ */
+const LISTE: Array<{ putanja: string; kategorija: string | null }> = [
+  { putanja: '/aktionen-angebote/summer-sale/', kategorija: null },
+  { putanja: '/c/hund/sale/', kategorija: 'Hund' },
+  { putanja: '/c/katze/sale/', kategorija: 'Katze' },
+  { putanja: '/c/kleintier/sale/', kategorija: 'Kleintier' },
+  { putanja: '/c/vogel/sale/', kategorija: 'Vogel' },
+  { putanja: '/c/fisch/sale/', kategorija: 'Fisch & Aquarium' },
 ];
+
+/**
+ * Grupe po ŽIVOTINJI — isti pristup kao `kategorijaObi`: Fressnapf ne spada
+ * u namirnice, pa mu jedna kategorija „Tierbedarf" ništa ne govori. Ovako
+ * korisnik filtrira po tome što stvarno traži (pas, mačka, akvarij).
+ *
+ * Koristi se SAMO kad lista ne kaže kategoriju (summer-sale).
+ */
+const FRESSNAPF_GRUPE: Array<[RegExp, string]> = [
+  [/\bhund|dog\b|welpen|leine|halsband|maulkorb|hundebett|hundefutter|kausnack|kauknochen/i, 'Hund'],
+  [/\bkatze|katzen|cat\b|kitten|kratzbaum|katzenstreu|katzenfutter|katzentoilette/i, 'Katze'],
+  [/nager|kaninchen|meerschwein|hamster|kleintier|heu\b|streu\b/i, 'Kleintier'],
+  [/vogel|voegel|vögel|wellensittich|kanarien|papagei|volier/i, 'Vogel'],
+  [/aquarium|aquaristik|\bfisch|teich|filter\b|garnelen/i, 'Fisch & Aquarium'],
+  [/terrarium|reptil|schildkr/i, 'Terraristik'],
+];
+
+/**
+ * Kategorija artikla. Prednost ima ono što kaže LISTA (pouzdano), a naziv
+ * je rezerva. Kad ništa ne pogodi — 'Tierbedarf', kao što OBI ima 'Baumarkt'.
+ */
+export function kategorijaFressnapf(naziv: string, izListe: string | null): string {
+  if (izListe) return izListe;
+  for (const [obrazac, grupa] of FRESSNAPF_GRUPE) {
+    if (obrazac.test(naziv)) return grupa;
+  }
+  return 'Tierbedarf';
+}
 
 /** priceValidUntil kad artikal NIJE na akciji. */
 const SENTINEL = '9999';
@@ -150,27 +185,32 @@ export class FressnapfSource implements Source {
     if (this.kes) return this.kes;
 
     // 1) skupi linkove na artikle sa sale listinga
-    const putanje = new Set<string>();
+    // putanja artikla → kategorija liste na kojoj je nađen (prva pobjeđuje;
+    // `summer-sale` je namjerno prvi pa ga kasnije liste "prepišu" pravom
+    // životinjom ako se artikal pojavi i tamo).
+    const putanje = new Map<string, string | null>();
     for (const lista of LISTE) {
-      const h = await html(lista);
+      const h = await html(lista.putanja);
       if (!h) {
-        console.log(`    [fressnapf] ${lista} nije odgovorio`);
+        console.log(`    [fressnapf] ${lista.putanja} nije odgovorio`);
         await pauza(PAUZA_MS);
         continue;
       }
       let nadjeno = 0;
       for (const m of h.matchAll(/href="(\/p\/[^"?#]+)"/g)) {
         const p = m[1];
-        if (p && !putanje.has(p)) {
-          putanje.add(p);
-          nadjeno += 1;
+        if (!p) continue;
+        const postojeca = putanje.get(p);
+        if (postojeca === undefined || (postojeca === null && lista.kategorija)) {
+          putanje.set(p, lista.kategorija);
+          if (postojeca === undefined) nadjeno += 1;
         }
       }
-      console.log(`    [fressnapf] ${lista}: ${nadjeno} artikala`);
+      console.log(`    [fressnapf] ${lista.putanja}: ${nadjeno} artikala`);
       await pauza(PAUZA_MS);
     }
 
-    const zaProvjeru = [...putanje].slice(0, MAX_ARTIKALA);
+    const zaProvjeru = [...putanje.keys()].slice(0, MAX_ARTIKALA);
     console.log(`    [fressnapf] ${putanje.size} nađeno, provjeravam ${zaProvjeru.length}`);
 
     // 2) svaki artikal: cijena + rok iz Offer scheme (jedan zahtjev po artiklu)
@@ -208,7 +248,7 @@ export class FressnapfSource implements Source {
           productName: naziv,
           newPrice: Math.round(cijena * 100) / 100,
           oldPrice: staraIzProcenta(cijena, pct ? Number(pct) : null),
-          category: normalizeCategory('Tierbedarf', naziv),
+          category: kategorijaFressnapf(naziv, putanje.get(r.putanja) ?? null),
           imageUrl: slikaIzHtml(r.h, id),
           validFrom: null, // Fressnapf ne objavljuje početak, samo rok
           validTo,

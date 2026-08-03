@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { idIzPutanje, offerIzHtml, slikaIzHtml, staraIzProcenta } from './fressnapf.js';
+import { idIzPutanje, kategorijaFressnapf, offerIzHtml, slikaIzHtml, staraIzProcenta } from './fressnapf.js';
 
 test('Offer blok: cijena i rok', () => {
   const h = `<script type="application/ld+json">
@@ -64,4 +64,23 @@ test('slika: rezerva po ID-u kad schema.org nema image', () => {
 test('NIKAD og:image — kod Fressnapfa je to generički logo', () => {
   const h = `<meta property="og:image" content="https://www.fressnapf.de/img/og-fressnapf.jpg">`;
   assert.equal(slikaIzHtml(h, '1110837'), null, 'og:image se ne smije uzeti');
+});
+
+test('kategorija: LISTA ima prednost nad nazivom', () => {
+  // "Royal Canin" sam po sebi ne kaže je li za psa ili mačku — zato lista.
+  assert.equal(kategorijaFressnapf('Royal Canin Adult', 'Katze'), 'Katze');
+  assert.equal(kategorijaFressnapf('Royal Canin Adult', 'Hund'), 'Hund');
+});
+
+test('kategorija: bez liste (summer-sale) pogađa se iz naziva', () => {
+  assert.equal(kategorijaFressnapf('Trixie Hundeleine 2 m', null), 'Hund');
+  assert.equal(kategorijaFressnapf('Kratzbaum Alpine XL', null), 'Katze');
+  assert.equal(kategorijaFressnapf('Aquarium Filter 200 l', null), 'Fisch & Aquarium');
+  assert.equal(kategorijaFressnapf('Wellensittich Futter 1 kg', null), 'Vogel');
+  assert.equal(kategorijaFressnapf('Kaninchen Heu 5 kg', null), 'Kleintier');
+  assert.equal(kategorijaFressnapf('Terrarium Lampe', null), 'Terraristik');
+});
+
+test('kategorija: ništa ne pogodi → Tierbedarf (kao OBI → Baumarkt)', () => {
+  assert.equal(kategorijaFressnapf('Irgendwas XY-123', null), 'Tierbedarf');
 });

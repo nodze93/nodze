@@ -87,6 +87,7 @@ export async function GET(req: Request) {
     const totalIzBaze = rows.length > 0 ? Number(rows[0].total_count) : 0;
 
     const svi = rows.map(({ total_count: _drop, ...item }) => item);
+
     const items = bezDuplikata(vaziDanas(svi, danasBerlin()));
     // Umanji i ukupan broj za izbačene (inače bi pisalo "72 artikala", a vidjelo
     // bi se 60). Tačno je dok sve stane u jednu stranicu (limit 300 > broj ponuda).
