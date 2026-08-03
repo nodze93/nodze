@@ -451,8 +451,52 @@ Ti linkovi stoje u meniju pregledne stranice, pa se mogu pročitati iz nje.
   (to je tačno onaj kvar zbog kojeg je Aldi Nord nestao sa sajta);
 - pregledna stranica NAMJERNO nema catch → greška izlazi i `withRetry` ponavlja.
 
+**DRUGI KRUG (isti dan) — podstranice nisu ni pokušane.** Prvi popravak nije
+pomogao: i dalje 15. Uzrok nađen mjerenjem u PRAVOM browseru (Claude in Chrome):
+
+| | `div.product-tile` | linkova na podstranice |
+|---|---|---|
+| pravi Chrome | **52** | **9** |
+| naš `kodnas-bot` UA | 15 | **0** |
+
+Aldi Süd pod poštenim bot-UA renderuje stranicu SAMO DJELIMIČNO — pa je izostao
+i meni s linkovima, zato podstranice nisu ni pokušane. **Isti slučaj kao OBI.**
+Riješeno poljem `browserUa: true` u defu (koristi `config.browserUserAgent`,
+koji i dalje sadrži „(+kodnas.de)" — ne krijemo se).
+
+**+ PAGINACIJA**: podstranica ima 30 artikala po strani, a dan zna imati 38
+(„Ab Montag, 3. August (38)") → `najvecaStrana()` čita `?page=N` i obiđe ih do 6.
+Njihov robots.txt to izričito dozvoljava (`Allow: /*?page=*`).
+
+⚠️ POUKA ZA UBUDUĆE: kad lanac vraća SUMNJIVO MALO artikala (a ne 0), prvo
+uporedi broj kartica u pravom browseru sa onim što dobija bot. Ako se razlikuje
+— to je User-Agent, ne selektor.
+
 Robots.txt Aldi Süda dozvoljava (`Disallow` je samo `/tools` i `/*?q=`).
 U logu se vidi `[podstranica] /angebote/2026-08-03: N kartica`.
+
+### REFERENTNA CIJENA — 30-dnevni minimum (§11 PAngV)
+Za namirnice NE postoji javna baza UVP-a, i ne treba nam: od 28.05.2022. njemački
+§11 PAngV traži da uz popust stoji **najniža cijena KOJU JE TAJ ISTI TRGOVAC imao
+u zadnjih 30 dana**, a EuGH je dodao da se i procenat mora računati iz nje.
+
+⚠️ **Cijene se NE MIJEŠAJU između lanaca.** Aldijeva referentna cijena dolazi iz
+Aldija, REWE-ova iz REWE-a. Ključ za bilo kakav budući obračun mora biti
+`store_id + product_key`, NIKAD samo naziv artikla.
+
+`old_price` koji već upisujemo je precrtana cijena koju lanac sam objavljuje —
+dakle po zakonu bi to već trebala biti ta 30-dnevna najniža. Mi smo prenosilac.
+(Izuzetak koji treba imati na umu: OBI često prikazuje UVP, ne 30-dnevni minimum.)
+
+**Zadržavanje snimaka podignuto 14 → 31 dan** (2026-08-03), na dva mjesta koja
+moraju ostati usklađena:
+- `scraper/src/config.ts` → `keepDays` default 31
+- `.github/workflows/akcije-scraper.yml` → `SCRAPER_KEEP_DAYS: "31"`
+Time imamo pun mjesec vlastite historije i možemo sami računati „najniža cijena
+koju smo vidjeli za ovaj artikal kod ovog lanca" — bez ijednog tuđeg servisa.
+Trošak je zanemariv (~800 redova dnevno ≈ 25k ukupno).
+
+**NIJE JOŠ NAPRAVLJENO**: sam obračun/prikaz tog minimuma. Dogovoriti prije diranja.
 
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.

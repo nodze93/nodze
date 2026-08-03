@@ -87,7 +87,7 @@ jobs:
           SCRAPER_CONCURRENCY: "1"
           SCRAPER_DELAY_MS: "2500"
           SCRAPER_RESPECT_ROBOTS: "true"
-          SCRAPER_KEEP_DAYS: "14"
+          SCRAPER_KEEP_DAYS: "31"
         run: |
           ARGS="--source=retailers"
           if [ -n "${{ github.event.inputs.plz }}" ]; then

@@ -61,6 +61,16 @@ interface RetailerDef {
   podstranice?: RegExp;
   /** Gornja granica obilazaka — da run ne eksplodira ako lanac doda 40 linkova. */
   maxPodstranica?: number;
+  /**
+   * Čitaj sa Chrome User-Agentom umjesto našeg `kodnas-bot` (vidi config).
+   *
+   * Aldi Süd pod poštenim bot-UA renderuje stranicu SAMO DJELIMIČNO: u pravom
+   * browseru ima 52 kartice i 9 linkova na podstranice, a bot je dobijao 15
+   * kartica i 0 linkova — zato podstranice nisu ni pokušane. Isti slučaj je
+   * ranije bio kod OBI-ja. `config.browserUserAgent` i dalje sadrži
+   * "(+kodnas.de)", pa se ne krijemo — samo ne dobijamo osakaćenu stranicu.
+   */
+  browserUa?: boolean;
 }
 
 /**
@@ -96,6 +106,7 @@ const RETAILERS: RetailerDef[] = [
     podstranice:
       /^https:\/\/www\.aldi-sued\.de\/(angebote\/\d{4}-\d{2}-\d{2}|produkte\/wochenangebote\/k\/\d+)$/,
     maxPodstranica: 8,
+    browserUa: true, // bez ovoga stranica dođe osakaćena — vidi opis gore
   },
   {
     name: 'Aldi Nord',
@@ -163,6 +174,25 @@ export function periodIzUrla(url: string): string {
   const m = url.match(/\/(\d{4})-(\d{2})-(\d{2})(?:$|[/?#])/);
   if (!m) return '';
   return `Angebote ab ${m[3]}.${m[2]}.${m[1]}`;
+}
+
+/** Najveći `?page=N` među linkovima — koliko strana paginacija ima. */
+export function najvecaStrana(hrefs: string[], najvise = 6): number {
+  let max = 1;
+  for (const h of hrefs) {
+    const m = h.match(/[?&]page=(\d+)/);
+    const n = m ? Number(m[1]) : 0;
+    if (Number.isFinite(n) && n > max) max = n;
+  }
+  return Math.min(max, najvise);
+}
+
+/** Pročitaj iz otvorene stranice koliko strana ima paginacija. */
+async function zadnjaStrana(page: Page): Promise<number> {
+  const hrefs = (await page.evaluate(() =>
+    Array.from(document.querySelectorAll('a[href]')).map((a) => (a as HTMLAnchorElement).href),
+  )) as string[];
+  return najvecaStrana(hrefs);
 }
 
 export class RetailersSource implements Source {
@@ -324,7 +354,7 @@ export class RetailersSource implements Source {
     //    `withRetry` u index.ts ponavlja — tako i treba.
     const raw: RawTile[] = [];
     let linkovi: string[] = [];
-    const page = await this.open(store.url);
+    const page = await this.open(store.url, def.browserUa === true);
     try {
       raw.push(...(await this.citajStranicu(page, def)));
 
@@ -359,13 +389,31 @@ export class RetailersSource implements Source {
         continue;
       }
       await pauza(config.delayMs);
-      const pod = await this.open(link);
+      const pod = await this.open(link, def.browserUa === true);
+      // Podstranica zna biti bez naslova s datumom — tada datum iz URL-a.
+      const zadano = periodIzUrla(link);
+      let ukupno = 0;
       try {
         const dio = await this.citajStranicu(pod, def);
-        // Podstranica zna biti bez naslova s datumom — tada datum iz URL-a.
-        const zadano = periodIzUrla(link);
+        ukupno += dio.length;
         for (const r of dio) raw.push(r.period ? r : { ...r, period: zadano });
-        console.log(`    [podstranica] ${u.pathname}: ${dio.length} kartica`);
+
+        // PAGINACIJA: Aldi Süd na jednu stranu stavi 30 artikala, a dan zna
+        // imati 38+ ("Ab Montag, 3. August (38)") — ostatak je na ?page=2.
+        // Njihov robots.txt to izričito dozvoljava (`Allow: /*?page=*`).
+        const zadnja = await zadnjaStrana(pod);
+        for (let n = 2; n <= zadnja; n += 1) {
+          await pauza(config.delayMs);
+          const sljedeca = await this.open(`${link}?page=${n}`, def.browserUa === true);
+          try {
+            const dioN = await this.citajStranicu(sljedeca, def);
+            ukupno += dioN.length;
+            for (const r of dioN) raw.push(r.period ? r : { ...r, period: zadano });
+          } finally {
+            await sljedeca.close();
+          }
+        }
+        console.log(`    [podstranica] ${u.pathname}: ${ukupno} kartica${zadnja > 1 ? ` (${zadnja} strane)` : ''}`);
       } catch (error) {
         const poruka = error instanceof Error ? error.message : String(error);
         console.log(`    [podstranica] ${u.pathname}: PALA — ${poruka.slice(0, 80)}`);
@@ -441,9 +489,10 @@ export class RetailersSource implements Source {
     return this.context;
   }
 
-  private async open(url: string): Promise<Page> {
-    const ctx = await this.ensureBrowser();
-    const page = await ctx.newPage();
+  private async open(url: string, browserUa = false): Promise<Page> {
+    const page = browserUa
+      ? await this.novaStranica({ browserUa: true })
+      : await (await this.ensureBrowser()).newPage();
     try {
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: config.timeoutMs });
       await dismissCookieBanner(page);

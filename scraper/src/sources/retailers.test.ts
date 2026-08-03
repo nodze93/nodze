@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { procitajPeriod } from '../datumi.js';
 import { parsePrice } from '../normalize.js';
-import { normPriceText, periodIzUrla, podstraniceIzLinkova } from './retailers.js';
+import { najvecaStrana, normPriceText, periodIzUrla, podstraniceIzLinkova } from './retailers.js';
 
 // Kaufland cijene dolaze kao "1.99" (tačka = decimalni zarez). Bez pretvaranja
 // parsePrice bi tačku shvatio kao hiljade i "1.99" pročitao kao 1 (ili slično).
@@ -93,4 +93,21 @@ test('period iz URL-a se STVARNO pročita u validFrom/validTo', () => {
     new Date(Date.UTC(2026, 7, 3)),
   );
   assert.deepEqual(p, { validFrom: '2026-08-03', validTo: '2026-08-08' });
+});
+
+test('paginacija: najveći ?page=N, ali s gornjom granicom', () => {
+  // Aldi Süd stavi 30 artikala po strani; "Ab Montag (38)" ima 2 strane.
+  assert.equal(
+    najvecaStrana([
+      'https://www.aldi-sued.de/angebote/2026-08-03',
+      'https://www.aldi-sued.de/angebote/2026-08-03?page=2',
+    ]),
+    2,
+  );
+  // bez paginacije → jedna strana
+  assert.equal(najvecaStrana(['https://www.aldi-sued.de/angebote/2026-08-03']), 1);
+  // ludo velik broj se reže na granicu (ne obilazimo 200 strana)
+  assert.equal(najvecaStrana(['https://x.de/a?page=200'], 6), 6);
+  // smeće se ignoriše
+  assert.equal(najvecaStrana(['https://x.de/a?page=abc', 'https://x.de/b']), 1);
 });

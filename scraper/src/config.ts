@@ -36,7 +36,10 @@ export function parseArgs(argv: string[]): Args {
     source,
     plz: plzArg ? plzArg.split(',').map((p) => p.trim()).filter(Boolean) : null,
     dryRun: has('dry-run'),
-    keepDays: Number(get('keep-days') ?? process.env.SCRAPER_KEEP_DAYS ?? 14),
+    // 31 dan, ne 14: §11 PAngV traži najnižu cijenu ISTOG trgovca u zadnjih
+    // 30 dana. Bez pune 31 snimke ne možemo sami izračunati je li popust
+    // stvaran. Cijena čuvanja je zanemariva (~800 redova dnevno ≈ 25k ukupno).
+    keepDays: Number(get('keep-days') ?? process.env.SCRAPER_KEEP_DAYS ?? 31),
   };
 }
 
