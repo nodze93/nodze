@@ -10,43 +10,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// Redoslijed po učestalosti korištenja (odluka korisnika, 3.8.2026):
+// navika (akcije = početna) · alat (kalkulator) · pomoć (vodiči).
+// Vijesti su namjerno VAN trake — gase se; naslovna vijesti postoji
+// još samo preko loga dok se ne ugasi skroz.
 const TABS = [
   {
-    href: "/",
-    label: "Vijesti",
-    match: (p: string) =>
-      p === "/" ||
-      p.startsWith("/vijesti") ||
-      p.startsWith("/clanak") ||
-      p.startsWith("/kategorija") ||
-      p.startsWith("/de"),
+    href: "/akcije",
+    label: "Početna",
+    match: (p: string) => p.startsWith("/akcije"),
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 10.5 12 3l9 7.5" />
         <path d="M5 9.5V21h14V9.5" />
-      </svg>
-    ),
-  },
-  {
-    href: "/akcije",
-    label: "Akcije",
-    match: (p: string) => p.startsWith("/akcije"),
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 6h2.2l2.1 10.4a1.6 1.6 0 0 0 1.6 1.3h8.3a1.6 1.6 0 0 0 1.6-1.3L20.5 9H6" />
-        <circle cx="9.5" cy="20.5" r="1.2" fill="currentColor" stroke="none" />
-        <circle cx="17" cy="20.5" r="1.2" fill="currentColor" stroke="none" />
-      </svg>
-    ),
-  },
-  {
-    href: "/vodici",
-    label: "Vodiči",
-    match: (p: string) => p.startsWith("/vodic"),
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
-        <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20" />
       </svg>
     ),
   },
@@ -61,6 +37,17 @@ const TABS = [
         <path d="M8 10.5h2M12 10.5h2M16 10.5h.01" />
         <path d="M8 14h2M12 14h2M16 14h.01" />
         <path d="M8 17.5h2M12 17.5h4" />
+      </svg>
+    ),
+  },
+  {
+    href: "/vodici",
+    label: "Vodiči",
+    match: (p: string) => p.startsWith("/vodic"),
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
+        <path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20" />
       </svg>
     ),
   },

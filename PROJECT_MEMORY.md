@@ -608,6 +608,35 @@ Dekodira se u JEDNOM prolazu (replacer funkcija), NE lančano — inače bi
 „&amp;lt;" postalo „<" umjesto „&lt;". Nepoznat entitet ostaje netaknut.
 Stari redovi u bazi se poprave sami sljedećim runom (snapshot se prepisuje).
 
+### DISKAUFEN — samostalna njemačka app (osvježeno 03.08.2026)
+Rebrend akcija kao poseban proizvod. **Ime: diskaufen, domena diskaufen.com**
+(ranije radno ime Angebote24 — zamijenjeno). Isporuka: `diskaufen.zip` (176
+fajlova). kodnas.de NIJE diran.
+
+Šta je ušlo pri osvježavanju (stari zip je bio PRIJE svega ovoga):
+- scraper: svih 8 lanaca (uklj. Fressnapf i Trinkgut), Aldi Süd podstranice +
+  paginacija + browserUa + novi selektor cijene, zaštita `prenesiZaostale`,
+  HTML entiteti, keepDays 31, plz.txt samo '00000'
+- frontend: dan-po-dan (`poSvjezini`/`najnovijaTura`/`turaOd`), „Prikaži još",
+  URL filteri, PLZ guard, `kategorijaNaziv`, novi CSS (srch, badge-novo)
+- admin JSON uvoz: dedup + `validTo` obavezan + rok max 60 dana
+- SQL: dodani `akcije-uvoz` u README redoslijed + `akcije-regije-2` + `akcije-fressnapf`
+- workflow: KEEP_DAYS 31, ime „diskaufen — täglicher Scraper"
+
+**Ispravljena curenja starog zipa** (bila su promakla): admin logo „kodnas.de",
+OG `siteName: 'kodnas.de'` + SITE fallback na detalju ponude, ime scraper
+paketa, UA `kodnas-bot`. Sada je identitet `diskaufen-bot/1.0
+(+kontakt: info@diskaufen.com)`, a SVE brend-stvari vuku iz `lib/brand.ts`
+(ime 'diskaufen', kratko 'DK', url diskaufen.com).
+
+**Ispravljeni zaostali bosanski tekstovi u njemačkom UI**: „X akcija" u traci
+prodavnica, „Preporuka ove sedmice", pola-pola rečenica u preporuci,
+„prodavnica" na glavnoj, „Pogledaj akcije" na Merkzettelu, „umjesto" u OG
+opisu (sad „statt"), „Alle aktuelne akcije".
+
+Admin NAMJERNO ostaje na bosanskom (za vlasnika). Komentari u kodu bosanski.
+Verifikovano: scraper 121/121 testova, tsc čist, `next build` 22 stranice.
+
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.
 - Korisnik radi Commit + Push čim se izmjena napravi (da se verzije ne razilaze).
