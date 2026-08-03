@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { formatPrice, mnozina, najnovijaTura } from '@/lib/akcije/format';
+import { formatPrice, mnozina, najnovijaTura, poSvjezini } from '@/lib/akcije/format';
 import { kategorijaNaziv } from '@/lib/akcije/kategorije';
 import { EMPTY_FILTERS, type Filters, type SortKey } from '@/lib/akcije/types';
 import { useFacets, useOffers } from '@/lib/akcije/useOffers';
@@ -117,13 +117,15 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
   const bestSaving = items.reduce((max, item) => Math.max(max, item.savings ?? 0), 0);
   const angebotCount = items.filter((item) => item.discount_percent === null).length;
 
-  // Najsvježija tura ponuda (za NOVO oznake); u topMode-u ta tura ide i NA
-  // POČETAK liste — klik na „Pogledaj sve" prvo pokaže današnje/najnovije
-  // jake popuste, pa tek onda starije koje još važe.
+  // Najsvježija tura ponuda — nosi NOVO oznake.
   const tura = najnovijaTura(items.filter((i) => i.discount_percent !== null));
-  const prikaz = topMode
-    ? [...items.filter((i) => i.valid_from === tura), ...items.filter((i) => i.valid_from !== tura)]
-    : items;
+  // U topMode-u lista ide DAN PO DAN: današnja tura gore, pa jučerašnja, pa
+  // prekjučerašnja — a unutar svakog dana po najvećem popustu. Ništa se ne
+  // izbacuje, samo se stariji dani guraju niže.
+  // (Ranije su bile samo DVIJE grupe: tura + sve ostalo pomiješano po
+  //  procentu, pa je ponuda od prošle sedmice s većim popustom skakala
+  //  iznad jučerašnje.)
+  const prikaz = topMode ? poSvjezini(items) : items;
 
   return (
     <>

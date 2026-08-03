@@ -36,6 +36,32 @@ export function najnovijaTura(items: Array<{ valid_from?: string | null }>): str
   return max;
 }
 
+/**
+ * Poredak PO SVJEŽINI: prvo najnoviji dan početka, unutar istog dana po
+ * najvećem popustu.
+ *
+ *   ── 04.08. (danas) ──  Kaffee −50% · Käse −40% · Butter −30%
+ *   ── 03.08. ──          Bier −55% · Chips −35%
+ *   ── 30.07. ──          Beamer −60%
+ *
+ * Namjerno: Beamer od −60% pada ISPOD Butera od −30% jer je stariji.
+ * Korisnik prvo vidi šta je novo, ne šta je najjeftinije — a stare ponude
+ * se ne gube nego samo idu niže, dan po dan.
+ *
+ * Ponude bez `valid_from` (Aldi „Dauerhaft", trajno niska cijena) nemaju
+ * dan pa idu na kraj — nisu ničija „nova tura".
+ */
+export function poSvjezini<T extends { valid_from?: string | null; discount_percent?: number | null }>(
+  items: T[],
+): T[] {
+  return [...items].sort((a, b) => {
+    const da = a.valid_from ?? '';
+    const db = b.valid_from ?? '';
+    if (da !== db) return db.localeCompare(da); // noviji dan gore
+    return (b.discount_percent ?? -1) - (a.discount_percent ?? -1); // veći popust gore
+  });
+}
+
 export const formatPrice = (value: number): string => euro.format(value);
 
 export const formatPercent = (value: number): string => `-${Math.round(value)}%`;

@@ -10,6 +10,7 @@
  *    LidlSource       Lidl                              (otvoreni Lidl Plus API)
  *    ReweSource       REWE                              (HTML BEZ JS-a)
  *    ObiSource        OBI                               (HTML SA JS-om + Nuxt payload)
+ *    FressnapfSource  Fressnapf                         (server HTML, bez browsera)
  *
  *  Ko gdje ide, odlučuje `listStores(plz)` svakog izvora:
  *  nacionalni lanci se javljaju samo za NACIONALNI_PLZ, regionalni za svoje
@@ -17,6 +18,7 @@
  * =====================================================================
  */
 import type { ScrapedOffer, ScrapedStore, Source } from '../types.js';
+import { FressnapfSource } from './fressnapf.js';
 import { LidlSource } from './lidl.js';
 import { ObiSource } from './obi.js';
 import { RetailersSource } from './retailers.js';
@@ -28,6 +30,7 @@ export class SviLanciSource implements Source {
   private readonly lidl: LidlSource;
   private readonly rewe: ReweSource;
   private readonly obi: ObiSource;
+  private readonly fressnapf: FressnapfSource;
 
   constructor(opts: { dryRun: boolean }) {
     this.retailers = new RetailersSource(opts);
@@ -41,6 +44,8 @@ export class SviLanciSource implements Source {
     // `browserUa` jer njihov keš sloj ne renderuje sadržaj za `kodnas-bot` UA
     // — prvi pokušaj je zato istekao na waitForSelector sa 0 artikala.
     this.obi = new ObiSource(() => this.retailers.novaStranica({ browserUa: true }));
+    // Fressnapf ne treba browser — sve je u server HTML-u.
+    this.fressnapf = new FressnapfSource();
   }
 
   async listStores(plz: string): Promise<ScrapedStore[]> {
@@ -49,6 +54,7 @@ export class SviLanciSource implements Source {
       this.lidl.listStores(plz),
       this.rewe.listStores(plz),
       this.obi.listStores(plz),
+      this.fressnapf.listStores(plz),
     ]);
     return grupe.flat();
   }
@@ -57,6 +63,7 @@ export class SviLanciSource implements Source {
     if (store.slug === 'lidl') return this.lidl.listOffers();
     if (store.slug === 'rewe') return this.rewe.listOffers();
     if (store.slug === 'obi') return this.obi.listOffers();
+    if (store.slug === 'fressnapf') return this.fressnapf.listOffers();
     return this.retailers.listOffers(store, plz);
   }
 

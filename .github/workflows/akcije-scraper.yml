@@ -73,7 +73,7 @@ jobs:
           key: akcije-slike-${{ github.run_id }}
           restore-keys: akcije-slike-
 
-      - name: Skupi ponude (Aldi ×2, Kaufland, Lidl, REWE)
+      - name: Skupi ponude (Aldi ×2, Kaufland, Lidl, REWE, OBI, Fressnapf)
         working-directory: scraper
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

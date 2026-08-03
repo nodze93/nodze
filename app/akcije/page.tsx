@@ -8,7 +8,7 @@ import PlzSheet from '@/components/akcije/PlzSheet';
 import Recommendation from '@/components/akcije/Recommendation';
 import StoreStrip from '@/components/akcije/StoreStrip';
 import { IconCart, IconChevron, IconStar } from '@/components/akcije/icons';
-import { formatPrice, mnozina, najnovijaTura } from '@/lib/akcije/format';
+import { formatPrice, mnozina, najnovijaTura, poSvjezini } from '@/lib/akcije/format';
 import type { Filters } from '@/lib/akcije/types';
 import { useFacets, useOffers } from '@/lib/akcije/useOffers';
 
@@ -37,13 +37,12 @@ export default function HomePage() {
   // Tura se računa SAMO među ponudama s procentom (želja korisnika: „svježe
   // ponude danas SA PROCENTOM") — inače bi REWE, koji nikad nema procent,
   // svojim današnjim datumom „pojeo" turu i vrh bi ostao star.
+  // Poredak je DAN PO DAN (`poSvjezini`): najnovija tura gore, pa jučerašnja,
+  // pa prekjučerašnja — unutar svakog dana po najvećem popustu. Isti poredak
+  // koristi i stranica iza „Pogledaj sve", da traka i lista budu dosljedne.
   const tura = najnovijaTura(items.filter((i) => i.discount_percent !== null));
-  const novoPrvo = (lista: typeof items) => [
-    ...lista.filter((i) => i.valid_from === tura),
-    ...lista.filter((i) => i.valid_from !== tura),
-  ];
-  const jakiPopust = novoPrvo(items.filter((i) => (i.discount_percent ?? 0) >= 30));
-  const top = (jakiPopust.length >= 8 ? jakiPopust : novoPrvo(items)).slice(0, 12);
+  const jakiPopust = poSvjezini(items.filter((i) => (i.discount_percent ?? 0) >= 30));
+  const top = (jakiPopust.length >= 8 ? jakiPopust : poSvjezini(items)).slice(0, 12);
   // Ispod: NAREDNE ponude koje NISU u "Top" (da se lista ne ponavlja).
   const topIds = new Set(top.map((t) => t.id));
   const rest = items.filter((i) => !topIds.has(i.id)).slice(0, 12);

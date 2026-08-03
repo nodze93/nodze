@@ -220,7 +220,7 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
   → `images:enrich` (Open Food Facts) ga popuni. Ide PRIJE enrich koraka u workflow-u.
 - ⚠️ Admin kolona „sa slikom %" broji samo da URL POSTOJI, ne da se otvara.
 
-### LANCI U SCRAPERU (6) — svi kroz `SCRAPER_SOURCE=retailers`
+### LANCI U SCRAPERU (7) — svi kroz `SCRAPER_SOURCE=retailers`
 | Lanac | Kako | Scope | Stara cijena |
 |---|---|---|---|
 | Aldi Süd / Aldi Nord | HTML (Playwright) | regionalno, 6 gradova | da |
@@ -228,6 +228,7 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
 | **Lidl** | otvoreni Lidl Plus API | **DE** | da |
 | **REWE** | HTML **BEZ JS-a** | **DE** | **ne** → sve „Angebot" |
 | **OBI** | HTML **SA JS-om** + Nuxt payload | **DE** | da (često UVP) |
+| **Fressnapf** | server HTML, BEZ browsera | **DE** | da (**IZVEDENA**) |
 
 ⚠️ REWE i OBI su suprotni slučajevi — lako se zamijene:
 - **REWE bez JS-a**: sadržaj je već u HTML-u; kad se skripta izvrši, pregazi
@@ -255,6 +256,12 @@ Ranije sesije: pwa · vodici · calc · datenshutzetc · appinstall · isoinstal
   ⚠️ Stara cijena je često **UVP** (preporuka proizvođača), ne ranija OBI cijena
   — popust nije isto što i „jeftinije nego prošle sedmice".
   Testovi: `scraper/src/sources/obi.test.ts`.
+- Fressnapf: sale kategorije → linkovi na artikle → 1 zahtjev po artiklu.
+  ⚠️ `priceValidUntil` je SENTINEL: `9999-12-31` znači „nije na akciji" → preskoči.
+  ⚠️ Stara cijena je **IZVEDENA** iz procenta (`cijena / (1 - pct/100)`), jer je
+  Fressnapf renderuje tek u browseru. Bez procenta → bez stare cijene.
+  Slika se bira po ID-u artikla iz putanje (stranica ima 150+ slika).
+  Testovi: `scraper/src/sources/fressnapf.test.ts`.
 - Istraživanje zašto Netto/EDEKA/Penny/dm NE rade: `scraper/docs/*.md`
   (EDEKA `/api/offers` vraća 403 „haha! better luck next time").
 - Osnova preuzeta iz korisnikovog `prospekt-bot` (Python) i prevedena u TS da
