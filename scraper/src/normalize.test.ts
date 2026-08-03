@@ -47,3 +47,24 @@ test('sanitizeOffer - lazna stara cijena postaje null (Angebot)', () => {
   assert.equal(sanitizeOffer({ productName: null, oldPrice: null, newPrice: 1 }), null);
   assert.equal(sanitizeOffer({ productName: 'Butter', oldPrice: null, newPrice: null }), null);
 });
+
+// ---------------------------------------------------------------
+// HTML entiteti — pravi slučajevi sa sajta (Fressnapf kartice)
+// ---------------------------------------------------------------
+
+test('HTML entiteti u nazivu se dekodiraju', () => {
+  assert.equal(cleanProductName('DOG&#39;S LOVE Adult Lamm 12 kg'), "DOG'S LOVE Adult Lamm 12 kg");
+  assert.equal(cleanProductName('N&amp;D Farmina Adult Weight'), 'N&D Farmina Adult Weight');
+  assert.equal(cleanProductName('Adult Maxi &gt;25kg mit Huhn'), 'Adult Maxi >25kg mit Huhn');
+  assert.equal(cleanProductName('Sma&#x00df;'), 'Smaß'); // heksadecimalni
+  assert.equal(cleanProductName('Caf&eacute; Crema'), 'Caf&eacute; Crema'); // nepoznat ostaje
+});
+
+test('NEMA dvostrukog dekodiranja ("&amp;lt;" nije "<")', () => {
+  // Jedan prolaz: &amp; → & , ali rezultat se NE dekodira ponovo.
+  assert.equal(cleanProductName('Test &amp;lt; kraj'), 'Test &lt; kraj');
+});
+
+test('entitet za razmak (&nbsp;) postaje običan razmak, ne dupli', () => {
+  assert.equal(cleanProductName('Royal&nbsp;Canin&nbsp; Adult'), 'Royal Canin Adult');
+});

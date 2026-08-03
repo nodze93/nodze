@@ -34,9 +34,48 @@ export function parsePrice(raw: string | null | undefined): number | null {
 }
 
 /** "  Rinderhackfleisch   500g\n(je kg 5,98)" -> "Rinderhackfleisch 500g" */
+/**
+ * =====================================================================
+ *  HTML ENTITETI \u2192 pravi znakovi
+ * =====================================================================
+ *  Izvori koje \u010ditamo REGEXOM iz sirovog HTML-a (Fressnapf, Trinkgut)
+ *  dobiju naziv onako kako stoji u kodu stranice, pa se na sajtu vidjelo:
+ *
+ *      DOG&#39;S LOVE Adult Lamm      umjesto  DOG'S LOVE Adult Lamm
+ *      N&amp;D Farmina                umjesto  N&D Farmina
+ *      Adult Maxi &gt;25kg            umjesto  Adult Maxi >25kg
+ *
+ *  Izvori koji idu kroz browser (`textContent`) ovo nemaju \u2014 tamo entitete
+ *  dekodira sam browser. Zato stoji OVDJE, u `cleanProductName`: jedno
+ *  mjesto kroz koje prolazi SVAKI naziv, iz svakog izvora i iz JSON uvoza.
+ *
+ *  Radi se u JEDNOM prolazu (replacer funkcija), ne lan\u010dano \u2014 ina\u010de bi
+ *  \u201e&amp;lt;" postalo \u201e<" umjesto \u201e&lt;" (dvostruko dekodiranje).
+ */
+const ENTITETI: Record<string, string> = {
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+  auml: '\u00e4', ouml: '\u00f6', uuml: '\u00fc', Auml: '\u00c4', Ouml: '\u00d6', Uuml: '\u00dc',
+  szlig: '\u00df', euro: '\u20ac', reg: '\u00ae', copy: '\u00a9', trade: '\u2122',
+  ndash: '\u2013', mdash: '\u2014', hellip: '\u2026', deg: '\u00b0',
+};
+
+export function dekodirajEntitete(raw: string): string {
+  return raw.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g, (cijeli, tijelo: string) => {
+    if (tijelo.startsWith('#x') || tijelo.startsWith('#X')) {
+      const broj = Number.parseInt(tijelo.slice(2), 16);
+      return Number.isFinite(broj) && broj > 0 ? String.fromCodePoint(broj) : cijeli;
+    }
+    if (tijelo.startsWith('#')) {
+      const broj = Number.parseInt(tijelo.slice(1), 10);
+      return Number.isFinite(broj) && broj > 0 ? String.fromCodePoint(broj) : cijeli;
+    }
+    return ENTITETI[tijelo] ?? cijeli; // nepoznat entitet ostaje kakav jeste
+  });
+}
+
 export function cleanProductName(raw: string | null | undefined): string | null {
   if (!raw) return null;
-  const name = String(raw)
+  const name = dekodirajEntitete(String(raw))
     .replace(/\u00a0/g, ' ')
     .replace(/\s+/g, ' ')
     .replace(/^(angebot|aktion|neu)[:\s-]+/i, '')
