@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { formatPrice, mnozina } from '@/lib/akcije/format';
+import { formatPrice, mnozina, najnovijaTura } from '@/lib/akcije/format';
 import { kategorijaNaziv } from '@/lib/akcije/kategorije';
 import { EMPTY_FILTERS, type Filters, type SortKey } from '@/lib/akcije/types';
 import { useFacets, useOffers } from '@/lib/akcije/useOffers';
@@ -116,6 +116,14 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
 
   const bestSaving = items.reduce((max, item) => Math.max(max, item.savings ?? 0), 0);
   const angebotCount = items.filter((item) => item.discount_percent === null).length;
+
+  // Najsvježija tura ponuda (za NOVO oznake); u topMode-u ta tura ide i NA
+  // POČETAK liste — klik na „Pogledaj sve" prvo pokaže današnje/najnovije
+  // jake popuste, pa tek onda starije koje još važe.
+  const tura = najnovijaTura(items.filter((i) => i.discount_percent !== null));
+  const prikaz = topMode
+    ? [...items.filter((i) => i.valid_from === tura), ...items.filter((i) => i.valid_from !== tura)]
+    : items;
 
   return (
     <>
@@ -233,8 +241,8 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
       ) : (
         <>
           <div className="grid" style={{ opacity: loading ? 0.55 : 1, transition: 'opacity .15s' }}>
-            {items.map((item) => (
-              <OfferCard key={item.id} item={item} hideStore={Boolean(storeSlug)} />
+            {prikaz.map((item) => (
+              <OfferCard key={item.id} item={item} hideStore={Boolean(storeSlug)} turaOd={tura} />
             ))}
           </div>
           {items.length < total ? (

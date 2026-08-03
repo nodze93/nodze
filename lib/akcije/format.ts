@@ -20,6 +20,22 @@ export function danasIso(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/**
+ * Najsvježija „tura" ponuda: najveći valid_from koji je ≤ danas.
+ * NOVO oznaka i vrh „Top ponuda" prate NJU, ne strogo današnji datum —
+ * pa ponedjeljkove ponude nose NOVO i u utorak/srijedu, sve dok ne
+ * stigne svježija tura (tačno kako je korisnik tražio).
+ */
+export function najnovijaTura(items: Array<{ valid_from?: string | null }>): string | null {
+  const danas = danasIso();
+  let max: string | null = null;
+  for (const item of items) {
+    const od = item.valid_from ?? null;
+    if (od && od <= danas && (!max || od > max)) max = od;
+  }
+  return max;
+}
+
 export const formatPrice = (value: number): string => euro.format(value);
 
 export const formatPercent = (value: number): string => `-${Math.round(value)}%`;

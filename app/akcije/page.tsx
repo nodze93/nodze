@@ -8,7 +8,7 @@ import PlzSheet from '@/components/akcije/PlzSheet';
 import Recommendation from '@/components/akcije/Recommendation';
 import StoreStrip from '@/components/akcije/StoreStrip';
 import { IconCart, IconChevron, IconStar } from '@/components/akcije/icons';
-import { danasIso, formatPrice, mnozina } from '@/lib/akcije/format';
+import { formatPrice, mnozina, najnovijaTura } from '@/lib/akcije/format';
 import type { Filters } from '@/lib/akcije/types';
 import { useFacets, useOffers } from '@/lib/akcije/useOffers';
 
@@ -30,12 +30,17 @@ export default function HomePage() {
 
   // "Top ponude danas" = najveći popusti. Prikaži one ≥30% (fallback: top 12
   // po popustu ako ih je malo taj dan) → traka je uvijek puna i stvarno "top".
-  // „NOVO" IDE PRVO: ponude koje POČINJU danas (valid_from = danas) na
-  // početak trake — ko svrati svaki dan, prvo vidi šta je od jutros novo.
-  const danas = danasIso();
+  // NAJSVJEŽIJA TURA IDE PRVA: tura = najnoviji valid_from ≤ danas u listi.
+  // Ponedjeljkova tura drži vrh (i NOVO oznake) i u utorak/srijedu — dok ne
+  // stigne svježija. Tako korisnik UVIJEK prvo vidi najnovije što postoji,
+  // a ne ponude stare sedmice samo zato što imaju veći procent.
+  // Tura se računa SAMO među ponudama s procentom (želja korisnika: „svježe
+  // ponude danas SA PROCENTOM") — inače bi REWE, koji nikad nema procent,
+  // svojim današnjim datumom „pojeo" turu i vrh bi ostao star.
+  const tura = najnovijaTura(items.filter((i) => i.discount_percent !== null));
   const novoPrvo = (lista: typeof items) => [
-    ...lista.filter((i) => i.valid_from === danas),
-    ...lista.filter((i) => i.valid_from !== danas),
+    ...lista.filter((i) => i.valid_from === tura),
+    ...lista.filter((i) => i.valid_from !== tura),
   ];
   const jakiPopust = novoPrvo(items.filter((i) => (i.discount_percent ?? 0) >= 30));
   const top = (jakiPopust.length >= 8 ? jakiPopust : novoPrvo(items)).slice(0, 12);
@@ -112,7 +117,7 @@ export default function HomePage() {
         ) : (
           <div className="rail">
             {top.map((item) => (
-              <OfferCard key={item.id} item={item} variant="rail" />
+              <OfferCard key={item.id} item={item} variant="rail" turaOd={tura} />
             ))}
           </div>
         )}
@@ -142,7 +147,7 @@ export default function HomePage() {
             </div>
             <div className="grid">
               {rest.map((item) => (
-                <OfferCard key={`all-${item.id}`} item={item} />
+                <OfferCard key={`all-${item.id}`} item={item} turaOd={tura} />
               ))}
             </div>
             <Link href="/akcije/ponude" className="btn btn-ghost" style={{ marginTop: 14 }}>

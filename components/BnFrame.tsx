@@ -39,12 +39,37 @@ export default function BnFrame() {
 
     const docW = Math.max(doc.documentElement.scrollWidth, doc.body.scrollWidth);
     if (docW < 50) return; // još se nije iscrtao
+    const scale = docW > w + 2 ? w / docW : 1;
 
-    if (docW > w + 2) {
-      const scale = w / docW;
+    // „ZBIJ PO VISINI" (želja korisnika): ako forma i uz punu širinu ne
+    // stane po visini, ubaci u kalkulator sažete razmake — manji naslov,
+    // bez podnaslova, tješnji razmaci — SAMO tada (na velikim ekranima se
+    // ništa ne mijenja). Fajl kalkulatora se i dalje NE dira; ovo je <style>
+    // ubačen izvana. Font inputa ostaje 16px (ispod toga iOS zumira fokus).
+    let visina = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
+    if (visina * scale > h + 2 && !doc.getElementById('kn-zbij')) {
+      const zbij = doc.createElement('style');
+      zbij.id = 'kn-zbij';
+      zbij.textContent = `
+        .bn-sub{display:none!important}
+        .bn-h1{font-size:22px!important}
+        .page-title{margin:2px 0 6px!important}
+        .page-title .menu-btn,.page-title .globe-btn{top:24px!important}
+        .stepper{padding-top:8px!important}
+        #page1{padding-top:10px!important;padding-bottom:84px!important}
+        .form-row{gap:7px 11px!important;margin-top:8px!important}
+        .form-group{gap:3px!important}
+        .input-wrap input{padding-top:7px!important;padding-bottom:7px!important}
+        select{padding-top:7px!important;padding-bottom:7px!important}
+      `;
+      doc.head.appendChild(zbij);
+      visina = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
+    }
+
+    if (scale < 1) {
       frame.style.width = `${docW}px`;
-      // visina = vidljivi prostor preračunat kroz scale: ako je forma viša,
-      // kalkulator se lagano skroluje IZNUTRA (stranica okolo nikad).
+      // visina = vidljivi prostor preračunat kroz scale: ako je i zbijena
+      // forma viša, kalkulator se lagano skroluje IZNUTRA (stranica nikad).
       frame.style.height = `${Math.ceil(h / scale)}px`;
       frame.style.transformOrigin = 'top left';
       frame.style.transform = `scale(${scale})`;

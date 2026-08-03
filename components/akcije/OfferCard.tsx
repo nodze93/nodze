@@ -19,9 +19,15 @@ interface Props {
    * "grid" = kartica u mrezi (2 kolone), cijene lijevo/desno.
    */
   variant?: 'rail' | 'grid';
+  /**
+   * Datum najsvježije „ture" ponuda u listi (najnovijaTura() iz format.ts).
+   * Kartica čiji valid_from = tura nosi NOVO — i zadrži je u utorak/srijedu,
+   * dok ne stigne svježija tura. Bez ovog propa: NOVO samo za strogo danas.
+   */
+  turaOd?: string | null;
 }
 
-export default function OfferCard({ item, hideStore = false, variant = 'grid' }: Props) {
+export default function OfferCard({ item, hideStore = false, variant = 'grid', turaOd }: Props) {
   const { has, toggle } = useFavorites();
   const key = favoriteKey(item);
   const favorite = has(key);
@@ -32,9 +38,12 @@ export default function OfferCard({ item, hideStore = false, variant = 'grid' }:
   // je niza, pa u ekran stane 6 artikala.
   const showFooter = rail || !hideStore;
 
-  // Ponuda koja POČINJE danas — nova je od jutros (npr. REWE/Lidl sedmica
-  // od ponedjeljka, Kaufland od četvrtka). Dobija zelenu „NOVO" oznaku.
-  const novo = item.valid_from === danasIso();
+  // NOVO = pripada najsvježijoj turi ponuda (ako je lista dala turu),
+  // inače strogo „počinje danas". Tura traje dok ne stigne svježija.
+  const novo =
+    turaOd !== undefined
+      ? turaOd !== null && item.valid_from === turaOd
+      : item.valid_from === danasIso();
 
   return (
     <article className={`card${rail ? ' card-rail' : ''}`}>
