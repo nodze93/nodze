@@ -89,33 +89,68 @@ export default function AdminAkcije() {
     } else setMsg(`Greška: ${j.error}`);
   }
 
+  // Koliko ponuda ide u jednom zahtjevu. Nije 3000 (koliko server prima) jer
+  // marktguru ponuda vrijedi u više gradova, pa se na serveru razmnoži u više
+  // redova: 500 ponuda ≈ 2.000 redova, što stane u jedan zahtjev bez isteka.
+  const KOMAD = 500;
+
   async function submitFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = ""; // reset da se isti fajl može ponovo izabrati
     if (!file) return;
-    setBusy(true); setMsg("");
-    let offers: unknown;
+    setBusy(true); setMsg("Čitam fajl…");
+
+    let offers: unknown[];
+    let sweptPlz: unknown[] = [];
     try {
       const text = await file.text();
       const parsed: unknown = JSON.parse(text);
       // Fajl može biti goli niz ILI omotan ({"offers":[...]}). Ranije se
       // omotani fajl umotavao JOŠ jednom → server je vidio jedan artikal bez
       // naziva i javljao "upisano 0, preskočeno 1".
-      const omotac = parsed as { offers?: unknown; items?: unknown; data?: unknown };
+      const omotac = parsed as { offers?: unknown; items?: unknown; data?: unknown; sweptPlz?: unknown };
       const ugnijezdjen = [omotac?.offers, omotac?.items, omotac?.data].find(Array.isArray);
-      offers = Array.isArray(parsed) ? parsed : (ugnijezdjen ?? [parsed]);
+      offers = (Array.isArray(parsed) ? parsed : (ugnijezdjen ?? [parsed])) as unknown[];
+      // Spisak skeniranih gradova NE SMIJE ispasti: po njemu server prepoznaje
+      // ponudu koja vrijedi u cijeloj Njemačkoj i upiše je jednom umjesto 18 puta.
+      if (Array.isArray(omotac?.sweptPlz)) sweptPlz = omotac.sweptPlz;
     } catch {
       setBusy(false); setMsg(`Neispravan JSON u fajlu "${file.name}"`); return;
     }
-    const r = await fetch("/api/admin/akcije", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ offers }),
-    });
-    const j = await r.json();
+
+    // VELIKI FAJL IDE U KOMADIMA. Cijeli uvoz od 13.000 ponuda u jednom
+    // zahtjevu bi istekao na pola posla i ostavio bazu napola napunjenu.
+    const komadi: unknown[][] = [];
+    for (let i = 0; i < offers.length; i += KOMAD) komadi.push(offers.slice(i, i + KOMAD));
+
+    let upisano = 0;
+    const preskoceno: string[] = [];
+    for (let i = 0; i < komadi.length; i++) {
+      setMsg(`Uvozim… komad ${i + 1}/${komadi.length} · redova do sad: ${upisano}`);
+      const r = await fetch("/api/admin/akcije", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // reset SAMO na prvom komadu: izbaci prošli uvoz jednim potezom, pa
+        // ostali komadi samo dopunjuju. Ručno ukucane ponude se ne diraju.
+        body: JSON.stringify({ offers: komadi[i], sweptPlz, reset: i === 0 }),
+      });
+      const j = await r.json();
+      if (!r.ok) {
+        setBusy(false);
+        setMsg(`Stalo na komadu ${i + 1}/${komadi.length} (upisano ${upisano}): ${j.error}`);
+        load();
+        return;
+      }
+      upisano += Number(j.upisano || 0);
+      preskoceno.push(...((j.preskoceno as string[]) || []));
+    }
+
     setBusy(false);
-    if (r.ok) {
-      setMsg(`Iz fajla "${file.name}": upisano ${j.upisano}, preskočeno ${(j.preskoceno || []).length}`);
-      load();
-    } else setMsg(`Greška: ${j.error}`);
+    setMsg(
+      `Iz fajla "${file.name}": ${offers.length} ponuda → upisano ${upisano} redova` +
+        (preskoceno.length ? `, preskočeno ${preskoceno.length} (npr. ${preskoceno[0]})` : ""),
+    );
+    load();
   }
 
   async function del(id: string) {
