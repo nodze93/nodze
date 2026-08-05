@@ -53,9 +53,11 @@ insert into ak_izvor_grad (plz, naziv, lat, lon) values
     ('01067', 'Dresden',        51.05, 13.74),
     ('04109', 'Leipzig',        51.34, 12.37),
     ('06108', 'Halle',          51.48, 11.97),
+    ('07743', 'Jena',           50.93, 11.59),
     ('09111', 'Chemnitz',       50.83, 12.92),
     ('10115', 'Berlin',         52.53, 13.38),
     ('14467', 'Potsdam',        52.40, 13.06),
+    ('17033', 'Neubrandenburg', 53.56, 13.26),
     ('18055', 'Rostock',        54.09, 12.14),
     ('19053', 'Schwerin',       53.63, 11.41),
     ('20095', 'Hamburg',        53.55, 10.00),
@@ -223,34 +225,58 @@ on conflict (prefix) do update
 -- ---------------------------------------------------------------------
 --  Zamjenjuje ranije zakucano `slug not in ('obi','fressnapf')`. Dodavanje
 --  novog lanca je sad jedan `insert`, a ne prepisivanje funkcija.
+--
+--  Spisak je usklađen sa izvozom od 04.08.2026 (42 lanca). Uz svaki lanac
+--  stoji koliko je ponuda donio u tom izvozu — zato XXXLutz mora van: sam
+--  je nosio 2338 od 13526 ponuda i gušio je namirnice na naslovnoj.
+--
+--  Uvoz od sada SAM dopisuje nove lance u ovu tabelu na osnovu marktguru
+--  polja `industry` (Möbelhaus, Baumarkt, Zoo & Garten, Kaufhaus, Großmarkt,
+--  KFZ & Zubehör) — vidi app/api/admin/akcije/route.ts. Ovaj spisak je
+--  početno stanje i ručna kontrola; nova stolarnica se skriva sama.
 create table if not exists ak_store_sporedni (
     slug   text primary key,
     razlog text
 );
 
 insert into ak_store_sporedni (slug, razlog) values
-    ('obi',                 'baumarkt'),
-    ('toom',                'baumarkt'),
-    ('hagebaumarkt',        'baumarkt'),
-    ('fressnapf',           'ljubimci'),
-    ('das-futterhaus',      'ljubimci'),
-    ('xxxlutz',             'namještaj'),
-    ('segmueller',          'namještaj'),
-    ('porta',               'namještaj'),
-    ('moemax',              'namještaj'),
-    ('moebel-inhofer',      'namještaj'),
-    ('ostermann',           'namještaj'),
-    ('trends-by-ostermann', 'namještaj'),
-    ('sb-moebel-boss',      'namještaj'),
-    ('kabs-polsterwelt',    'namještaj'),
-    ('schaffrath',          'namještaj'),
-    ('woolworth',           'razno, neprehrana'),
-    ('thomas-philipps',     'razno, neprehrana'),
-    ('handelshof',          'veleprodaja (cijene bez PDV-a)'),
-    ('edeka-foodservice',   'veleprodaja (cijene bez PDV-a)'),
-    ('bosch-car-service',   'auto servis'),
-    ('ran-tankstelle',      'benzinska')
+    -- namještaj (Möbelhaus) — 3881 ponuda, najveći zagađivač naslovne
+    ('xxxlutz',              'namještaj'),      -- 2338
+    ('segmueller',           'namještaj'),      --  328
+    ('opti-wohnwelt',        'namještaj'),      --  304
+    ('porta',                'namještaj'),      --  180
+    ('schaffrath',           'namještaj'),      --  159
+    ('moemax',               'namještaj'),      --  142
+    ('moebel-inhofer',       'namještaj'),      --  122
+    ('trends-by-ostermann',  'namještaj'),      --  106
+    ('ostermann',            'namještaj'),      --  100
+    ('sb-moebel-boss',       'namještaj'),      --   71
+    ('kabs-polsterwelt',     'namještaj'),      --   31
+    -- alat i gradnja (Baumarkt) — 280 ponuda
+    ('toom',                 'alat, baumarkt'), --  180
+    ('b1-discount-baumarkt', 'alat, baumarkt'), --   67
+    ('obi',                  'alat, baumarkt'), --   25
+    ('hagebaumarkt',         'alat, baumarkt'), --    8
+    -- ljubimci i vrt (Zoo & Garten) — 120 ponuda
+    ('fressnapf',            'ljubimci'),       --   97
+    ('das-futterhaus',       'ljubimci'),       --   23
+    -- robna kuća (Kaufhaus) — 294 ponuda, uglavnom neprehrana
+    ('thomas-philipps',      'razno, neprehrana'), -- 150
+    ('woolworth',            'razno, neprehrana'), -- 144
+    -- veleprodaja (Großmarkt) — cijene su bez PDV-a, varaju kupca
+    ('handelshof',           'veleprodaja (cijene bez PDV-a)'), -- 396
+    ('edeka-foodservice',    'veleprodaja (cijene bez PDV-a)'), -- 398
+    -- ostalo
+    ('bosch-car-service',    'auto servis'),    --   13
+    ('ran-tankstelle',       'benzinska')       --    9
 on conflict (slug) do nothing;
+
+--  Lanci koji OSTAJU na naslovnoj (namirnice, piće, drogerija) — za kontrolu:
+--  edeka 1201, netto-marken-discount 1016, lidl 885, kaufland 734, rewe 731,
+--  rewe-center 629, aldi-sued 414, penny 399, famila-nordwest 298,
+--  rossmann 291, scheck-in-center 265, e-center 241, combi 236,
+--  edeka-frischemarkt 216, nahkauf 193, trinkgut 176, budni 105,
+--  e-xpress 63, edeka-bandelt 42.
 
 
 -- ---------------------------------------------------------------------

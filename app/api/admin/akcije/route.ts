@@ -104,6 +104,35 @@ interface OfferInput {
   externalId?: unknown;
   offerUrl?: string | null;
   sourceUrl?: string | null;
+  // marktguru v4: vrsta lanca ("Supermarkt", "Möbelhaus", "Baumarkt"…)
+  industry?: string | null;
+}
+
+/**
+ * LANCI KOJI NISU ZA NAMIRNICE.
+ * Namještaj i baumarkt su u izvozu od 04.08. nosili 4175 od 13526 ponuda —
+ * XXXLutz sam 2338. Bez ovoga naslovna "Top ponude danas" postane katalog
+ * kauča, a namirnice se ne vide. Takvi lanci ostaju dostupni, ali TEK kad se
+ * klikne njihova pločica (pravilo je u bazi: tabela ak_store_sporedni).
+ *
+ * Ovdje se prepoznaju po marktguru polju `industry`, pa se novi lanac iste
+ * vrste sakrije SAM — ne treba mi javljati i ja ručno dopisivati SQL.
+ */
+const SPOREDNE_BRANSE: Record<string, string> = {
+  "möbelhaus": "namještaj",
+  "moebelhaus": "namještaj",
+  "baumarkt": "alat, baumarkt",
+  "zoo & garten": "ljubimci",
+  "kaufhaus": "razno, neprehrana",
+  "großmarkt": "veleprodaja (cijene bez PDV-a)",
+  "grossmarkt": "veleprodaja (cijene bez PDV-a)",
+  "kfz & zubehör": "auto servis",
+  "kfz & zubehoer": "auto servis",
+};
+
+function sporednaBransa(industry: unknown): string | null {
+  const k = String(industry ?? "").trim().toLowerCase();
+  return k ? (SPOREDNE_BRANSE[k] ?? null) : null;
 }
 
 // HOTLINK, NE SPREMANJE (odluka korisnika, 4.8.2026).
@@ -235,6 +264,8 @@ export async function POST(req: Request) {
   const prodavnice = await ucitajProdavnice(db);
   // (store_id, plz) parovi za ak_stores_by_plz — upišu se skupno na kraju.
   const parovi = new Map<string, { store_id: number; plz: string }>();
+  // Lanci koje treba skloniti s naslovne (namještaj, baumarkt…) — skupno na kraju.
+  const sporedni = new Map<string, { slug: string; razlog: string }>();
 
   let upisano = 0;
   const preskoceno: string[] = [];
@@ -300,6 +331,9 @@ export async function POST(req: Request) {
       }
       prodavnice.set(slug, storeId);
     }
+
+    const razlog = sporednaBransa(o.industry);
+    if (razlog) sporedni.set(slug, { slug, razlog });
 
     const imageUrl = cleanImageUrl(o.imageUrl ?? o.image);
     const validFrom = normalizeDate(o.validFrom ?? o.validSince);
@@ -392,9 +426,25 @@ export async function POST(req: Request) {
     await db.from("ak_stores_by_plz").upsert(grupa, { onConflict: "store_id,plz" });
   }
 
+  // 4) skloni s naslovne lance koji nisu za namirnice (namještaj, baumarkt…).
+  //    `ignoreDuplicates` znači: ako si taj lanac ručno vratio na naslovnu
+  //    brisanjem iz tabele, uvoz ga NEĆE vratiti nazad — ovo je pomoć, a ne
+  //    presuda. Ako tabela još ne postoji (SQL nije pokrenut), samo preskoči.
+  const sviSporedni = [...sporedni.values()];
+  if (sviSporedni.length > 0) {
+    await db
+      .from("ak_store_sporedni")
+      .upsert(sviSporedni, { onConflict: "slug", ignoreDuplicates: true });
+  }
+
   // `ponuda` = koliko je ponuda stiglo, `upisano` = koliko je REDOVA nastalo
   // (jedna ponuda koja vrijedi u 7 gradova daje 7 redova).
-  return NextResponse.json({ ponuda: list.length, upisano, preskoceno });
+  return NextResponse.json({
+    ponuda: list.length,
+    upisano,
+    preskoceno,
+    sporedniLanci: sviSporedni.map((s) => s.slug),
+  });
 }
 
 export async function GET() {
