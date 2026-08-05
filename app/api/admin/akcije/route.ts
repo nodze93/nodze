@@ -437,6 +437,15 @@ export async function POST(req: Request) {
       .upsert(sviSporedni, { onConflict: "slug", ignoreDuplicates: true });
   }
 
+  // 5) osvježi spisak non-food kategorija (bušilice, sofe, parfemi…) da nove
+  //    kategorije iz ovog uvoza odmah ispadnu s naslovne. Ako funkcija još ne
+  //    postoji (SQL nije pokrenut), uvoz zbog toga ne smije pasti.
+  try {
+    await db.rpc("ak_osvjezi_kategorije");
+  } catch {
+    /* SQL migracija još nije pokrenuta — preskoči */
+  }
+
   // `ponuda` = koliko je ponuda stiglo, `upisano` = koliko je REDOVA nastalo
   // (jedna ponuda koja vrijedi u 7 gradova daje 7 redova).
   return NextResponse.json({

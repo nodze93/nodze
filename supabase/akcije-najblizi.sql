@@ -280,6 +280,227 @@ on conflict (slug) do nothing;
 
 
 -- ---------------------------------------------------------------------
+-- 3b) Kategorije koje NISU namirnice — ni kod Lidla ni kod Rossmanna
+-- ---------------------------------------------------------------------
+--  Izbacivanje lanaca nije dovoljno. I lanci koji OSTAJU (Lidl, ALDI, Netto,
+--  Kaufland, Rossmann) svake sedmice guraju "non-food" ćošak: bušilice, sofe,
+--  ženske cipele, TV, kosilice, parfeme. U izvozu od 04.08. to je 1403 od
+--  8135 ponuda tih lanaca — svaka šesta kartica na naslovnoj nije hrana.
+--
+--  Zato se filtrira i po KATEGORIJI, a ne samo po prodavnici. Kategorija
+--  ostaje vidljiva čim se izričito izabere (klik na lanac ili na kategoriju),
+--  isto pravilo kao za sporedne lance — ništa se ne briše, samo se skloni
+--  s naslovne.
+--
+--  Radi u dva koraka jer ima 382 kategorije i stalno stižu nove:
+--    ak_kategorija_uzorak    – ~140 LIKE uzoraka koje ja održavam
+--    ak_kategorija_sporedna  – konkretna imena, popunjava se iz uzoraka
+--  Pretraga gleda samo drugu tabelu (obično poređenje po ključu, brzo).
+
+create table if not exists ak_kategorija_uzorak (
+    uzorak text primary key,   -- LIKE uzorak, mala slova (npr. 'damen %')
+    razlog text
+);
+
+create table if not exists ak_kategorija_sporedna (
+    naziv  text primary key,   -- tačno ime kategorije kako stoji u ponudi
+    razlog text
+);
+
+insert into ak_kategorija_uzorak (uzorak, razlog) values
+    -- odjeća i obuća
+    ('damen %',              'odjeća'),   -- NE hvata 'Damenhygiene' (nema razmaka)
+    ('herren %',             'odjeća'),
+    ('kinder- und babybekleidung', 'odjeća'),
+    ('kinderschuhe',         'odjeća'),
+    ('dessous',              'odjeća'),
+    ('unterwäsche',          'odjeća'),
+    ('leggins',              'odjeća'),
+    ('blazer',               'odjeća'),
+    ('kopfbedeckung',        'odjeća'),
+    ('accessoires',          'odjeća'),
+    ('sportbekleidung',      'odjeća'),
+    ('arbeitsbekleidung%',   'odjeća'),
+    ('%bademode',            'odjeća'),
+    -- parfemi i šminka (drogerija ostaje, ali parfem nije namirnica)
+    ('%düfte',               'parfemi'),
+    ('duftsets',             'parfemi'),
+    ('%makeup%',             'šminka'),
+    ('maniküre pediküre',    'šminka'),
+    ('brillen',              'optika'),
+    ('sehhilfen',            'optika'),
+    ('kontaktlinsen',        'optika'),
+    -- namještaj
+    ('%möbel%',              'namještaj'),
+    ('betten',               'namještaj'),
+    ('matratzen',            'namještaj'),
+    ('sofas',                'namještaj'),
+    ('sessel',               'namještaj'),
+    ('tische',               'namještaj'),
+    ('regale',               'namještaj'),
+    ('kommoden',             'namještaj'),
+    ('spiegel',              'namještaj'),
+    ('garderoben',           'namještaj'),
+    ('küchen',               'namještaj'),
+    ('auflagen',             'namještaj'),
+    -- bašta i vanjsko
+    ('garten%',              'bašta'),
+    ('rasenmäher',           'bašta'),
+    ('rasentrimmer',         'bašta'),
+    ('heckenscheren',        'bašta'),
+    ('laubsauger',           'bašta'),
+    ('schnittblumen',        'bašta'),
+    ('dünger%',              'bašta'),
+    ('pflanzen',             'bašta'),
+    ('pflanzenzubehör',      'bašta'),
+    ('insektizide',          'bašta'),
+    ('insektenschutz',       'bašta'),
+    ('fliegengitter',        'bašta'),
+    ('schubkarren',          'bašta'),
+    ('terrassenheizung%',    'bašta'),
+    ('terassen%',            'bašta'),
+    ('markisen',             'bašta'),
+    ('sichtschutz',          'bašta'),
+    ('sonnenschutzsystem',   'bašta'),   -- tenda; obični 'Sonnenschutz' (krema) OSTAJE
+    ('gerätehäuser',         'bašta'),
+    ('sauna',                'bašta'),
+    ('poolzubehör%',         'bašta'),
+    ('mülltonnenbox',        'bašta'),
+    ('grills',               'bašta'),
+    ('grillzubehör',         'bašta'),
+    -- alat
+    ('%werkzeug%',           'alat'),
+    ('bohrmaschinen',        'alat'),
+    ('sägen',                'alat'),
+    ('kettensäge',           'alat'),
+    ('akkuschrauber',        'alat'),
+    ('schleifer',            'alat'),
+    ('schweißgeräte',        'alat'),
+    ('kompressoren',         'alat'),
+    ('leitern',              'alat'),
+    ('schraubzwingen',       'alat'),
+    ('dübel',                'alat'),
+    ('kleber',               'alat'),
+    ('arbeitsleuchten',      'alat'),
+    ('arbeitssicherheit',    'alat'),
+    ('hebeanlagen',          'alat'),
+    -- gradnja i instalacije
+    ('sanitär',              'gradnja'),
+    ('heizkörper',           'gradnja'),
+    ('farben',               'gradnja'),
+    ('türbeschläge',         'gradnja'),
+    ('schalter',             'gradnja'),
+    ('haustechnik',          'gradnja'),
+    ('brennstoffe',          'gradnja'),
+    ('klimageräte',          'gradnja'),
+    ('jalousien',            'gradnja'),
+    -- tehnika
+    ('tv',                   'tehnika'),
+    ('handys',               'tehnika'),
+    ('laptops',              'tehnika'),
+    ('monitore',             'tehnika'),
+    ('kopfhörer',            'tehnika'),
+    ('drucker-scanner',      'tehnika'),
+    ('computerzubehör',      'tehnika'),
+    ('speichermedien',       'tehnika'),
+    ('multimedia',           'tehnika'),
+    ('foto-video',           'tehnika'),
+    ('smartwatches',         'tehnika'),
+    ('kabel',                'tehnika'),
+    ('netzwerk',             'tehnika'),
+    ('steckdosenleisten',    'tehnika'),
+    ('mobileabspielgeräte',  'tehnika'),
+    ('uhren',                'tehnika'),
+    ('armbanduhr',           'tehnika'),
+    ('sportuhren',           'tehnika'),
+    ('wanduhren',            'tehnika'),
+    ('gesundheitselektronik','tehnika'),
+    -- bijela tehnika i aparati
+    ('kühlgeräte',           'aparati'),
+    ('waschmaschinen',       'aparati'),
+    ('geschirrspüler',       'aparati'),
+    ('küchengroßgeräte',     'aparati'),
+    ('küchengeräte',         'aparati'),
+    ('kaffeemaschinen',      'aparati'),
+    ('haartrockner',         'aparati'),
+    ('nähmaschinen',         'aparati'),
+    ('reinigungsgeräte',     'aparati'),
+    ('wäschenständer',       'aparati'),
+    ('filtersysteme',        'aparati'),
+    -- dekoracija, posuđe, tekstil
+    ('%deko%',               'dekoracija'),
+    ('bilder',               'dekoracija'),
+    ('wanddekoration',       'dekoracija'),
+    ('kerzen',               'dekoracija'),
+    ('leuchten',             'dekoracija'),
+    ('lampen',               'dekoracija'),
+    ('teppiche',             'tekstil'),
+    ('heimtextilien',        'tekstil'),
+    ('küchentextilien',      'tekstil'),
+    ('glasartikel',          'posuđe'),
+    ('essgeschirr',          'posuđe'),
+    ('besteck',              'posuđe'),
+    ('kochgeschirr',         'posuđe'),
+    ('töpfe',                'posuđe'),
+    ('küchenzubehör',        'posuđe'),
+    ('aufbewahrungsbehälter','posuđe'),
+    -- igračke i sport
+    ('spiele',               'igračke'),
+    ('spielfiguren',         'igračke'),
+    ('puppen',               'igračke'),
+    ('plüschtiere',          'igračke'),
+    ('bausteine',            'igračke'),
+    ('%spielzeug',           'igračke'),
+    ('experimentierkasten',  'igračke'),
+    ('kinderfahrzeuge',      'igračke'),
+    ('kindermalbedarf',      'igračke'),
+    ('radsport',             'sport'),
+    ('tennis',               'sport'),
+    ('kampfsport',           'sport'),
+    ('fitness',              'sport'),
+    ('fitnessartikel',       'sport'),
+    ('outdoorausrüstung',    'sport'),
+    ('fanartikel',           'sport'),
+    ('koffer',               'sport'),
+    -- ured, mediji, vozila
+    ('schreibwaren',         'ured'),
+    ('bürozubehör',          'ured'),
+    ('bücher',               'mediji'),
+    ('zeitschriften',        'mediji'),
+    ('auto',                 'vozila'),
+    ('motorräder',           'vozila'),
+    ('roller',               'vozila'),
+    ('medizinische geräte%', 'medicinska oprema'),
+    ('mobilitäts-%',         'medicinska oprema')
+on conflict (uzorak) do nothing;
+
+--  Iz uzoraka napravi spisak konkretnih imena. Zove se sam poslije svakog
+--  uvoza (vidi app/api/admin/akcije/route.ts), a može i ručno:
+--      select ak_osvjezi_kategorije();
+--  Vraća koliko kategorija je sklonjeno s naslovne.
+create or replace function ak_osvjezi_kategorije()
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $fn$
+declare
+    n int;
+begin
+    insert into ak_kategorija_sporedna (naziv, razlog)
+    select distinct on (d.category) d.category, u.razlog
+      from ak_discounts d
+      join ak_kategorija_uzorak u on lower(trim(d.category)) like u.uzorak
+     where d.category is not null
+    on conflict (naziv) do nothing;
+
+    select count(*) into n from ak_kategorija_sporedna;
+    return n;
+end;
+$fn$;
+
+
+-- ---------------------------------------------------------------------
 -- 4) PLZ -> najbliži grad koji ZAISTA ima ponude
 -- ---------------------------------------------------------------------
 --  Udaljenost: obična ravan račun, s tim da se stepen dužine množi sa 0.62
@@ -388,6 +609,10 @@ begin
           -- namještaj, baumarkt, ljubimci… samo kad su izričito izabrani
           and ($2 is not null
                or not exists (select 1 from ak_store_sporedni z where z.slug = s.slug))
+          -- non-food kategorije (bušilice, sofe, parfemi, TV) i kod Lidla/Aldija:
+          -- vide se tek kad se klikne taj lanac ili ta kategorija
+          and ($2 is not null or $3 is not null
+               or not exists (select 1 from ak_kategorija_sporedna k where k.naziv = d.category))
           and ( (d.source <> 'manual' and d.date = snap.date)
              or (d.source  = 'manual' and d.valid_to is not null) )
           and (d.valid_from is null or d.valid_from <= ak_danas())
@@ -483,6 +708,9 @@ as $fn$
       and (d.scope = 'DE' or d.plz = p_plz or d.scope = i.regija or d.plz = i.blizu)
       and (p_store is not null
            or not exists (select 1 from ak_store_sporedni z where z.slug = s.slug))
+      -- non-food kategorije se ne nude ni kao dugme; kod izabranog lanca da
+      and (p_store is not null
+           or not exists (select 1 from ak_kategorija_sporedna k where k.naziv = d.category))
       and ( (d.source <> 'manual' and d.date = snap.date)
          or (d.source  = 'manual' and d.valid_to is not null) )
       and (d.valid_from is null or d.valid_from <= ak_danas())
@@ -553,9 +781,16 @@ revoke execute on function ak_stores_list(text)            from anon, authentica
 revoke execute on function ak_categories_list(text, text)  from anon, authenticated;
 revoke execute on function ak_meta(text)                   from anon, authenticated;
 revoke execute on function ak_najblizi_plz(text)           from anon, authenticated;
-revoke all on table ak_izvor_grad     from anon, authenticated;
-revoke all on table ak_plz_tacka      from anon, authenticated;
-revoke all on table ak_store_sporedni from anon, authenticated;
+revoke execute on function ak_osvjezi_kategorije()         from anon, authenticated;
+revoke all on table ak_izvor_grad          from anon, authenticated;
+revoke all on table ak_plz_tacka           from anon, authenticated;
+revoke all on table ak_store_sporedni      from anon, authenticated;
+revoke all on table ak_kategorija_uzorak   from anon, authenticated;
+revoke all on table ak_kategorija_sporedna from anon, authenticated;
+
+-- Prvo popunjavanje spiska kategorija iz onoga što je VEĆ u bazi.
+-- Poslije svakog uvoza uvoz ovo pozove sam.
+select ak_osvjezi_kategorije() as sklonjeno_kategorija;
 
 
 -- ---------------------------------------------------------------------
@@ -565,3 +800,15 @@ revoke all on table ak_store_sporedni from anon, authenticated;
 --  select ak_najblizi_plz('72764');  -- Reutlingen -> Stuttgart
 --  select ak_najblizi_plz('18055');  -- Rostock -> Rostock (ako je skinut)
 --  select * from ak_meta('44137');
+--
+--  Šta je sklonjeno s naslovne, po razlogu:
+--  select razlog, count(*) from ak_kategorija_sporedna group by 1 order by 2 desc;
+--
+--  AKO NEŠTO NE ŽELIŠ SKLONITI (npr. hoćeš da se roštilji vide ljeti):
+--  delete from ak_kategorija_sporedna where naziv in ('Grills','Grillzubehör');
+--  delete from ak_kategorija_uzorak    where uzorak in ('grills','grillzubehör');
+--
+--  AKO IPAK HOĆEŠ ROSSMANN SASVIM VAN (a ne samo njegove parfeme):
+--  insert into ak_store_sporedni (slug, razlog)
+--  values ('rossmann','drogerija'), ('budni','drogerija')
+--  on conflict (slug) do nothing;
