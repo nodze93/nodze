@@ -128,6 +128,8 @@ const SPOREDNE_BRANSE: Record<string, string> = {
   "grossmarkt": "veleprodaja (cijene bez PDV-a)",
   "kfz & zubehör": "auto servis",
   "kfz & zubehoer": "auto servis",
+  // Rossmann, budni, dm, Müller… — parfemi i šminka, ne namirnice.
+  "drogerie & gesundheit": "drogerija",
 };
 
 function sporednaBransa(industry: unknown): string | null {

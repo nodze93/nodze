@@ -266,17 +266,26 @@ insert into ak_store_sporedni (slug, razlog) values
     -- veleprodaja (Großmarkt) — cijene su bez PDV-a, varaju kupca
     ('handelshof',           'veleprodaja (cijene bez PDV-a)'), -- 396
     ('edeka-foodservice',    'veleprodaja (cijene bez PDV-a)'), -- 398
+    -- drogerija (Drogerie & Gesundheit) — 396 ponuda
+    --  Nije namirnica. Rossmann je u izvozu od 04.08. kao najjaču kategoriju
+    --  imao "Damen Düfte" (28 parfema), pa šampone, kreme i šminku. Deterdžent
+    --  i pelene tu jesu, ali zbog njih ne vrijedi držati parfimeriju na
+    --  naslovnoj — ko traži drogeriju, klikne pločicu.
+    ('rossmann',             'drogerija'),      --  291
+    ('budni',                'drogerija'),      --  105
     -- ostalo
     ('bosch-car-service',    'auto servis'),    --   13
     ('ran-tankstelle',       'benzinska')       --    9
 on conflict (slug) do nothing;
 
---  Lanci koji OSTAJU na naslovnoj (namirnice, piće, drogerija) — za kontrolu:
+--  Lanci koji OSTAJU na naslovnoj (samo namirnice i piće) — za kontrolu:
 --  edeka 1201, netto-marken-discount 1016, lidl 885, kaufland 734, rewe 731,
 --  rewe-center 629, aldi-sued 414, penny 399, famila-nordwest 298,
---  rossmann 291, scheck-in-center 265, e-center 241, combi 236,
---  edeka-frischemarkt 216, nahkauf 193, trinkgut 176, budni 105,
---  e-xpress 63, edeka-bandelt 42.
+--  scheck-in-center 265, e-center 241, combi 236, edeka-frischemarkt 216,
+--  nahkauf 193, trinkgut 176, e-xpress 63, edeka-bandelt 42.
+--
+--  Ako budni ipak hoćeš nazad na naslovnu (Rossmann si izričito tražio van):
+--      delete from ak_store_sporedni where slug = 'budni';
 
 
 -- ---------------------------------------------------------------------
@@ -808,7 +817,5 @@ select ak_osvjezi_kategorije() as sklonjeno_kategorija;
 --  delete from ak_kategorija_sporedna where naziv in ('Grills','Grillzubehör');
 --  delete from ak_kategorija_uzorak    where uzorak in ('grills','grillzubehör');
 --
---  AKO IPAK HOĆEŠ ROSSMANN SASVIM VAN (a ne samo njegove parfeme):
---  insert into ak_store_sporedni (slug, razlog)
---  values ('rossmann','drogerija'), ('budni','drogerija')
---  on conflict (slug) do nothing;
+--  AKO NEKI LANAC HOĆEŠ VRATITI NA NASLOVNU:
+--  delete from ak_store_sporedni where slug = 'budni';
