@@ -637,6 +637,39 @@ opisu (sad „statt"), „Alle aktuelne akcije".
 Admin NAMJERNO ostaje na bosanskom (za vlasnika). Komentari u kodu bosanski.
 Verifikovano: scraper 121/121 testova, tsc čist, `next build` 22 stranice.
 
+### GLAVNI ZID — „U pola cijene i više" (06.08.2026)
+Naslovna traka više NIJE „Top ponude danas" nego **„U pola cijene i više"**:
+prikazuje SAMO ponude sa **≥50%** popusta (`PRAG` u `app/akcije/page.tsx`).
+
+⚠️ NAMJERNO BEZ REZERVNOG POPUNJAVANJA. Ranije je fallback punio traku
+slabijim ponudama kad ih nema dovoljno — naslov je obećavao više nego što je
+stajalo ispod. Sada: ako danas nema ničega na −50%, traka se ne prikazuje nego
+piše „Danas nema ponuda na −50% i više". Prag prati i naslov na `/akcije/ponude`
+(OffersBrowser, `state.percent >= 50`) i link `?percent=50&top=1`.
+
+### KO SE VIDI NA ZIDU (ak_store_sporedni)
+⚠️ NIŠTA SE NE BRIŠE. `ak_store_sporedni` je popis lanaca koji se NE guraju na
+opšte liste. Ponude ostaju u bazi, pločica s brojem ostaje u traci prodavnica,
+i klikom se otvori sve što lanac ima. Vraćanje = jedan `delete`.
+
+`supabase/akcije-zid.sql` (06.08.) vraća na zid **OBI i ROSSMANN** — izričita
+odluka korisnika, mijenja raniju odluku da Rossmann bude van.
+
+Sklonjeni ostaju: namještaj (XXXLutz 1203 ponuda i ostali), baumarkt (toom,
+hagebaumarkt), ljubimci (Fressnapf, DAS FUTTERHAUS), robne kuće (Woolworth,
+Thomas Philipps), veleprodaja (Handelshof, EDEKA Foodservice — cijene BEZ
+PDV-a, varaju kupca), benzinske, auto servis.
+
+**Namirnice koje ostaju na zidu (11):** lidl · aldi-sued/aldi-nord · kaufland ·
+rewe · rewe-center · netto-marken-discount · penny · edeka · e-center ·
+e-xpress · nahkauf. Plus trinkgut (piće), rossmann (drogerija), obi.
+
+⚠️ ZAPAŽANJE ZA KASNIJE (izmjereno 06.08., PLZ 80331): marktguru lanci uglavnom
+NEMAJU staru cijenu — REWE 1 od 410 s procentom, Netto 0 od 355, PENNY 0 od 251,
+REWE Center 0 od 346, Trinkgut 0 od 94. Oni na pločici pokazuju velik broj, a
+unutra su sve „Angebot" bez popusta. Kaufland ima samo 53 ponude — premalo za
+njihov letak, liči na problem u skrejperu, provjeriti.
+
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.
 - Korisnik radi Commit + Push čim se izmjena napravi (da se verzije ne razilaze).

@@ -28,8 +28,10 @@ export default function HomePage() {
   const { items, total, loading, error } = useOffers(filters);
   const { stores } = useFacets(aktivniPlz);
 
-  // "Top ponude danas" = najveći popusti. Prikaži one ≥30% (fallback: top 12
-  // po popustu ako ih je malo taj dan) → traka je uvijek puna i stvarno "top".
+  // „U POLA CIJENE I VIŠE" = SAMO popusti ≥50%. Odluka korisnika: bez
+  // rezervnog popunjavanja slabijim ponudama — ako danas nema ničega na
+  // −50%, traka se jednostavno NE prikaže. Ranije je fallback punio traku
+  // bilo čime, pa je naslov obećavao više nego što je stajalo ispod.
   // NAJSVJEŽIJA TURA IDE PRVA: tura = najnoviji valid_from ≤ danas u listi.
   // Ponedjeljkova tura drži vrh (i NOVO oznake) i u utorak/srijedu — dok ne
   // stigne svježija. Tako korisnik UVIJEK prvo vidi najnovije što postoji,
@@ -41,8 +43,8 @@ export default function HomePage() {
   // pa prekjučerašnja — unutar svakog dana po najvećem popustu. Isti poredak
   // koristi i stranica iza „Pogledaj sve", da traka i lista budu dosljedne.
   const tura = najnovijaTura(items.filter((i) => i.discount_percent !== null));
-  const jakiPopust = poSvjezini(items.filter((i) => (i.discount_percent ?? 0) >= 30));
-  const top = (jakiPopust.length >= 8 ? jakiPopust : poSvjezini(items)).slice(0, 12);
+  const PRAG = 50; // „u pola cijene i više"
+  const top = poSvjezini(items.filter((i) => (i.discount_percent ?? 0) >= PRAG)).slice(0, 12);
   // Ispod: NAREDNE ponude koje NISU u "Top" (da se lista ne ponavlja).
   const topIds = new Set(top.map((t) => t.id));
   const rest = items.filter((i) => !topIds.has(i.id)).slice(0, 12);
@@ -82,11 +84,11 @@ export default function HomePage() {
       <section className="sec">
         <div className="sec-hd">
           <h2>
-            <IconStar size={17} style={{ color: '#f5a524' }} /> Top ponude danas
+            <IconStar size={17} style={{ color: '#f5a524' }} /> U pola cijene i više
           </h2>
-          {/* `top=1` samo da odredišna stranica zna da nosi naslov „Top ponude
-              danas" (ne „Sve akcije") — korisnik je došao s te trake. */}
-          <Link href="/akcije/ponude?percent=30&top=1">
+          {/* `top=1` samo da odredišna stranica zna da nosi naslov „U pola
+              cijene i više" (ne „Sve akcije") — došlo se s ove trake. */}
+          <Link href="/akcije/ponude?percent=50&top=1">
             Pogledaj sve <IconChevron size={13} style={{ verticalAlign: -2 }} />
           </Link>
         </div>
@@ -112,6 +114,13 @@ export default function HomePage() {
             <button type="button" className="btn" onClick={() => setPlzOpen(true)}>
               Promijeni lokaciju
             </button>
+          </div>
+        ) : top.length === 0 ? (
+          /* Namjerno BEZ popunjavanja slabijim ponudama: ako danas nema
+             ničega na −50%, to se pošteno kaže. Sve ostalo je ispod. */
+          <div className="state">
+            <h2>Danas nema ponuda na −50% i više</h2>
+            <p>Pogledaj sve akcije ispod — ima ih {total}.</p>
           </div>
         ) : (
           <div className="rail">

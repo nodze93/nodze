@@ -1,0 +1,34 @@
+-- =====================================================================
+--  GLAVNI ZID — ko se vidi, a ko tek na klik   (odluka korisnika 06.08.)
+-- =====================================================================
+--  ⚠️ NIŠTA SE NE BRIŠE. `ak_store_sporedni` je samo popis lanaca koji se
+--  NE guraju na opšte liste (naslovna, „Sve akcije", kategorije). Njihove
+--  ponude ostaju u bazi, pločica s brojem ostaje u traci prodavnica, i
+--  klikom na nju otvori se SVE što taj lanac ima. Vraćanje na zid je
+--  jedan `delete` — vidi dno fajla.
+--
+--  ŠTA SE MIJENJA OVIM FAJLOM
+--  --------------------------
+--  Na zid se VRAĆAJU dva lanca koja su ranije bila sklonjena:
+--    • obi       — korisnik ih izričito hoće nazad
+--    • rossmann  — isto (deterdženti, higijena, bebi program su
+--                  svakodnevni trošak, iako nisu hrana)
+--
+--  Sve ostalo ostaje sklonjeno: namještaj (XXXLutz i ostali), baumarkt,
+--  ljubimci, robne kuće, veleprodaja (cijene bez PDV-a) i benzinske.
+--
+--  Pokrenuti u Supabase → SQL Editor. Bezopasno je pokrenuti više puta.
+--  Zahtijeva da je `akcije-najblizi.sql` već pokrenut (on pravi tabelu).
+-- =====================================================================
+
+delete from ak_store_sporedni where slug in ('obi', 'rossmann');
+
+-- Kontrola: ko je sada sklonjen sa zida.
+--   select slug, razlog from ak_store_sporedni order by razlog, slug;
+--
+-- Vraćanje bilo kojeg lanca na zid (primjer):
+--   delete from ak_store_sporedni where slug = 'toom';
+--
+-- Sklanjanje novog lanca sa zida (primjer):
+--   insert into ak_store_sporedni (slug, razlog) values ('woolworth', 'razno')
+--   on conflict (slug) do nothing;

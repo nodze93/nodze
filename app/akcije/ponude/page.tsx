@@ -11,8 +11,8 @@ function Inner() {
   const params = useSearchParams();
   const sortParam = params.get('sort');
 
-  // Dolazak s trake „Top ponude danas" (link nosi top=1): naslov „Top ponude
-  // danas" stoji dok god stoji i filter ≥30% — a čim ga korisnik skine,
+  // Dolazak s trake „U pola cijene i više" (link nosi top=1): taj naslov
+  // stoji dok god stoji i filter ≥50% — a čim ga korisnik skine,
   // OffersBrowser sam vrati naslov na „Sve akcije" (topMode logika).
   const topMode = params.get('top') === '1';
 

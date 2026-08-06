@@ -30,9 +30,9 @@ interface Props {
   /** otvori filter-sheet odmah pri učitavanju (npr. dolazak s dugmeta „Filteri") */
   openFilters?: boolean;
   /**
-   * Dolazak s trake „Top ponude danas": naslov ostaje „Top ponude danas"
-   * SAMO dok stoji filter ≥30% — čim ga korisnik skine, ovo je opet
-   * obična lista i naslov se vraća na „Sve akcije".
+   * Dolazak s trake „U pola cijene i više": naslov ostaje isti SAMO dok
+   * stoji filter ≥50% — čim ga korisnik skine, ovo je opet obična lista
+   * i naslov se vraća na „Sve akcije".
    */
   topMode?: boolean;
 }
@@ -93,7 +93,7 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
       if (state.savings) qs.set('savings', String(state.savings));
       if (state.q) qs.set('q', state.q);
       if (state.sort !== 'percent') qs.set('sort', state.sort);
-      if (topMode && state.percent >= 30) qs.set('top', '1');
+      if (topMode && state.percent >= 50) qs.set('top', '1');
       const next = qs.toString();
       const trenutni = window.location.search.replace(/^\?/, '');
       if (next !== trenutni) {
@@ -136,7 +136,7 @@ export default function OffersBrowser({ title, storeSlug, storeName, initial, op
         {storeSlug && storeName ? (
           <StoreLogo slug={storeSlug} name={storeName} size="md" />
         ) : null}
-        <h1>{topMode ? (state.percent >= 30 ? 'Top ponude danas' : 'Sve akcije') : title}</h1>
+        <h1>{topMode ? (state.percent >= 50 ? 'U pola cijene i više' : 'Sve akcije') : title}</h1>
         <button
           type="button"
           className={`icon-btn${activeCount > 0 ? ' on' : ''}`}
