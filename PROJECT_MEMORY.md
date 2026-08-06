@@ -647,7 +647,24 @@ stajalo ispod. Sada: ako danas nema ničega na −50%, traka se ne prikazuje neg
 piše „Danas nema ponuda na −50% i više". Prag prati i naslov na `/akcije/ponude`
 (OffersBrowser, `state.percent >= 50`) i link `?percent=50&top=1`.
 
-### TRAKA PRODAVNICA — i ona poštuje `ak_store_sporedni` (06.08.2026)
+### TRAKA PRODAVNICA — filtrira se U KODU, ne u SQL-u (06.08.2026)
+⚠️ POUKA IZ GREŠKE: dvaput sam pokušao filtriranje trake ubaciti u
+`ak_stores_list`. Oba puta `drop function` prođe, `create` padne (poziv na
+nešto što u toj bazi ne postoji), funkcija NESTANE i traka ostane PRAZNA —
+jer `app/api/akcije/stores/route.ts` tiho vraća praznu listu kad RPC padne.
+
+**Zato je filter sada u `lib/akcije/zid.ts`** (`VAN_TRAKE` + `naTraci()`),
+primijenjen u toj ruti. Vidljivo, provjerljivo, ne može srušiti bazu, a
+promjena je jedan red u listi.
+
+`supabase/akcije-traka-vrati.sql` vraća `ak_stores_list` na verziju koja je
+radila — BEZ ikakvog dodatka.
+
+⚠️ Ako se ikad opet dira SQL funkcija: NE oslanjati se na `ak_najblizi_plz`
+dok se ne potvrdi `select to_regproc('ak_najblizi_plz')`. I ruta bi trebala
+logovati grešku umjesto da je guta.
+
+### (staro) TRAKA PRODAVNICA — pokušaj kroz ak_store_sporedni
 `supabase/akcije-traka.sql`. Dosad su lanci van zida nestajali iz LISTA ali su
 ostajali kao pločica u traci — namjerno, jer je pločica bila jedini put do njih.
 XXXLutz je tako s 1203 ponude i dalje stajao PRVI u traci i izgledao kao glavni

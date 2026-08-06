@@ -1,28 +1,56 @@
 -- =====================================================================
---  TRAKA PRODAVNICA — i ona sada poštuje `ak_store_sporedni`
+--  TRAKA PRODAVNICA — samo namirnice + ROSSMANN + OBI
 -- =====================================================================
---  ŠTA SE MIJENJA I ZAŠTO
---  ----------------------
---  Dosad su lanci van zida (namještaj, baumarkt, veleprodaja…) NESTALI iz
---  lista ponuda, ali su OSTALI kao pločica u traci prodavnica. To je bila
---  namjerna odluka: pločica je bila jedini način da se do njih dođe.
+--  SAM SE POSLAŽE. Ne traži da je išta ranije pokrenuto:
+--    • napravi `ak_store_sporedni` ako je nema i popuni je
+--    • izbaci OBI i ROSSMANN iz nje (oni OSTAJU na traci)
+--    • prepiše `ak_stores_list` tako da traku filtrira
 --
---  Korisnik traži da ih nema ni tamo — XXXLutz je s 1203 ponude i dalje
---  stajao prvi u traci i izgledao kao glavni lanac sajta.
+--  ⚠️ ZAŠTO PRETHODNA VERZIJA NIJE RADILA: pozivala je `ak_najblizi_plz`,
+--  koje u ovoj bazi nema. `drop function` je prošao, `create` pao — pa je
+--  funkcija NESTALA i traka je ostala prazna. Zato ovdje NEMA nijednog
+--  poziva koji nije siguran: koristi se samo `ak_aldi_scope` i `ak_danas`,
+--  a oni postoje otkad radi regionalna podjela Aldija.
 --
---  ⚠️ POSLJEDICA KOJU TREBA ZNATI: nakon ovoga se do sklonjenih lanaca
---  VIŠE NE MOŽE doći kroz sučelje. Podaci OSTAJU u bazi i dalje se skupljaju
---  — samo se nigdje ne prikazuju. Vraćanje je i dalje jedan red:
---      delete from ak_store_sporedni where slug = 'toom';
+--  ⚠️ NIŠTA SE NE BRIŠE. Ponude sklonjenih lanaca ostaju u bazi i bot ih
+--  i dalje skuplja — samo se ne prikazuju. Vraćanje je jedan red, na dnu.
 --
---  Sve ostalo u funkciji je 1:1 iz `akcije-najblizi.sql` (regije, najbliži
---  grad, datumi važenja, skriveni redovi). Postgres ne zna „zakrpiti"
---  tijelo funkcije, pa se piše cijela iznova.
---
---  Pokrenuti POSLIJE `akcije-najblizi.sql` i `akcije-zid.sql`.
---  Bezopasno je pokrenuti više puta.
+--  Pokrenuti u Supabase → SQL Editor. Bezopasno je pokrenuti više puta.
 -- =====================================================================
 
+-- 1) Popis lanaca koji NISU za namirnice ------------------------------
+create table if not exists ak_store_sporedni (
+    slug   text primary key,
+    razlog text
+);
+
+insert into ak_store_sporedni (slug, razlog) values
+    -- namještaj: najveći zagađivač naslovne (XXXLutz sam ima 1203 ponude)
+    ('xxxlutz','namještaj'), ('segmueller','namještaj'),
+    ('moemax','namještaj'),  ('moebel-inhofer','namještaj'),
+    ('opti-wohnwelt','namještaj'), ('porta','namještaj'),
+    ('schaffrath','namještaj'), ('trends-by-ostermann','namještaj'),
+    ('ostermann','namještaj'), ('sb-moebel-boss','namještaj'),
+    ('kabs-polsterwelt','namještaj'),
+    -- alat i gradnja (OBI je IZUZET — korisnik ga hoće na traci)
+    ('toom','alat, baumarkt'), ('hagebaumarkt','alat, baumarkt'),
+    ('b1-discount-baumarkt','alat, baumarkt'),
+    -- ljubimci
+    ('fressnapf','ljubimci'), ('das-futterhaus','ljubimci'),
+    -- robne kuće, uglavnom neprehrana
+    ('thomas-philipps','razno'), ('woolworth','razno'),
+    -- veleprodaja: cijene su BEZ PDV-a, pa varaju kupca
+    ('handelshof','veleprodaja (cijene bez PDV-a)'),
+    ('edeka-foodservice','veleprodaja (cijene bez PDV-a)'),
+    -- ostalo
+    ('bosch-car-service','auto servis'), ('ran-tankstelle','benzinska'),
+    ('budni','drogerija')
+on conflict (slug) do nothing;
+
+-- 2) OBI i ROSSMANN OSTAJU na traci ------------------------------------
+delete from ak_store_sporedni where slug in ('obi', 'rossmann');
+
+-- 3) Traka prodavnica poštuje taj popis ---------------------------------
 drop function if exists ak_stores_list(text);
 
 create function ak_stores_list(p_plz text)
@@ -39,24 +67,20 @@ stable
 security definer
 set search_path = public
 as $fn$
-    with izvor as (
-        select ak_aldi_scope(p_plz) as regija, ak_najblizi_plz(p_plz) as blizu
-    ),
-    snap as (
+    with snap as (
         select max(d.date) as date
-          from ak_discounts d, izvor i
+          from ak_discounts d
          where d.source <> 'manual'
-           and (d.scope = 'DE' or d.plz = p_plz or d.scope = i.regija)
+           and (d.scope = 'DE' or d.plz = p_plz or d.scope = ak_aldi_scope(p_plz))
     )
     select s.id, s.name, s.slug, s.logo_url,
            count(d.id)::int, count(d.discount_percent)::int
     from ak_discounts d
     join ak_stores s on s.id = d.store_id
     cross join snap
-    cross join izvor i
     where not d.hidden
-      and (d.scope = 'DE' or d.plz = p_plz or d.scope = i.regija or d.plz = i.blizu)
-      -- NOVO: lanci van zida se ne prikazuju ni u traci
+      and (d.scope = 'DE' or d.plz = p_plz or d.scope = ak_aldi_scope(p_plz))
+      -- lanci koji nisu namirnice se ne prikazuju na traci
       and not exists (select 1 from ak_store_sporedni z where z.slug = s.slug)
       and ( (d.source <> 'manual' and d.date = snap.date)
          or (d.source  = 'manual' and d.valid_to is not null) )
@@ -68,6 +92,11 @@ $fn$;
 
 revoke execute on function ak_stores_list(text) from anon, authenticated;
 
--- Provjera poslije pokretanja — u traci smiju ostati samo namirnice,
--- Trinkgut, ROSSMANN i OBI:
---   select name, offers from ak_stores_list('80331');
+-- 4) Provjera — mora vratiti listu, NE prazno --------------------------
+select name, offers from ak_stores_list('80331');
+
+-- Vraćanje nekog lanca na traku:
+--   delete from ak_store_sporedni where slug = 'toom';
+-- Sklanjanje novog:
+--   insert into ak_store_sporedni (slug, razlog) values ('woolworth','razno')
+--   on conflict (slug) do nothing;
