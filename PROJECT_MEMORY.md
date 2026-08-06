@@ -647,6 +647,18 @@ stajalo ispod. Sada: ako danas nema ničega na −50%, traka se ne prikazuje neg
 piše „Danas nema ponuda na −50% i više". Prag prati i naslov na `/akcije/ponude`
 (OffersBrowser, `state.percent >= 50`) i link `?percent=50&top=1`.
 
+### TRAKA PRODAVNICA — i ona poštuje `ak_store_sporedni` (06.08.2026)
+`supabase/akcije-traka.sql`. Dosad su lanci van zida nestajali iz LISTA ali su
+ostajali kao pločica u traci — namjerno, jer je pločica bila jedini put do njih.
+XXXLutz je tako s 1203 ponude i dalje stajao PRVI u traci i izgledao kao glavni
+lanac sajta. Korisnik traži da ih nema ni tamo.
+
+⚠️ POSLJEDICA: do sklonjenih lanaca se VIŠE NE MOŽE doći kroz sučelje. Podaci
+ostaju u bazi i dalje se skupljaju, samo se nigdje ne prikazuju. Vraćanje je i
+dalje `delete from ak_store_sporedni where slug = '…'`.
+
+Redoslijed pokretanja: `akcije-najblizi.sql` → `akcije-zid.sql` → `akcije-traka.sql`.
+
 ### KO SE VIDI NA ZIDU (ak_store_sporedni)
 ⚠️ NIŠTA SE NE BRIŠE. `ak_store_sporedni` je popis lanaca koji se NE guraju na
 opšte liste. Ponude ostaju u bazi, pločica s brojem ostaje u traci prodavnica,
