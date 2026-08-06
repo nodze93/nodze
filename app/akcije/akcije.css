@@ -1043,3 +1043,11 @@
   font-style: normal;
   font-weight: 800;
 }
+
+/* podnaslov trake „Najniže do sada" — objašnjava koliko je tvrdnja jaka */
+.ak .sec-sub {
+  margin: -2px 0 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}

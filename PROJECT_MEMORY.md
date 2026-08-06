@@ -670,6 +670,67 @@ REWE Center 0 od 346, Trinkgut 0 od 94. Oni na pločici pokazuju velik broj, a
 unutra su sve „Angebot" bez popusta. Kaufland ima samo 53 ponude — premalo za
 njihov letak, liči na problem u skrejperu, provjeriti.
 
+### BOT ZA VIJESTI — smanjen na 1 članak dnevno (06.08.2026)
+Odluka korisnika: bot troši previše, a piše i nevažne stvari. NIJE ugašen —
+smanjen. „Jednu vijest dnevno, ali da je važna."
+
+⚠️ VAŽNO ZA UBUDUĆE: postoje DVA pipelinea. `scripts/run-bot.ts` po
+PODRAZUMIJEVANOM pokreće **`pipeline2.ts`** („lijevak"), a NE `pipeline.ts`.
+Stari se pali sa `NOVI_PIPELINE=off`. Kvote `CLANCI_DE`/`CLANCI_SPORT` iz
+workflowa čita SAMO stari pipeline — novi ih uzima iz `bot_config` (admin).
+Lako se pogriješi.
+
+**Dva mjesta koja to podešavaju:**
+1. `/admin/pipeline` → `bot_config`: jedan termin umjesto tri, i kvote
+   `kvota_de=1`, ostale `0`. `pipeline2` sabira sve četiri u `brojObjava`.
+2. `.github/workflows/bot-cron.yml` → `PRAG_TRIAZA: "70"` (bilo 52) i
+   `PRAG_SPORT_SVIJET: "60"` (bilo 36). Prag je „koliko vijest mora biti
+   važna da bi se uopšte pisala". Bolje nijedan članak nego članak ni o čemu
+   — ako ništa ne pređe prag, bot to kaže u logu i ne potroši na pisanje.
+
+**Prekidač za potpuno gašenje već postoji** — `/admin/pipeline`, kvačica
+„Uključen" (`bot_config.aktivan`). `/api/cron/tick` to poštuje i ne dispatchuje
+workflow. Ili: `update bot_config set aktivan = false where id = 1;`
+
+**RSS feed (`lib/live.ts`) NEMA nijedan AI poziv** — radi i dalje, besplatno,
+bez obzira na bota. To su sirovi naslovi DE/BiH/Svijet.
+
+Anthropic zovu samo `lib/bot/agenti/claude.ts`. `lib/claude.ts` postoji ali ga
+NIKO ne uvozi — mrtav kod, ne troši ništa.
+
+### „NAJNIŽE DO SADA" — druga traka na naslovnoj (06.08.2026)
+**Problem:** traka „U pola cijene i više" radi SAMO za lance koji objave staru
+cijenu. Izmjereno 06.08. za PLZ 80331: ≥50% ima svega **15 artikala** (E center
+6, ROSSMANN 3, OBI/Kaufland po 2, Aldi Süd/EDEKA po 1), a najjači su parfemi
+(Etienne Aigner −74%), ne hrana. REWE, PENNY, Netto, REWE Center i Trinkgut —
+oko **1.360 ponuda** — nikad se ne pojave jer im marktguru nije dao staru cijenu.
+
+⚠️ NJIHOV POPUST SE NE MOŽE POŠTENO IZRAČUNATI. Ne znamo im redovnu cijenu s
+police. Uzimanje najviše viđene cijene kao reference = izmišljen popust; zakonska
+referenca (najniža u 30 dana) daje MANJI popust, pa ni ona ne puni zid. Ne
+pokušavati ponovo.
+
+**Rješenje:** druga mjera koja vrijedi za sve jednako — *„najniža cijena koju smo
+za taj artikal ikad vidjeli KOD TOG LANCA"*. Ne treba tuđa stara cijena, samo
+naša historija snapshota (31 dan).
+
+- `supabase/akcije-najnize-ikad.sql` → funkcija `ak_najnize_ikad(plz, dana,
+  min_dana, limit)`. Zove `ak_discounts_search` iznutra, pa nasljeđuje SVA
+  pravila (regije, najbliži grad, datumi, lanci van zida) — ne duplira ih.
+- ⚠️ ZAŠTITA OD LAŽNOG REKORDA: artikal mora biti viđen bar **3 različita dana
+  prije današnjeg**. Bez toga bi svaki NOVI artikal bio „najniži ikad" (viđen
+  jednom). Historija namjerno isključuje današnji dan — inače je svaki artikal
+  jednak sam sebi.
+- ⚠️ Poređenje ide po (prodavnica + naziv). Cijene se NE miješaju između lanaca.
+- ⚠️ NE PIŠE SE PROCENAT ni „staro → novo" — samo da je najniže što smo vidjeli
+  i kroz koliko dana gledamo, da korisnik zna koliko je tvrdnja jaka.
+- `app/api/akcije/najnize/route.ts` + `components/akcije/NajnizeIkad.tsx`.
+  Ako funkcija nije pokrenuta u bazi, ruta vrati praznu listu i traka se ne
+  prikaže — naslovna se NE ruši zbog dodatka.
+
+Traka postaje ozbiljna tek s 2-3 sedmice historije; retencija je 31 dan pa se
+sama puni.
+
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.
 - Korisnik radi Commit + Push čim se izmjena napravi (da se verzije ne razilaze).

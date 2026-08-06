@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import OfferCard from '@/components/akcije/OfferCard';
 import { usePlz } from '@/components/akcije/PlzProvider';
 import PlzSheet from '@/components/akcije/PlzSheet';
+import NajnizeIkad from '@/components/akcije/NajnizeIkad';
 import Recommendation from '@/components/akcije/Recommendation';
 import StoreStrip from '@/components/akcije/StoreStrip';
 import { IconCart, IconChevron, IconStar } from '@/components/akcije/icons';
@@ -130,6 +131,8 @@ export default function HomePage() {
           </div>
         )}
       </section>
+
+      <NajnizeIkad plz={aktivniPlz} />
 
       <Recommendation items={items} />
 

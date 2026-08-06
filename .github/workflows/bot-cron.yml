@@ -56,4 +56,13 @@ jobs:
           CLANCI_BIH: ${{ github.event.inputs.bih || '1' }}
           CLANCI_SVIJET: ${{ github.event.inputs.svijet || '1' }}
           CLANCI_SPORT: ${{ github.event.inputs.sport || '1' }}
+          # PRAG TRIAŽE — koliko vijest mora biti VAŽNA da bi se uopšte pisala.
+          # Podrazumijevano je 52; podignuto na 70 (odluka korisnika 06.08.):
+          # bolje NIJEDAN članak nego članak ni o čemu. Ako neki dan ništa ne
+          # pređe prag, bot to i kaže u logu i ne potroši ništa na pisanje.
+          # Spustiti nazad = promijeni broj ovdje (52 = staro ponašanje).
+          PRAG_TRIAZA: "70"
+          # Sport i svijet imaju svoj, niži prag. Pošto su im kvote 0, ovo
+          # više ništa ne radi — ostaje da se zna gdje je kad zatreba.
+          PRAG_SPORT_SVIJET: "60"
         run: npx tsx scripts/run-bot.ts
