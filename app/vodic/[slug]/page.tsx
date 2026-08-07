@@ -27,6 +27,30 @@ interface VodicNorm {
   min_citanja: number;
   tekst: string | null;
   koraci: Korak[];
+  provjereno: string | null; // 'YYYY-MM-DD' — datum zadnje provjere činjenica
+}
+
+// "2026-08-07" -> "7. avgusta 2026." (prikaz kao u mockupu: "Zadnje ažurirano")
+const MJESECI = [
+  "januara", "februara", "marta", "aprila", "maja", "juna",
+  "jula", "avgusta", "septembra", "oktobra", "novembra", "decembra",
+];
+function formatirajDatum(iso: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return null;
+  return `${Number(m[3])}. ${MJESECI[Number(m[2]) - 1]} ${m[1]}.`;
+}
+
+// Dugim vodičima (tekst) sadržaj se pravi iz <h2> naslova: svakom se doda
+// id="sekcija-N" pa "U ovom vodiču" skače na njih — isto kao koraci kod kratkih.
+function izdvojiSekcije(html: string): { html: string; sekcije: string[] } {
+  const sekcije: string[] = [];
+  const out = html.replace(/<h2>([\s\S]*?)<\/h2>/g, (_sve, naslov: string) => {
+    const cist = naslov.replace(/<[^>]+>/g, "").trim();
+    sekcije.push(cist);
+    return `<h2 id="sekcija-${sekcije.length}">${naslov}</h2>`;
+  });
+  return { html: out, sekcije };
 }
 
 // Baza prvo; ako nema, padni na statični (kod). Tako se SVAKI vodič otvara.
@@ -42,6 +66,7 @@ async function ucitajVodic(slug: string): Promise<VodicNorm | null> {
       min_citanja: db.min_citanja,
       tekst: db.tekst,
       koraci: db.koraci ?? [],
+      provjereno: db.provjereno ?? null,
     };
   }
   const s = getVodic(slug);
@@ -55,6 +80,7 @@ async function ucitajVodic(slug: string): Promise<VodicNorm | null> {
       min_citanja: s.minCitanja,
       tekst: null,
       koraci: s.koraci,
+      provjereno: null, // statični vodiči iz koda nemaju datum provjere
     };
   }
   return null;
@@ -102,6 +128,10 @@ export default async function VodicPage({ params }: Props) {
     ? `${vodic.min_citanja} min čitanja`
     : `${imaKoraka ? koraci.length + " koraka · " : ""}${vodic.min_citanja} min čitanja`;
 
+  // Dugi vodič: sadržaj se gradi iz h2 naslova teksta, ne iz koraka.
+  const obradjen = vodic.tekst ? izdvojiSekcije(vodic.tekst) : null;
+  const datumProvjere = vodic.provjereno ? formatirajDatum(vodic.provjereno) : null;
+
   return (
     <>
       <Nav />
@@ -117,15 +147,40 @@ export default async function VodicPage({ params }: Props) {
         <span className="vd-tag" style={{ background: boja.bg, color: boja.tekst }}>{dk.label}</span>
         <h1 className="vd-title">{vodic.naziv}</h1>
         <p className="vd-opis">{vodic.opis}</p>
-        <div className="vd-meta">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {metaTekst}
+        <div className="vd-meta-red">
+          <span className="vd-meta">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {metaTekst}
+          </span>
+          {datumProvjere && (
+            <span className="vd-meta">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="5" width="18" height="16" rx="2.5" /><path d="M3 10h18M8 3v4M16 3v4" strokeLinecap="round" />
+              </svg>
+              Zadnje ažurirano: {datumProvjere}
+            </span>
+          )}
         </div>
 
-        {/* U OVOM VODIČU */}
-        {imaKoraka && (
+        {/* U OVOM VODIČU — dugi vodiči iz h2 naslova, kratki iz koraka */}
+        {obradjen && obradjen.sekcije.length > 0 ? (
+          <div className="vd-toc">
+            <div className="vd-toc-head">U ovom vodiču:</div>
+            {obradjen.sekcije.map((naslov, i) => (
+              <a key={i} href={`#sekcija-${i + 1}`} className="vd-toc-item">
+                <span className="vd-toc-doc">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#1a8a4a" strokeWidth="2">
+                    <path d="M7 3h7l4 4v14H7z" strokeLinejoin="round" /><path d="M14 3v4h4M9 12h6M9 16h6" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <span className="vd-toc-txt">{i + 1}. {naslov}</span>
+                <span className="vd-toc-chev">›</span>
+              </a>
+            ))}
+          </div>
+        ) : imaKoraka ? (
           <div className="vd-toc">
             <div className="vd-toc-head">U ovom vodiču:</div>
             {koraci.map((korak) => (
@@ -140,7 +195,7 @@ export default async function VodicPage({ params }: Props) {
               </a>
             ))}
           </div>
-        )}
+        ) : null}
 
         {/* Akcije */}
         <div className="vd-actions">
@@ -155,8 +210,8 @@ export default async function VodicPage({ params }: Props) {
 
         {/* SADRŽAJ */}
         <div id="sadrzaj" className="vd-content">
-          {vodic.tekst ? (
-            <div className="vodic-rich-tekst" dangerouslySetInnerHTML={{ __html: vodic.tekst }} />
+          {obradjen ? (
+            <div className="vodic-rich-tekst" dangerouslySetInnerHTML={{ __html: obradjen.html }} />
           ) : imaKoraka ? (
             koraci.map((korak, i) => (
               <div
@@ -201,7 +256,10 @@ export default async function VodicPage({ params }: Props) {
         .vd-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 7px; }
         .vd-title { font-size: 24px; font-weight: 800; line-height: 1.25; letter-spacing: -0.4px; color: #111827; margin: 10px 0 8px; }
         .vd-opis { font-size: 15px; color: #4B5563; line-height: 1.6; }
-        .vd-meta { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #9CA3AF; font-weight: 600; margin-top: 10px; }
+        .vd-meta-red { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 10px; }
+        .vd-meta { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #9CA3AF; font-weight: 600; }
+        /* Anchor skokovi iz "U ovom vodiču" — da naslov ne završi ispod sticky headera */
+        .vd-content [id] { scroll-margin-top: 72px; }
 
         .vd-toc { background: #fff; border: 1px solid #eef0f2; border-radius: 16px; padding: 8px; margin-top: 20px; }
         .vd-toc-head { font-size: 14px; font-weight: 800; color: #111827; padding: 8px 10px 6px; }

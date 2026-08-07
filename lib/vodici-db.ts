@@ -21,6 +21,10 @@ export interface VodicRow {
   tagovi: string[];
   tekst: string | null;       // Rich HTML sadržaj (za duge vodiče)
   koraci: VodicKorak[] | null; // Step-by-step (za kraće vodiče)
+  // Datum kad su ČINJENICE zadnji put provjerene (ne kad je red mijenjan —
+  // za to je updated_at). Kolona: supabase/vodici-provjereno.sql.
+  // Opciono namjerno: dok kolone nema u bazi, polje je undefined i ništa ne puca.
+  provjereno?: string | null;
   aktivan: boolean;
   created_at: string;
   updated_at: string;
