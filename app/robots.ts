@@ -8,8 +8,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // Admin i API se ne indeksiraju.
-        disallow: ["/admin", "/api/"],
+        // Admin i API se ne indeksiraju. /kalkulator-app/ su sirovi fajlovi
+        // kalkulatora koji žive u iframe-u — indeksira se /brutto-netto,
+        // ne njegov unutrašnji dokument (inače Google vidi duplikat).
+        disallow: ["/admin", "/api/", "/kalkulator-app/"],
       },
     ],
     sitemap: `${BASE}/sitemap.xml`,

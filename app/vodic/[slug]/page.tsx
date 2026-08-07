@@ -132,9 +132,43 @@ export default async function VodicPage({ params }: Props) {
   const obradjen = vodic.tekst ? izdvojiSekcije(vodic.tekst) : null;
   const datumProvjere = vodic.provjereno ? formatirajDatum(vodic.provjereno) : null;
 
+  // Strukturirani podaci za Google (Article + mrvice). </ se maskira da
+  // sadržaj iz baze nikad ne može zatvoriti <script> tag.
+  const BAZA = (process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de").replace(/\/+$/, "");
+  const urlVodica = `${BAZA}/vodic/${vodic.slug}`;
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article",
+        headline: vodic.naziv,
+        description: vodic.opis,
+        inLanguage: "bs",
+        mainEntityOfPage: { "@type": "WebPage", "@id": urlVodica },
+        image: `${BAZA}/og-default.jpg`,
+        ...(vodic.provjereno ? { dateModified: vodic.provjereno } : {}),
+        author: { "@type": "Organization", name: "kodnas.de", url: BAZA },
+        publisher: {
+          "@type": "Organization",
+          name: "kodnas.de",
+          logo: { "@type": "ImageObject", url: `${BAZA}/icon-512.png` },
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Vodiči", item: `${BAZA}/vodici` },
+          { "@type": "ListItem", position: 2, name: vodic.naziv, item: urlVodica },
+        ],
+      },
+    ],
+  }).replace(/</g, "\\u003c");
+
   return (
     <>
       <Nav />
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
 
       <main className="vd">
         <Link href="/vodici" className="vd-back">← Vodiči</Link>
@@ -291,18 +325,57 @@ export default async function VodicPage({ params }: Props) {
         .vd-cta p { font-size: 13px; color: #166534; opacity: .85; line-height: 1.5; margin-bottom: 14px; }
         .vd-cta-btn { display: inline-block; padding: 11px 20px; background: #1a8a4a; color: #fff; border-radius: 10px; font-size: 14px; font-weight: 700; text-decoration: none; }
 
-        .vodic-rich-tekst { font-size: 15px; line-height: 1.75; color: #374151; }
-        .vodic-rich-tekst h2 { font-size: 21px; font-weight: 700; margin: 34px 0 14px; color: #111827; letter-spacing: -0.3px; border-bottom: 2px solid #EAF7EE; padding-bottom: 8px; }
-        .vodic-rich-tekst h3 { font-size: 17px; font-weight: 700; margin: 22px 0 10px; color: #374151; }
-        .vodic-rich-tekst p { margin-bottom: 14px; }
-        .vodic-rich-tekst ul, .vodic-rich-tekst ol { padding-left: 22px; margin-bottom: 16px; }
-        .vodic-rich-tekst li { margin-bottom: 6px; }
-        .vodic-rich-tekst strong { font-weight: 700; }
-        .vodic-rich-tekst a { color: #1a8a4a; text-decoration: underline; }
-        .vodic-rich-tekst code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
-        .vodic-rich-tekst table.vd-tabela { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 14px; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; }
+        /* ===== DUGI TEKST — čitljivost prije svega =====
+           16px/1.8, kraći razmaci vizuelno "dišu"; kutije (savjet/zamka/info)
+           daju isti kartičasti ritam kao koraci kod kratkih vodiča. */
+        .vodic-rich-tekst { font-size: 16px; line-height: 1.8; color: #333d4d; }
+        .vodic-rich-tekst > p:first-child { font-size: 17.5px; line-height: 1.7; color: #1f2937; }
+        .vodic-rich-tekst h2 { font-size: 22px; font-weight: 800; margin: 42px 0 16px; color: #111827; letter-spacing: -0.3px; border-bottom: 2px solid #EAF7EE; padding-bottom: 10px; }
+        .vodic-rich-tekst h3 { font-size: 18px; font-weight: 700; margin: 28px 0 10px; color: #1f2937; }
+        .vodic-rich-tekst p { margin-bottom: 16px; }
+        .vodic-rich-tekst ul, .vodic-rich-tekst ol { padding-left: 24px; margin-bottom: 18px; }
+        .vodic-rich-tekst li { margin-bottom: 10px; }
+        .vodic-rich-tekst li::marker { color: #1a8a4a; font-weight: 700; }
+        .vodic-rich-tekst strong { font-weight: 700; color: #111827; }
+        .vodic-rich-tekst a { color: #1a8a4a; text-decoration: underline; text-underline-offset: 2px; }
+        .vodic-rich-tekst code { background: #f3f4f6; padding: 2px 7px; border-radius: 6px; font-size: 14px; font-weight: 600; }
+
+        /* Kutije — 💡 savjet (zeleno), ⚠️ zamka (žuto), ℹ️ napomena (plavo).
+           Dva ravnopravna zapisa u HTML-u vodiča:
+             <blockquote class="vd-savjet">💡 Savjet: ...</blockquote>   (format tekstova)
+             <div class="vd-box vd-box-tip"><span>💡</span><span>...</span></div>
+           Oba se stilizuju isto — admin može lijepiti bilo koji. */
+        .vodic-rich-tekst blockquote { margin: 20px 0; }
+        .vodic-rich-tekst blockquote.vd-savjet,
+        .vodic-rich-tekst blockquote.vd-upozorenje,
+        .vodic-rich-tekst blockquote.vd-info { border-radius: 14px; padding: 14px 16px; font-size: 14.5px; line-height: 1.65; }
+        .vodic-rich-tekst blockquote.vd-savjet { background: #EAF7EE; border: 1px solid #C7EAD5; color: #14532D; }
+        .vodic-rich-tekst blockquote.vd-savjet strong { color: #14532D; }
+        .vodic-rich-tekst blockquote.vd-upozorenje { background: #FEF6E7; border: 1px solid #F1DCB2; color: #7C4A03; }
+        .vodic-rich-tekst blockquote.vd-upozorenje strong { color: #7C4A03; }
+        .vodic-rich-tekst blockquote.vd-info { background: #EFF4FB; border: 1px solid #D3E0F0; color: #27415F; }
+        .vodic-rich-tekst blockquote.vd-info strong { color: #27415F; }
+        .vodic-rich-tekst blockquote a { color: inherit; font-weight: 600; }
+        .vodic-rich-tekst .vd-box { display: flex; gap: 11px; align-items: flex-start; border-radius: 14px; padding: 14px 16px; margin: 20px 0; font-size: 14.5px; line-height: 1.65; }
+        .vodic-rich-tekst .vd-box > span:first-child { font-size: 19px; line-height: 1.35; flex-shrink: 0; }
+        .vodic-rich-tekst .vd-box p { margin: 0; }
+        .vodic-rich-tekst .vd-box-tip { background: #EAF7EE; border: 1px solid #C7EAD5; color: #14532D; }
+        .vodic-rich-tekst .vd-box-tip strong { color: #14532D; }
+        .vodic-rich-tekst .vd-box-warn { background: #FEF6E7; border: 1px solid #F1DCB2; color: #7C4A03; }
+        .vodic-rich-tekst .vd-box-warn strong { color: #7C4A03; }
+        .vodic-rich-tekst .vd-box-info { background: #EFF4FB; border: 1px solid #D3E0F0; color: #27415F; }
+        .vodic-rich-tekst .vd-box-info strong { color: #27415F; }
+
+        /* Tabele: na telefonu se NE gnječe — klize horizontalno unutar okvira */
+        .vodic-rich-tekst .vd-tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 18px 0; border: 1px solid #e5e7eb; border-radius: 12px; }
+        .vodic-rich-tekst table.vd-tabela { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0; }
+        .vodic-rich-tekst .vd-tabela-wrap table.vd-tabela { border: none; }
         .vodic-rich-tekst table.vd-tabela th { background: #f0fdf4; color: #166534; font-weight: 700; padding: 10px 14px; text-align: left; border-bottom: 1px solid #d1fae5; }
-        .vodic-rich-tekst table.vd-tabela td { padding: 9px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+        .vodic-rich-tekst table.vd-tabela td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+        /* Kolone se normalno prelamaju; iznosi u tekstu koriste &nbsp; pa se
+           "5.812,50 €" nikad ne prelomi na pola. Široka tabela dobije
+           min-width u HTML-u i klizi u okviru, uske stanu cijele. */
+        .vodic-rich-tekst table.vd-tabela td:first-child { min-width: 110px; }
         .vodic-rich-tekst table.vd-tabela tr:last-child td { border-bottom: none; }
         .vodic-rich-tekst table.vd-tabela tr:nth-child(even) td { background: #fafafa; }
       `}</style>

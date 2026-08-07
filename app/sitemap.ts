@@ -73,15 +73,47 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   }
 
-  // Vodiči (hard-kodirani u lib/data/vodici.ts)
+  // Brutto-Netto kalkulator — do sada uopšte NIJE bio u sitemapu.
+  // Bez lastModified: bolje ništa nego lažni "danas" na svaki zahtjev.
+  stavke.push({
+    url: `${BASE}/brutto-netto`,
+    changeFrequency: "monthly",
+    priority: 0.9,
+  });
+
+  // Vodiči — kod + baza SPOJENI po slug-u (baza pobjeđuje, kao na sajtu).
+  // Do sada su ulazili samo hard-kodirani, pa su vodiči uneseni kroz admin
+  // Googleu u sitemapu bili nevidljivi. lastModified je STVARAN datum
+  // (provjereno/updated_at iz baze), ne "sada" — lažni svježi datum na
+  // svaki zahtjev uči Google da sitemapu ne vjeruje.
+  const vodiciMapa = new Map<string, MetadataRoute.Sitemap[number]>();
   for (const v of getAllVodici()) {
-    stavke.push({
+    vodiciMapa.set(v.slug, {
       url: `${BASE}/vodic/${v.slug}`,
-      lastModified: sada,
       changeFrequency: "monthly",
       priority: 0.6,
     });
   }
+  if (db) {
+    try {
+      // select("*") namjerno: kolona `provjereno` možda još ne postoji
+      // (supabase/vodici-provjereno.sql), a "*" ne puca na tome.
+      const { data } = await db.from("vodici").select("*").eq("aktivan", true).limit(500);
+      for (const v of data || []) {
+        const lm = v.provjereno || v.updated_at || v.created_at;
+        vodiciMapa.set(v.slug, {
+          url: `${BASE}/vodic/${v.slug}`,
+          ...(lm ? { lastModified: new Date(lm) } : {}),
+          changeFrequency: "monthly",
+          // Dugi provjereni vodiči su najvredniji sadržaj — neka to i sitemap kaže.
+          priority: v.tekst ? 0.8 : 0.6,
+        });
+      }
+    } catch {
+      /* baza pala — ostaju vodiči iz koda */
+    }
+  }
+  stavke.push(...vodiciMapa.values());
 
   return stavke;
 }

@@ -17,6 +17,28 @@ export const metadata: Metadata = {
   alternates: { canonical: "/brutto-netto" },
 };
 
+// Strukturirani podaci: Googleu kažemo da je ovo besplatna web-aplikacija.
+// Stranica je inače čist iframe (kalkulator preko cijelog ekrana — namjerno),
+// pa je ovo jedini signal o sadržaju pored <title> i opisa.
+const jsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Brutto-Netto Rechner 2026",
+  url: "https://kodnas.de/brutto-netto",
+  description:
+    "Kalkulator neto plate u Njemačkoj za 2026: poreska klasa, savezna država, djeca, zdravstveno i penziono osiguranje.",
+  applicationCategory: "FinanceApplication",
+  operatingSystem: "Web",
+  inLanguage: "bs",
+  offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
+  publisher: { "@type": "Organization", name: "kodnas.de", url: "https://kodnas.de" },
+}).replace(/</g, "\\u003c");
+
 export default function BruttoNettoPage() {
-  return <BnFrame />;
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      <BnFrame />
+    </>
+  );
 }
