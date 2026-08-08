@@ -91,7 +91,7 @@ values (
 <p>Možeš, pogotovo kod privatnih stanodavaca: ugovor o radu, prve platne liste i garancija rođaka pokrivaju rupu. Schufu ionako izvadi čim otvoriš račun — poslije prve godine urednog plaćanja ona radi za tebe.</p>
 
 <h3>Otkazao sam, a stanodavac traži da krečim cijeli stan?</h3>
-<p>Zavisi šta piše u ugovoru — mnoge klauzule o „ljepoticama popravkama" su ništavne. Prije nego platiš ijednog majstora, ponesi ugovor u Mieterverein; često ispadne da ne duguješ ništa.</p>
+<p>Zavisi šta piše u ugovoru — mnoge klauzule o „kozmetičkim popravkama" (Schönheitsreparaturen) su ništavne. Prije nego platiš ijednog majstora, ponesi ugovor u Mieterverein; često ispadne da ne duguješ ništa.</p>
 
 <p><em>Informativno, ne predstavlja pravni savjet. Rokovi i pravila imaju izuzetke, a pojedinačni ugovori se razlikuju — za svoj slučaj provjeri kod Mietervereina ili advokata.</em></p>
 
