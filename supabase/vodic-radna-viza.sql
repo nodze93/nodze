@@ -1,17 +1,15 @@
 -- =====================================================================
 --  VODIC: Radna viza za Njemačku — dva puta i koji je tvoj
---  Supabase -> SQL Editor -> Run.  Samostalan fajl, bezbjedno i ponovo.
+--  Ispravka 8.8.: lista dokumenata uskladjena sa ZVANICNOM listom Ambasade (sarajewo.diplo.de) — smjestaj i osiguranje NISU na listi.
+--  Bezbjedno pokrenuti i ponovo (upsert po slug-u).
 -- =====================================================================
 
 alter table vodici add column if not exists provjereno date;
 
 insert into vodici (slug, naziv, opis, ikona, kategorija, min_citanja, tagovi, tekst, aktivan)
 values (
-  'radna-viza-njemacka',
-  'Radna viza za Njemačku — dva puta i koji je tvoj',
-  'Westbalkanregelung ili Fachkräfte, kvota od 50.000, Vorabzustimmung, i koraci od ugovora do prvog dana',
-  '📋', 'viza', 7,
-  array['viza', 'Westbalkan', 'Fachkräfte', 'VisaMetric', 'Vorabzustimmung'],
+  'radna-viza-njemacka', 'Radna viza za Njemačku — dva puta i koji je tvoj', 'Westbalkanregelung ili Fachkräfte, kvota od 50.000, Vorabzustimmung, i koraci od ugovora do prvog dana',
+  '📋', 'viza', 7, array['viza', 'Westbalkan', 'Fachkräfte', 'VisaMetric', 'Vorabzustimmung'],
   $vodic$
 <p>Većina vodiča o radnoj vizi napisana je za ljude s fakultetskom diplomom koja se priznaje u Njemačkoj. Ako si s Balkana — iz BiH, Srbije, Crne Gore, Albanije, Kosova ili Sjeverne Makedonije — postoji i drugi put koji ne zahtijeva da ti kvalifikacija bude formalno priznata. Mnogi za njega ne znaju i odustanu prije nego što uopšte pokušaju.</p>
 
@@ -109,16 +107,23 @@ values (
 
 <h3>5. Pripremi dokumente</h3>
 
+<p>Zvanična lista Ambasade za Westbalkanregelung kraća je nego što ljudi misle. <strong>U svakom slučaju trebaš:</strong></p>
+
 <ul>
-<li>Pasoš koji važi još najmanje <strong>18 mjeseci</strong> (ne 6, kako se često pogrešno navodi)</li>
-<li>Biometrijske fotografije</li>
-<li>Potpisan Arbeitsvertrag</li>
-<li>Diploma i ovjereni sudski prijevod (ako ideš Fachkräfte putem)</li>
-<li>Potvrda o priznavanju kvalifikacije, ako je zanimanje reglementirano</li>
-<li>Dokaz o smještaju u Njemačkoj</li>
-<li>Dokaz o zdravstvenom osiguranju za period do prve plate</li>
-<li>Dokaz o penzijskom ili plati, ako imaš više od 45 godina</li>
+<li>pasoš koji važi još najmanje <strong>18 mjeseci</strong> (ne 6, kako se često pogrešno navodi),</li>
+<li><strong>1 aktuelnu biometrijsku fotografiju</strong>,</li>
+<li>popunjen zahtjev za nacionalnu vizu — online preko <strong>VIDEX-a</strong>.</li>
 </ul>
+
+<p><strong>Za Westbalkanregelung uz to:</strong></p>
+
+<ul>
+<li><strong>Vorabzustimmung</strong> Savezne agencije za rad,</li>
+<li><strong>Erklärung zum Beschäftigungsverhältnis</strong> — izjavu o radnom odnosu koju popunjava poslodavac (ponesi uz nju i potpisan Arbeitsvertrag),</li>
+<li>taksu od <strong>75&nbsp;€</strong> pri predaji.</li>
+</ul>
+
+<blockquote class="vd-upozorenje"><strong>⚠️ Važno:</strong> Dokaz o smještaju i dokaz o zdravstvenom osiguranju <strong>nisu na listi</strong> za radnu vizu — smještaj se traži samo kod spajanja porodice. Ako ideš Fachkräfte putem, dodaješ diplomu sa sudskim prijevodom, a za reglementirana zanimanja i potvrdu o priznavanju. Uslov za starije od 45 godina (plata ili penzijsko) dokazuje se kroz Vorabzustimmung kod Agencije za rad — to rješava poslodavac, ne ti na šalteru.</blockquote>
 
 <blockquote class="vd-savjet"><strong>💡 Savjet:</strong> Prijevode radi kod sudskog tumača, ne kod poznanika koji zna njemački.</blockquote>
 
@@ -167,7 +172,6 @@ on conflict (slug) do update set
   tagovi = excluded.tagovi, tekst = excluded.tekst,
   aktivan = true, updated_at = now();
 
-update vodici set provjereno = date '2026-08-07' where slug = 'radna-viza-njemacka';
+update vodici set provjereno = date '2026-08-08' where slug = 'radna-viza-njemacka';
 
-select slug, naziv, min_citanja, provjereno, length(tekst) as duzina
-from vodici where slug = 'radna-viza-njemacka';
+select slug, naziv, provjereno, length(tekst) as duzina from vodici where slug = 'radna-viza-njemacka';

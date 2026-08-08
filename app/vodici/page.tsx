@@ -37,6 +37,7 @@ export default async function VodiciPage() {
       min_citanja: v.minCitanja,
       brojKoraka: v.koraci.length,
       imaTekst: false,
+      provjereno: null,
     });
   }
 
@@ -51,6 +52,7 @@ export default async function VodiciPage() {
         min_citanja: v.min_citanja,
         brojKoraka: v.koraci?.length ?? 0,
         imaTekst: !!v.tekst,
+        provjereno: v.provjereno ?? null,
       });
     }
   } catch {

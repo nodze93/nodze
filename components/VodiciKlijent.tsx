@@ -17,6 +17,15 @@ export interface VodicKartica {
   min_citanja: number;
   brojKoraka: number;
   imaTekst: boolean;
+  // datum zadnje provjere činjenica ('YYYY-MM-DD') — samo dugi vodiči iz baze
+  provjereno?: string | null;
+}
+
+// "2026-08-08" -> "8. 8. 2026."
+function kratkiDatum(iso: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return null;
+  return `${Number(m[3])}. ${Number(m[2])}. ${m[1]}.`;
 }
 
 function Sat() {
@@ -39,10 +48,14 @@ export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
   const [aktivna, setAktivna] = useState("sve");
 
   const grupa = VODIC_KATEGORIJE.find((k) => k.key === aktivna);
-  const prikazani =
+  const filtrirani =
     !grupa || grupa.cats === null
       ? vodici
       : vodici.filter((v) => grupa.cats!.includes(v.kategorija));
+
+  // Detaljni (dugi, provjereni) vodiči idu na vrh — to je novi sadržaj sajta.
+  const detaljni = filtrirani.filter((v) => v.imaTekst);
+  const prikazani = [...detaljni, ...filtrirani.filter((v) => !v.imaTekst)];
 
   const naslovSekcije = aktivna === "sve" ? "Svi vodiči" : grupa?.label ?? "Vodiči";
 
@@ -103,6 +116,11 @@ export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
                   <span className="vd-min">
                     <Sat /> {v.imaTekst ? `${v.min_citanja} min` : `${v.brojKoraka} koraka`}
                   </span>
+                  {v.imaTekst && (
+                    <span className="vd-badge-novo">
+                      {v.provjereno ? `Ažurirano ${kratkiDatum(v.provjereno)}` : "Detaljan vodič"}
+                    </span>
+                  )}
                 </span>
               </span>
               <span className="vd-card-bm"><Bookmark /></span>
@@ -175,6 +193,10 @@ export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
         .vd-card-meta { display: flex; align-items: center; gap: 10px; margin-top: 3px; }
         .vd-tag { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
         .vd-min { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: #9CA3AF; white-space: nowrap; }
+        .vd-badge-novo {
+          font-size: 10px; font-weight: 800; letter-spacing: .3px; white-space: nowrap;
+          background: #1a8a4a; color: #fff; padding: 3px 8px; border-radius: 999px;
+        }
         .vd-card-bm { flex-shrink: 0; align-self: flex-start; padding-top: 2px; }
       `}</style>
     </div>

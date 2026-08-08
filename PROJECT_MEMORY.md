@@ -47,6 +47,11 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
   (izvori se čuvaju u chatu/SQL komentaru); brojevi se SVAKI provjere prije objave.
 - Svaki broj u eurima gdje god može (ne samo procenti). Bosanski ugao obavezan
   (BH 6, povratak, dijaspora situacije) — to nas dijeli od njemačkih sajtova.
+- LISTE DOKUMENATA (lekcija 8.8.2026., radna viza): lista dokumenata u vodič
+  ulazi ISKLJUČIVO prepisana sa zvanične stranice (ambasada/ministarstvo/kasa),
+  NIKAD po logici "valjda treba i...". Greška: smještaj i osiguranje stajali
+  u listi za radnu vizu, a NISU na zvaničnoj listi (sarajewo.diplo.de).
+  Poslije svake objave: samoprovjera tvrdnji (✅ zvanično / 🟡 sekundarno / 🔴 ispravi).
 - FORMULA SVAKOG VODIČA (njegova, 7.8.2026.): 1) ŠTA DOBIJAŠ od države
   (pravo/novac, u eurima), 2) NAJLAKŠI PUT do toga — uvijek provjeriti da li je
   lakše "preko Bosne" (uradi u BiH → priznaj u Njemačkoj), 3) šta izbjeći.

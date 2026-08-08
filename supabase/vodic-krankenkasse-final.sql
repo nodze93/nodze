@@ -1,8 +1,6 @@
 -- =====================================================================
---  VODIC: Krankenkasse — prijava, cijene i koju kasu izabrati  (v3)
---  Dopuna 7.8.: participacija PRECIZNO — placa se u APOTECI (ne kod ljekara),
---  po pakovanju, djeca 0, lista bez participacije, plafon 2 %/1 %,
---  najavljeno poskupljenje 7,50-15 evidentirano kao prijedlog.
+--  VODIC: Krankenkasse — prijava, cijene i koju kasu izabrati
+--  Ispravka 8.8.: broj kasa koje su poskupjele 1.1. (izvori se ne slazu 33/43/45 -> "tridesetak, preko 40 tokom godine").
 --  Bezbjedno pokrenuti i ponovo (upsert po slug-u).
 -- =====================================================================
 
@@ -10,11 +8,8 @@ alter table vodici add column if not exists provjereno date;
 
 insert into vodici (slug, naziv, opis, ikona, kategorija, min_citanja, tagovi, tekst, aktivan)
 values (
-  'krankenkasse',
-  'Krankenkasse — prijava, cijene i koju kasu izabrati',
-  'Koliko košta 2026., ko se osigurava besplatno uz tebe, zubi, participacije, promjena kase i šta ti treba kad ideš u Bosnu',
-  '🏥', 'zdravstvo', 8,
-  array['zdravstvo','osiguranje','Krankenkasse','zubi','participacija','BiH'],
+  'krankenkasse', 'Krankenkasse — prijava, cijene i koju kasu izabrati', 'Koliko košta 2026., ko se osigurava besplatno uz tebe, zubi, participacije, promjena kase i šta ti treba kad ideš u Bosnu',
+  '🏥', 'zdravstvo', 8, array['zdravstvo', 'osiguranje', 'Krankenkasse', 'zubi', 'participacija', 'BiH'],
   $vodic$
 <p>Zdravstveno osiguranje u Njemačkoj nije opcija nego zakonska obaveza. Ako si zaposlen, poslodavac te prijavljuje — ali <strong>kasu biraš ti</strong>, i taj izbor te košta ili štedi nekoliko stotina eura godišnje. Većina ljudi to nikad ne provjeri, pa ostanu tamo gdje ih je neko upisao prvi dan.</p>
 
@@ -81,7 +76,7 @@ values (
 </tbody>
 </table>
 
-<p>Prosjek je 2,9 posto, raspon od 2,18 do 4,39. Oko 45 kasa poskupjelo je 1. januara 2026.</p>
+<p>Prosjek je 2,9 posto, raspon od 2,18 do 4,39. Tridesetak kasa poskupjelo je već 1. januara 2026., a tokom godine ih je preko 40.</p>
 
 <p><strong>Šta to znači u novcu:</strong> razlika između TK-a i Barmera je 0,6 postotnih poena. Na bruto plati od 3.000 eura to je oko 9 eura mjesečno tvog dijela. Nije ogromno, ali je besplatno — jedan formular.</p>
 
@@ -200,7 +195,6 @@ on conflict (slug) do update set
   tagovi = excluded.tagovi, tekst = excluded.tekst,
   aktivan = true, updated_at = now();
 
-update vodici set provjereno = date '2026-08-07' where slug = 'krankenkasse';
+update vodici set provjereno = date '2026-08-08' where slug = 'krankenkasse';
 
-select slug, naziv, min_citanja, provjereno, length(tekst) as duzina
-from vodici where slug = 'krankenkasse';
+select slug, naziv, provjereno, length(tekst) as duzina from vodici where slug = 'krankenkasse';
