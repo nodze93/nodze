@@ -1,6 +1,9 @@
 -- =====================================================================
---  VODIC: Krankenkasse — prijava, cijene i koju kasu izabrati
---  Supabase -> SQL Editor -> Run.  Samostalan fajl, bezbjedno i ponovo.
+--  VODIC: Krankenkasse — prijava, cijene i koju kasu izabrati  (v3)
+--  Dopuna 7.8.: participacija PRECIZNO — placa se u APOTECI (ne kod ljekara),
+--  po pakovanju, djeca 0, lista bez participacije, plafon 2 %/1 %,
+--  najavljeno poskupljenje 7,50-15 evidentirano kao prijedlog.
+--  Bezbjedno pokrenuti i ponovo (upsert po slug-u).
 -- =====================================================================
 
 alter table vodici add column if not exists provjereno date;
@@ -9,9 +12,9 @@ insert into vodici (slug, naziv, opis, ikona, kategorija, min_citanja, tagovi, t
 values (
   'krankenkasse',
   'Krankenkasse — prijava, cijene i koju kasu izabrati',
-  'Koliko košta 2026., ko se osigurava besplatno uz tebe, zubi, promjena kase i šta ti treba kad ideš u Bosnu',
-  '🏥', 'zdravstvo', 7,
-  array['zdravstvo', 'osiguranje', 'Krankenkasse', 'zubi', 'BiH'],
+  'Koliko košta 2026., ko se osigurava besplatno uz tebe, zubi, participacije, promjena kase i šta ti treba kad ideš u Bosnu',
+  '🏥', 'zdravstvo', 8,
+  array['zdravstvo','osiguranje','Krankenkasse','zubi','participacija','BiH'],
   $vodic$
 <p>Zdravstveno osiguranje u Njemačkoj nije opcija nego zakonska obaveza. Ako si zaposlen, poslodavac te prijavljuje — ali <strong>kasu biraš ti</strong>, i taj izbor te košta ili štedi nekoliko stotina eura godišnje. Većina ljudi to nikad ne provjeri, pa ostanu tamo gdje ih je neko upisao prvi dan.</p>
 
@@ -20,6 +23,17 @@ values (
 <p><strong>Osnovni paket je zakonom identičan u svim kasama.</strong> Ljekar, bolnica, lijekovi, operacije, porod — isto kod najveće i kod najmanje kase. Zakonski katalog usluga je jedinstven.</p>
 
 <p>Razlikuju se samo dvije stvari: <strong>dodatni doprinos</strong> i <strong>dobrovoljne dodatne usluge</strong>. Svaka reklama koja ti sugeriše da je neka kasa „bolja za liječenje" prodaje maglu.</p>
+
+<p>I da bude izričito, jer se ovo često pita: <strong>kod ljekara ne plaćaš ništa</strong> — ni pregled, ni uput, ni operaciju, ni porod. Ljekaru se novac ne daje nikad i niko ti ga na šalteru ne smije tražiti.</p>
+
+<p>Participacija postoji na tačno dva mjesta:</p>
+
+<ul>
+<li><strong>U apoteci</strong>, kad podižeš lijek na recept: 10 posto cijene lijeka, najmanje 5 a najviše 10 eura <strong>po pakovanju</strong>. Zato mnogi misle da „plaćaju lijek" — ne plaćaš lijek, nego participaciju. <strong>Djeca do 18 godina ne plaćaju ništa</strong>, a za dosta jeftinijih lijekova participacije uopšte nema (zvanična lista se osvježava svake dvije sedmice) — zato je mnogi nikad nisu ni primijetili. U parlamentu je prijedlog da poraste na 7,50–15 eura; dok se ne usvoji, važi 5–10.</li>
+<li><strong>U bolnici:</strong> 10 eura po danu, najviše 28 dana godišnje — dakle najviše 280 eura, pa makar ležao i tri mjeseca. Djeca ništa.</li>
+</ul>
+
+<blockquote class="vd-savjet"><strong>💡 Savjet:</strong> Postoji i godišnji plafon: kad ti participacije u jednoj godini pređu <strong>2 posto bruto prihoda domaćinstva</strong> (1 posto za hronične bolesnike), kasa te na zahtjev oslobodi do kraja godine i vrati višak. Čuvaj račune iz apoteke — oslobođenje se traži svake godine iznova.</blockquote>
 
 <h2>Javno ili privatno</h2>
 
@@ -75,11 +89,23 @@ values (
 
 <h2>Zubi — ovdje ljudi najviše pogriješe</h2>
 
-<p>Ovo je najčešći neprijatan račun kod novopridošlih.</p>
+<p>Ovo je najčešći neprijatan račun kod novopridošlih — jer niko ne kaže unaprijed šta je besplatno, a šta nije. Zato izričito:</p>
 
-<p><strong>Profesionalno čišćenje zuba (PZR) nije zakonska usluga i nemaš pravo na njega.</strong> Kasa obavezno pokriva samo uklanjanje kamenca jednom godišnje i dva kontrolna pregleda. Poliranje, fluorizacija i čišćenje međuzubnih prostora plaćaš sam.</p>
+<p><strong>Besplatno ti je (kasa plaća u cijelosti):</strong></p>
 
-<p><strong>Cijena je 80 do 150 eura po tretmanu</strong>, kod implantata ili jakog kamenca i do 200.</p>
+<ul>
+<li>dva kontrolna pregleda godišnje,</li>
+<li>uklanjanje kamenca jednom godišnje,</li>
+<li>vađenje zuba i liječenje,</li>
+<li>plombe u standardnoj varijanti — amalgamska na bočnim, bijela na prednjim zubima,</li>
+<li>PSI pregled na parodontozu svake dvije godine.</li>
+</ul>
+
+<p><strong>Sam plaćaš:</strong> profesionalno čišćenje zuba (PZR) — poliranje, fluorizacija i čišćenje međuzubnih prostora nisu zakonska usluga. <strong>Cijena je 80 do 150 eura po tretmanu</strong>, kod implantata ili jakog kamenca i do 200. Doplaćuješ i razliku ako hoćeš bijelu plombu na bočnom zubu — besplatna varijanta uvijek postoji, zubar ti je mora ponuditi.</p>
+
+<p><strong>Djelimično plaćaš:</strong> krunice, mostove i proteze. Kasa daje fiksni doprinos od 60 posto standardne terapije, ostatak je tvoj.</p>
+
+<blockquote class="vd-savjet"><strong>💡 Savjet:</strong> Vodi <strong>Bonusheft</strong> — pečat zubara jednom godišnje pri kontroli. Poslije 5 godina urednih pečata kasin doprinos za krunicu ili protezu raste sa 60 na 70 posto, poslije 10 godina na 75. Jedan pečat godišnje, stotine do hiljade eura razlike kad jednom zatreba.</blockquote>
 
 <p><strong>Skoro sve kase daju dobrovoljni doprinos, ali razlike su ogromne</strong> — od 40 do 250 eura godišnje:</p>
 

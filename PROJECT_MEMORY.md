@@ -36,6 +36,27 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 2. Objasni mi jednostavno, korak po korak
 3. Nikad ne otkrivaj javno da "bot piše" ili "prati izvore" (neozbiljno)
 
+## ✍️ PRAVILA PISANJA VODIČA (7.8.2026., njegova formulacija)
+- NIKAD ne ostavljati "podrazumijeva se". Uvijek izričito: šta je BESPLATNO /
+  pokriveno, šta SAM PLAĆAŠ, šta DJELIMIČNO. Primjer zubi: prvo lista šta kasa
+  plaća u cijelosti, pa tek onda šta ide iz džepa — čitalac ne smije morati pogađati.
+- Format tekstova = njegova dva uzorka (radna-viza, krankenkasse iz files.zip):
+  kratki pasusi, puno bolda na brojevima, <blockquote class="vd-savjet">💡 /
+  <blockquote class="vd-upozorenje">⚠️, tabele sa thead, unakrsni linkovi
+  /vodic/<slug>, FAQ na kraju, italic disclaimer. BEZ liste izvora u tekstu
+  (izvori se čuvaju u chatu/SQL komentaru); brojevi se SVAKI provjere prije objave.
+- Svaki broj u eurima gdje god može (ne samo procenti). Bosanski ugao obavezan
+  (BH 6, povratak, dijaspora situacije) — to nas dijeli od njemačkih sajtova.
+- FORMULA SVAKOG VODIČA (njegova, 7.8.2026.): 1) ŠTA DOBIJAŠ od države
+  (pravo/novac, u eurima), 2) NAJLAKŠI PUT do toga — uvijek provjeriti da li je
+  lakše "preko Bosne" (uradi u BiH → priznaj u Njemačkoj), 3) šta izbjeći.
+  Njegov primjer: ženidba — u Njemačkoj milion dokumenata, u BiH riješio za
+  4 dana pa u Njemačkoj samo prijavio/preveo. Isti šablon: međunarodni izvodi
+  iz BiH (ne treba prevod), zamjena BiH vozačke bez ispita, ovjere kod notara.
+- Cilj strukture: ~8 grupa-pločica na /vodici, svaka odmah otvara tekst
+  (viza ✓, zdravstvo ✓, posao+diploma, stan, porodica, novac+porezi,
+  penzija+povratak, vozačka). Stari slugovi → 301 kad se koja grupa spoji.
+
 ## SUPABASE
 - Project ID (20 znakova): nfqhnhtktktlyqlwhcsj
 - URL: https://nfqhnhtktktlyqlwhcsj.supabase.co
@@ -636,129 +657,6 @@ opisu (sad „statt"), „Alle aktuelne akcije".
 
 Admin NAMJERNO ostaje na bosanskom (za vlasnika). Komentari u kodu bosanski.
 Verifikovano: scraper 121/121 testova, tsc čist, `next build` 22 stranice.
-
-### GLAVNI ZID — „U pola cijene i više" (06.08.2026)
-Naslovna traka više NIJE „Top ponude danas" nego **„U pola cijene i više"**:
-prikazuje SAMO ponude sa **≥50%** popusta (`PRAG` u `app/akcije/page.tsx`).
-
-⚠️ NAMJERNO BEZ REZERVNOG POPUNJAVANJA. Ranije je fallback punio traku
-slabijim ponudama kad ih nema dovoljno — naslov je obećavao više nego što je
-stajalo ispod. Sada: ako danas nema ničega na −50%, traka se ne prikazuje nego
-piše „Danas nema ponuda na −50% i više". Prag prati i naslov na `/akcije/ponude`
-(OffersBrowser, `state.percent >= 50`) i link `?percent=50&top=1`.
-
-### TRAKA PRODAVNICA — filtrira se U KODU, ne u SQL-u (06.08.2026)
-⚠️ POUKA IZ GREŠKE: dvaput sam pokušao filtriranje trake ubaciti u
-`ak_stores_list`. Oba puta `drop function` prođe, `create` padne (poziv na
-nešto što u toj bazi ne postoji), funkcija NESTANE i traka ostane PRAZNA —
-jer `app/api/akcije/stores/route.ts` tiho vraća praznu listu kad RPC padne.
-
-**Zato je filter sada u `lib/akcije/zid.ts`** (`VAN_TRAKE` + `naTraci()`),
-primijenjen u toj ruti. Vidljivo, provjerljivo, ne može srušiti bazu, a
-promjena je jedan red u listi.
-
-`supabase/akcije-traka-vrati.sql` vraća `ak_stores_list` na verziju koja je
-radila — BEZ ikakvog dodatka.
-
-⚠️ Ako se ikad opet dira SQL funkcija: NE oslanjati se na `ak_najblizi_plz`
-dok se ne potvrdi `select to_regproc('ak_najblizi_plz')`. I ruta bi trebala
-logovati grešku umjesto da je guta.
-
-### (staro) TRAKA PRODAVNICA — pokušaj kroz ak_store_sporedni
-`supabase/akcije-traka.sql`. Dosad su lanci van zida nestajali iz LISTA ali su
-ostajali kao pločica u traci — namjerno, jer je pločica bila jedini put do njih.
-XXXLutz je tako s 1203 ponude i dalje stajao PRVI u traci i izgledao kao glavni
-lanac sajta. Korisnik traži da ih nema ni tamo.
-
-⚠️ POSLJEDICA: do sklonjenih lanaca se VIŠE NE MOŽE doći kroz sučelje. Podaci
-ostaju u bazi i dalje se skupljaju, samo se nigdje ne prikazuju. Vraćanje je i
-dalje `delete from ak_store_sporedni where slug = '…'`.
-
-Redoslijed pokretanja: `akcije-najblizi.sql` → `akcije-zid.sql` → `akcije-traka.sql`.
-
-### KO SE VIDI NA ZIDU (ak_store_sporedni)
-⚠️ NIŠTA SE NE BRIŠE. `ak_store_sporedni` je popis lanaca koji se NE guraju na
-opšte liste. Ponude ostaju u bazi, pločica s brojem ostaje u traci prodavnica,
-i klikom se otvori sve što lanac ima. Vraćanje = jedan `delete`.
-
-`supabase/akcije-zid.sql` (06.08.) vraća na zid **OBI i ROSSMANN** — izričita
-odluka korisnika, mijenja raniju odluku da Rossmann bude van.
-
-Sklonjeni ostaju: namještaj (XXXLutz 1203 ponuda i ostali), baumarkt (toom,
-hagebaumarkt), ljubimci (Fressnapf, DAS FUTTERHAUS), robne kuće (Woolworth,
-Thomas Philipps), veleprodaja (Handelshof, EDEKA Foodservice — cijene BEZ
-PDV-a, varaju kupca), benzinske, auto servis.
-
-**Namirnice koje ostaju na zidu (11):** lidl · aldi-sued/aldi-nord · kaufland ·
-rewe · rewe-center · netto-marken-discount · penny · edeka · e-center ·
-e-xpress · nahkauf. Plus trinkgut (piće), rossmann (drogerija), obi.
-
-⚠️ ZAPAŽANJE ZA KASNIJE (izmjereno 06.08., PLZ 80331): marktguru lanci uglavnom
-NEMAJU staru cijenu — REWE 1 od 410 s procentom, Netto 0 od 355, PENNY 0 od 251,
-REWE Center 0 od 346, Trinkgut 0 od 94. Oni na pločici pokazuju velik broj, a
-unutra su sve „Angebot" bez popusta. Kaufland ima samo 53 ponude — premalo za
-njihov letak, liči na problem u skrejperu, provjeriti.
-
-### BOT ZA VIJESTI — smanjen na 1 članak dnevno (06.08.2026)
-Odluka korisnika: bot troši previše, a piše i nevažne stvari. NIJE ugašen —
-smanjen. „Jednu vijest dnevno, ali da je važna."
-
-⚠️ VAŽNO ZA UBUDUĆE: postoje DVA pipelinea. `scripts/run-bot.ts` po
-PODRAZUMIJEVANOM pokreće **`pipeline2.ts`** („lijevak"), a NE `pipeline.ts`.
-Stari se pali sa `NOVI_PIPELINE=off`. Kvote `CLANCI_DE`/`CLANCI_SPORT` iz
-workflowa čita SAMO stari pipeline — novi ih uzima iz `bot_config` (admin).
-Lako se pogriješi.
-
-**Dva mjesta koja to podešavaju:**
-1. `/admin/pipeline` → `bot_config`: jedan termin umjesto tri, i kvote
-   `kvota_de=1`, ostale `0`. `pipeline2` sabira sve četiri u `brojObjava`.
-2. `.github/workflows/bot-cron.yml` → `PRAG_TRIAZA: "70"` (bilo 52) i
-   `PRAG_SPORT_SVIJET: "60"` (bilo 36). Prag je „koliko vijest mora biti
-   važna da bi se uopšte pisala". Bolje nijedan članak nego članak ni o čemu
-   — ako ništa ne pređe prag, bot to kaže u logu i ne potroši na pisanje.
-
-**Prekidač za potpuno gašenje već postoji** — `/admin/pipeline`, kvačica
-„Uključen" (`bot_config.aktivan`). `/api/cron/tick` to poštuje i ne dispatchuje
-workflow. Ili: `update bot_config set aktivan = false where id = 1;`
-
-**RSS feed (`lib/live.ts`) NEMA nijedan AI poziv** — radi i dalje, besplatno,
-bez obzira na bota. To su sirovi naslovi DE/BiH/Svijet.
-
-Anthropic zovu samo `lib/bot/agenti/claude.ts`. `lib/claude.ts` postoji ali ga
-NIKO ne uvozi — mrtav kod, ne troši ništa.
-
-### „NAJNIŽE DO SADA" — druga traka na naslovnoj (06.08.2026)
-**Problem:** traka „U pola cijene i više" radi SAMO za lance koji objave staru
-cijenu. Izmjereno 06.08. za PLZ 80331: ≥50% ima svega **15 artikala** (E center
-6, ROSSMANN 3, OBI/Kaufland po 2, Aldi Süd/EDEKA po 1), a najjači su parfemi
-(Etienne Aigner −74%), ne hrana. REWE, PENNY, Netto, REWE Center i Trinkgut —
-oko **1.360 ponuda** — nikad se ne pojave jer im marktguru nije dao staru cijenu.
-
-⚠️ NJIHOV POPUST SE NE MOŽE POŠTENO IZRAČUNATI. Ne znamo im redovnu cijenu s
-police. Uzimanje najviše viđene cijene kao reference = izmišljen popust; zakonska
-referenca (najniža u 30 dana) daje MANJI popust, pa ni ona ne puni zid. Ne
-pokušavati ponovo.
-
-**Rješenje:** druga mjera koja vrijedi za sve jednako — *„najniža cijena koju smo
-za taj artikal ikad vidjeli KOD TOG LANCA"*. Ne treba tuđa stara cijena, samo
-naša historija snapshota (31 dan).
-
-- `supabase/akcije-najnize-ikad.sql` → funkcija `ak_najnize_ikad(plz, dana,
-  min_dana, limit)`. Zove `ak_discounts_search` iznutra, pa nasljeđuje SVA
-  pravila (regije, najbliži grad, datumi, lanci van zida) — ne duplira ih.
-- ⚠️ ZAŠTITA OD LAŽNOG REKORDA: artikal mora biti viđen bar **3 različita dana
-  prije današnjeg**. Bez toga bi svaki NOVI artikal bio „najniži ikad" (viđen
-  jednom). Historija namjerno isključuje današnji dan — inače je svaki artikal
-  jednak sam sebi.
-- ⚠️ Poređenje ide po (prodavnica + naziv). Cijene se NE miješaju između lanaca.
-- ⚠️ NE PIŠE SE PROCENAT ni „staro → novo" — samo da je najniže što smo vidjeli
-  i kroz koliko dana gledamo, da korisnik zna koliko je tvrdnja jaka.
-- `app/api/akcije/najnize/route.ts` + `components/akcije/NajnizeIkad.tsx`.
-  Ako funkcija nije pokrenuta u bazi, ruta vrati praznu listu i traka se ne
-  prikaže — naslovna se NE ruši zbog dodatka.
-
-Traka postaje ozbiljna tek s 2-3 sedmice historije; retencija je 31 dan pa se
-sama puni.
 
 ## RADNI DOGOVOR
 - Claude UVIJEK radi na NAJSVJEŽIJOJ verziji fajla (povuče iz foldera prije izmjene), ne iz starog snimka.
