@@ -1,12 +1,19 @@
 "use client";
 
 // ============================================================
-// VODIČI — app-stil (Ekran 1 + 2): kategorije + kartice s ilustracijama
+// VODIČI — nova struktura: 8 grupa-pločica + 3 zasebna vodiča.
+// * Pločica NE filtrira nego ODMAH otvara tekst te grupe.
+// * Na listi stoji SAMO 11 vodiča iz mape (mapa-vodica.html) —
+//   stari se više ne prikazuju (linkovi im rade dok spajanja ne
+//   završe; preusmjerenja: next.config.ts).
+// * Svaka kartica nosi SVOJU ikonicu (v.ikona iz baze/koda),
+//   ne više istu ilustraciju kategorije na svima.
+// * Prikazuje se samo ono što stvarno postoji, pa ako neki SQL
+//   još nije pokrenut, ta pločica/kartica se sama sakrije.
 // ============================================================
 
-import { useState } from "react";
 import Link from "next/link";
-import { VODIC_KATEGORIJE, KAT_BOJA, displejKategorija } from "@/lib/data/vodic-kategorije";
+import { KAT_BOJA, displejKategorija } from "@/lib/data/vodic-kategorije";
 
 export interface VodicKartica {
   slug: string;
@@ -28,6 +35,36 @@ function kratkiDatum(iso: string): string | null {
   return `${Number(m[3])}. ${Number(m[2])}. ${m[1]}.`;
 }
 
+// 8 grupa — redoslijed, natpisi i ikonice pločica.
+const GRUPE = [
+  { emoji: "🛂", label: "Viza i dolazak", slug: "radna-viza-njemacka" },
+  { emoji: "🏥", label: "Zdravstvo", slug: "krankenkasse" },
+  { emoji: "💶", label: "Novac i porezi", slug: "porezi-njemacka" },
+  { emoji: "🔑", label: "Stan", slug: "stan-u-njemackoj" },
+  { emoji: "👶", label: "Porodica", slug: "porodica-u-njemackoj" },
+  { emoji: "🎓", label: "Posao i diploma", slug: "priznavanje-diplome-anerkennung" },
+  { emoji: "🧳", label: "Penzija i povratak", slug: "penzija-i-povratak" },
+  { emoji: "🚗", label: "Vozačka i auto", slug: "zamjena-vozacke-njemacka" },
+];
+
+// Zasebni vodiči ispod grupa (prevelike teme da se utope u grupu).
+const ZASEBNI = ["prijavljivanje-adrese", "spajanje-porodice", "njemacko-drzavljanstvo-einburgerung"];
+
+// Ikonice kartica — svaka SVOJA (nadjačava ikonu iz baze/koda ako treba).
+const IKONA: Record<string, string> = {
+  "radna-viza-njemacka": "🛂",
+  "krankenkasse": "🏥",
+  "porezi-njemacka": "💶",
+  "stan-u-njemackoj": "🔑",
+  "porodica-u-njemackoj": "👶",
+  "priznavanje-diplome-anerkennung": "🎓",
+  "penzija-i-povratak": "🧳",
+  "zamjena-vozacke-njemacka": "🚗",
+  "prijavljivanje-adrese": "🏠",
+  "spajanje-porodice": "👨‍👩‍👧",
+  "njemacko-drzavljanstvo-einburgerung": "🇩🇪",
+};
+
 function Sat() {
   return (
     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
@@ -36,28 +73,15 @@ function Sat() {
     </svg>
   );
 }
-function Bookmark() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#C4C9D0" strokeWidth="2">
-      <path d="M6 4h12v16l-6-4-6 4z" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
-  const [aktivna, setAktivna] = useState("sve");
+  const poSlugu = new Map(vodici.map((v) => [v.slug, v]));
 
-  const grupa = VODIC_KATEGORIJE.find((k) => k.key === aktivna);
-  const filtrirani =
-    !grupa || grupa.cats === null
-      ? vodici
-      : vodici.filter((v) => grupa.cats!.includes(v.kategorija));
-
-  // Detaljni (dugi, provjereni) vodiči idu na vrh — to je novi sadržaj sajta.
-  const detaljni = filtrirani.filter((v) => v.imaTekst);
-  const prikazani = [...detaljni, ...filtrirani.filter((v) => !v.imaTekst)];
-
-  const naslovSekcije = aktivna === "sve" ? "Svi vodiči" : grupa?.label ?? "Vodiči";
+  // Samo ono što stvarno postoji (kod ili baza).
+  const grupe = GRUPE.filter((g) => poSlugu.has(g.slug));
+  const lista = [...GRUPE.map((g) => g.slug), ...ZASEBNI]
+    .map((slug) => poSlugu.get(slug))
+    .filter((v): v is VodicKartica => !!v);
 
   return (
     <div className="vd-wrap">
@@ -71,40 +95,35 @@ export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
         </div>
         <div>
           <h1 className="vd-title">Vodiči za život u Njemačkoj</h1>
-          <p className="vd-sub">Praktični savjeti i uputstva za našu dijasporu.</p>
+          <p className="vd-sub">Sve po temama — bez traženja po deset članaka.</p>
         </div>
       </div>
 
-      {/* Kategorije (tile-ovi, horizontalno) */}
-      <div className="vd-tiles">
-        {VODIC_KATEGORIJE.map((k) => (
-          <button
-            key={k.key}
-            onClick={() => setAktivna(k.key)}
-            className={`vd-tile${aktivna === k.key ? " active" : ""}`}
-          >
-            <span className="vd-tile-ico">{k.icon}</span>
-            <span className="vd-tile-lbl">{k.label}</span>
-          </button>
+      {/* 8 GRUPA — pločica odmah otvara tekst */}
+      <div className="vd-grupe">
+        {grupe.map((g) => (
+          <Link key={g.slug} href={`/vodic/${g.slug}`} className="vd-grupa">
+            <span className="vd-grupa-ico">{g.emoji}</span>
+            <span className="vd-grupa-lbl">{g.label}</span>
+          </Link>
         ))}
       </div>
 
-      {/* Sekcija */}
+      {/* Ista ta lista, s opisima */}
       <div className="vd-sec">
-        <span className="vd-sec-title">{naslovSekcije}</span>
-        <span className="vd-sec-count">{prikazani.length}</span>
+        <span className="vd-sec-title">Svi vodiči</span>
+        <span className="vd-sec-count">{lista.length}</span>
       </div>
 
-      {/* Lista */}
       <div className="vd-list">
-        {prikazani.length === 0 && <p className="vd-empty">Nema vodiča u ovoj kategoriji.</p>}
-        {prikazani.map((v) => {
+        {lista.map((v) => {
           const dk = displejKategorija(v.kategorija);
           const boja = KAT_BOJA[dk.key] || KAT_BOJA.ostalo;
+          const ikona = IKONA[v.slug] || v.ikona || "📄";
           return (
             <Link key={v.slug} href={`/vodic/${v.slug}`} className="vd-card">
               <span className="vd-card-thumb" style={{ background: boja.bg }}>
-                <img src={`/vodic-ilustracije/${dk.key}.svg`} alt="" loading="lazy" />
+                <span className="vd-card-emoji">{ikona}</span>
               </span>
               <span className="vd-card-body">
                 <span className="vd-card-naslov">{v.naziv}</span>
@@ -116,14 +135,11 @@ export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
                   <span className="vd-min">
                     <Sat /> {v.imaTekst ? `${v.min_citanja} min` : `${v.brojKoraka} koraka`}
                   </span>
-                  {v.imaTekst && (
-                    <span className="vd-badge-novo">
-                      {v.provjereno ? `Ažurirano ${kratkiDatum(v.provjereno)}` : "Detaljan vodič"}
-                    </span>
+                  {v.imaTekst && v.provjereno && (
+                    <span className="vd-badge-novo">Ažurirano {kratkiDatum(v.provjereno)}</span>
                   )}
                 </span>
               </span>
-              <span className="vd-card-bm"><Bookmark /></span>
             </Link>
           );
         })}
@@ -140,24 +156,22 @@ export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
         .vd-title { font-size: 21px; font-weight: 800; line-height: 1.2; color: #111827; letter-spacing: -0.3px; }
         .vd-sub { font-size: 13px; color: #6B7280; margin-top: 3px; }
 
-        .vd-tiles {
-          display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 14px;
-          -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        /* Grupe: 2 kolone na telefonu, 4 na desktopu */
+        .vd-grupe { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 22px; }
+        @media (min-width: 640px) { .vd-grupe { grid-template-columns: repeat(4, 1fr); } }
+        .vd-grupa {
+          display: flex; flex-direction: column; align-items: center; gap: 8px;
+          padding: 16px 8px 13px; border-radius: 16px; border: 1.5px solid #EEF0F2;
+          background: #fff; text-decoration: none; transition: all .15s;
+          box-shadow: 0 1px 3px rgba(0,0,0,.03);
         }
-        .vd-tiles::-webkit-scrollbar { display: none; }
-        .vd-tile {
-          flex: 0 0 auto; width: 78px; display: flex; flex-direction: column; align-items: center; gap: 7px;
-          padding: 12px 6px; border-radius: 15px; border: 1.5px solid #EEF0F2; background: #fff;
-          cursor: pointer; transition: all .15s;
+        .vd-grupa:active { background: #F0FBF4; }
+        @media (hover: hover) { .vd-grupa:hover { border-color: #1a8a4a; box-shadow: 0 3px 12px rgba(0,0,0,.07); } }
+        .vd-grupa-ico {
+          width: 44px; height: 44px; border-radius: 12px; background: #F0FBF4;
+          display: flex; align-items: center; justify-content: center; font-size: 22px;
         }
-        .vd-tile-ico {
-          width: 40px; height: 40px; border-radius: 11px; background: #F1F5F9;
-          display: flex; align-items: center; justify-content: center; font-size: 20px;
-        }
-        .vd-tile-lbl { font-size: 11px; font-weight: 600; color: #6B7280; text-align: center; line-height: 1.2; }
-        .vd-tile.active { border-color: #1a8a4a; background: #F0FBF4; }
-        .vd-tile.active .vd-tile-ico { background: #1a8a4a; }
-        .vd-tile.active .vd-tile-lbl { color: #1a8a4a; font-weight: 700; }
+        .vd-grupa-lbl { font-size: 12.5px; font-weight: 700; color: #111827; text-align: center; line-height: 1.25; }
 
         .vd-sec { display: flex; align-items: center; gap: 8px; margin: 4px 2px 12px; }
         .vd-sec-title { font-size: 16px; font-weight: 800; color: #111827; }
@@ -167,7 +181,6 @@ export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
         }
 
         .vd-list { display: flex; flex-direction: column; gap: 11px; }
-        .vd-empty { color: #6B7280; font-size: 14px; padding: 20px 4px; }
         .vd-card {
           display: flex; gap: 13px; align-items: center; padding: 12px;
           background: #fff; border: 1px solid #EEF0F2; border-radius: 16px;
@@ -177,10 +190,10 @@ export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
         .vd-card:active { background: #fafafa; }
         @media (hover: hover) { .vd-card:hover { border-color: #1a8a4a; box-shadow: 0 3px 12px rgba(0,0,0,.07); } }
         .vd-card-thumb {
-          width: 76px; height: 76px; border-radius: 14px; flex-shrink: 0; overflow: hidden;
+          width: 64px; height: 64px; border-radius: 14px; flex-shrink: 0;
           display: flex; align-items: center; justify-content: center;
         }
-        .vd-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .vd-card-emoji { font-size: 30px; line-height: 1; }
         .vd-card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
         .vd-card-naslov {
           font-size: 15px; font-weight: 700; line-height: 1.3; color: #111827;
@@ -188,16 +201,15 @@ export default function VodiciKlijent({ vodici }: { vodici: VodicKartica[] }) {
         }
         .vd-card-opis {
           font-size: 12.5px; color: #6B7280; line-height: 1.4;
-          display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
-        .vd-card-meta { display: flex; align-items: center; gap: 10px; margin-top: 3px; }
+        .vd-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 3px; }
         .vd-tag { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
         .vd-min { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: #9CA3AF; white-space: nowrap; }
         .vd-badge-novo {
           font-size: 10px; font-weight: 800; letter-spacing: .3px; white-space: nowrap;
           background: #1a8a4a; color: #fff; padding: 3px 8px; border-radius: 999px;
         }
-        .vd-card-bm { flex-shrink: 0; align-self: flex-start; padding-top: 2px; }
       `}</style>
     </div>
   );
