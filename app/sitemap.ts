@@ -5,14 +5,23 @@ import { getAllVodici } from "@/lib/data/vodici";
 // Bazni URL sajta (bez završne kose crte).
 const BASE = (process.env.NEXT_PUBLIC_SITE_URL || "https://kodnas.de").replace(/\/+$/, "");
 
-// Kategorije koje imaju svoju stranicu (/kategorija/<slug>).
+// VIJESTI SU IZBAČENE IZ SITEMAPA (odluka 9.8.2026.).
+// Zašto: sitemap je "molba Googleu da ovo puzi". Sa 240+ članaka Google
+// je najveći dio budžeta puzanja trošio na vijesti koje ne donose posjete,
+// umjesto na vodiče i kalkulator. Vijesti ostaju na sajtu i ostaju u
+// Google indeksu — samo ih više aktivno ne guramo.
+// Da se vrate: postavi VIJESTI_U_SITEMAP = true.
+const VIJESTI_U_SITEMAP = false;
+
+// Kategorije vijesti (/kategorija/<slug>) — ulaze samo ako su vijesti uključene.
 const KATEGORIJE = [
   "viza", "posao", "stan", "zdravstvo", "porodica", "porez", "penzija",
   "povratak", "svijet", "sport", "finansije", "gastarbajter", "biznis",
 ];
 
 // Statične javne stranice. (BiH rubrika uklonjena.)
-const STATICNE = ["", "/vijesti", "/vodici", "/de", "/o-nama", "/kontakt"];
+const STATICNE_UVIJEK = ["", "/vodici", "/de", "/o-nama", "/kontakt"];
+const STATICNE = VIJESTI_U_SITEMAP ? [...STATICNE_UVIJEK, "/vijesti"] : STATICNE_UVIJEK;
 
 function klijent() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -38,8 +47,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  // Kategorije
-  for (const k of KATEGORIJE) {
+  // Kategorije vijesti
+  for (const k of VIJESTI_U_SITEMAP ? KATEGORIJE : []) {
     stavke.push({
       url: `${BASE}/kategorija/${k}`,
       lastModified: sada,
@@ -49,7 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const db = klijent();
-  if (db) {
+  if (db && VIJESTI_U_SITEMAP) {
     // Objavljeni članci
     try {
       const { data } = await db
