@@ -32,17 +32,36 @@ const nextConfig: NextConfig = {
       { source: "/vodic/ausbildung-njega-medicina", destination: "/vodic/priznavanje-diplome-anerkennung", permanent: true },
       { source: "/vodic/njemacki-jezik-ucenje", destination: "/vodic/priznavanje-diplome-anerkennung", permanent: true },
 
-      // ---- ČEKAJU SVOJ TEKST (ne otkomentarisati prije objave!) ----
-      // Stan:      pronalazak-stana, mietvertrag-ugovor-o-najmu, mietkaution-kaucija,
-      //            nebenkosten-obracun, prava-stanara, otkaz-najma-iseljenje,
-      //            wohngeld-socijalni-stan, struja-internet-rundfunkbeitrag → /vodic/stan-u-njemackoj
-      // Porodica:  trudnoca-njemacka, elterngeld-elternzeit, dijete-rodjeno-u-njemackoj,
-      //            vrtic-kita-kindergarten, skola-u-njemackoj, vjencanje-njemacka-standesamt,
-      //            razvod-izdrzavanje-djece, njega-starijih-pflege → /vodic/porodica-u-njemackoj
-      // Zdravstvo: kod-ljekara-hausarzt-facharzt, bolovanje-krankmeldung, lijekovi-apoteka,
-      //            hitni-slucajevi-112-116117, djeca-kod-ljekara,
-      //            dopunsko-osiguranje-mentalno-zdravlje → /vodic/krankenkasse (nakon dopune)
-      // Penzija:   povratak-bih → /vodic/penzija-i-povratak
+      // → Stan (svih 8 starih stanovanjskih tema u jedan tekst)
+      { source: "/vodic/pronalazak-stana", destination: "/vodic/stan-u-njemackoj", permanent: true },
+      { source: "/vodic/mietvertrag-ugovor-o-najmu", destination: "/vodic/stan-u-njemackoj", permanent: true },
+      { source: "/vodic/mietkaution-kaucija", destination: "/vodic/stan-u-njemackoj", permanent: true },
+      { source: "/vodic/nebenkosten-obracun", destination: "/vodic/stan-u-njemackoj", permanent: true },
+      { source: "/vodic/prava-stanara", destination: "/vodic/stan-u-njemackoj", permanent: true },
+      { source: "/vodic/otkaz-najma-iseljenje", destination: "/vodic/stan-u-njemackoj", permanent: true },
+      { source: "/vodic/wohngeld-socijalni-stan", destination: "/vodic/stan-u-njemackoj", permanent: true },
+      { source: "/vodic/struja-internet-rundfunkbeitrag", destination: "/vodic/stan-u-njemackoj", permanent: true },
+
+      // → Porodica
+      { source: "/vodic/trudnoca-njemacka", destination: "/vodic/porodica-u-njemackoj", permanent: true },
+      { source: "/vodic/elterngeld-elternzeit", destination: "/vodic/porodica-u-njemackoj", permanent: true },
+      { source: "/vodic/dijete-rodjeno-u-njemackoj", destination: "/vodic/porodica-u-njemackoj", permanent: true },
+      { source: "/vodic/vrtic-kita-kindergarten", destination: "/vodic/porodica-u-njemackoj", permanent: true },
+      { source: "/vodic/skola-u-njemackoj", destination: "/vodic/porodica-u-njemackoj", permanent: true },
+      { source: "/vodic/vjencanje-njemacka-standesamt", destination: "/vodic/porodica-u-njemackoj", permanent: true },
+      { source: "/vodic/razvod-izdrzavanje-djece", destination: "/vodic/porodica-u-njemackoj", permanent: true },
+      { source: "/vodic/njega-starijih-pflege", destination: "/vodic/porodica-u-njemackoj", permanent: true },
+
+      // → Zdravstvo (krankenkasse sad ima ljekara, hitnu, bolovanje, djecu i dopunska)
+      { source: "/vodic/kod-ljekara-hausarzt-facharzt", destination: "/vodic/krankenkasse", permanent: true },
+      { source: "/vodic/bolovanje-krankmeldung", destination: "/vodic/krankenkasse", permanent: true },
+      { source: "/vodic/lijekovi-apoteka", destination: "/vodic/krankenkasse", permanent: true },
+      { source: "/vodic/hitni-slucajevi-112-116117", destination: "/vodic/krankenkasse", permanent: true },
+      { source: "/vodic/djeca-kod-ljekara", destination: "/vodic/krankenkasse", permanent: true },
+      { source: "/vodic/dopunsko-osiguranje-mentalno-zdravlje", destination: "/vodic/krankenkasse", permanent: true },
+
+      // → Penzija i povratak
+      { source: "/vodic/povratak-bih", destination: "/vodic/penzija-i-povratak", permanent: true },
     ];
   },
 };

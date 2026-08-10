@@ -86,8 +86,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Googleu u sitemapu bili nevidljivi. lastModified je STVARAN datum
   // (provjereno/updated_at iz baze), ne "sada" — lažni svježi datum na
   // svaki zahtjev uči Google da sitemapu ne vjeruje.
+  // Stari slugovi koji sad imaju 301 (next.config.ts) NE SMIJU u sitemap —
+  // Google prijavljuje "preusmjereni URL u sitemapu" kao grešku i troši budžet
+  // puzanja. Lista mora ostati usklađena sa redirects() u next.config.ts.
+  const PREUSMJERENI = new Set([
+    "westbalkan-regulacija", "chancenkarte", "eu-plava-karta",
+    "zubar-zahnarzt", "povrat-poreza", "kindergeld-poreske-klase",
+    "ausbildung-njega-medicina", "njemacki-jezik-ucenje",
+    "pronalazak-stana", "mietvertrag-ugovor-o-najmu", "mietkaution-kaucija",
+    "nebenkosten-obracun", "prava-stanara", "otkaz-najma-iseljenje",
+    "wohngeld-socijalni-stan", "struja-internet-rundfunkbeitrag",
+    "trudnoca-njemacka", "elterngeld-elternzeit", "dijete-rodjeno-u-njemackoj",
+    "vrtic-kita-kindergarten", "skola-u-njemackoj", "vjencanje-njemacka-standesamt",
+    "razvod-izdrzavanje-djece", "njega-starijih-pflege",
+    "kod-ljekara-hausarzt-facharzt", "bolovanje-krankmeldung", "lijekovi-apoteka",
+    "hitni-slucajevi-112-116117", "djeca-kod-ljekara",
+    "dopunsko-osiguranje-mentalno-zdravlje", "povratak-bih",
+  ]);
+
   const vodiciMapa = new Map<string, MetadataRoute.Sitemap[number]>();
   for (const v of getAllVodici()) {
+    if (PREUSMJERENI.has(v.slug)) continue;
     vodiciMapa.set(v.slug, {
       url: `${BASE}/vodic/${v.slug}`,
       changeFrequency: "monthly",
@@ -100,6 +119,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // (supabase/vodici-provjereno.sql), a "*" ne puca na tome.
       const { data } = await db.from("vodici").select("*").eq("aktivan", true).limit(500);
       for (const v of data || []) {
+        if (PREUSMJERENI.has(v.slug)) continue;
         const lm = v.provjereno || v.updated_at || v.created_at;
         vodiciMapa.set(v.slug, {
           url: `${BASE}/vodic/${v.slug}`,
