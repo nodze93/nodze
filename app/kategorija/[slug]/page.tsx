@@ -34,10 +34,14 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const info = kategorijeInfo[slug];
-  if (!info) return { title: "Kategorija — Dijaspora.ba" };
+  if (!info) return { title: "Kategorija — kodnas.de" };
   return {
-    title: `${info.naziv} — Dijaspora.ba`,
+    // Bio je zaostao stari brend "Dijaspora.ba" — to je Google pokazivao
+    // kao naslov u rezultatima.
+    title: `${info.naziv} — kodnas.de`,
     description: info.opis,
+    // Bez ovoga stranica nasljeđuje canonical "/" iz root layouta.
+    alternates: { canonical: `/kategorija/${slug}` },
   };
 }
 

@@ -326,6 +326,28 @@ export async function replaceSnapshot(
   }
 }
 
+/**
+ * TRAJNO PAMCENJE CIJENA.
+ *
+ * `ak_discounts` se svake noci rezao na keepDays (31) — pa je „najnize do
+ * sada" u praksi znacilo „najnize u zadnjih mjesec dana". Ovo prepise
+ * danasnji snapshot u `ak_price_observations`: jedan red po (prodavnica,
+ * artikal, dan), bez naziva/slike/kategorije, pa je visestruko manji i
+ * moze da stoji zauvijek.
+ *
+ * MORA se zvati PRIJE `pruneOldSnapshots` — inace bi rezanje moglo odnijeti
+ * dan koji jos nismo zapisali.
+ *
+ * SQL: supabase/akcije-najnize-v2.sql
+ */
+export async function zapisiPosmatranja(date: string): Promise<number> {
+  const { rows } = await pool.query<{ ak_zapisi_posmatranja: string }>(
+    'select ak_zapisi_posmatranja($1::date)',
+    [date],
+  );
+  return Number(rows[0]?.ak_zapisi_posmatranja ?? 0);
+}
+
 export async function pruneOldSnapshots(keepDays: number): Promise<number> {
   const { rows } = await pool.query<{ ak_prune_old_snapshots: string }>(
     'select ak_prune_old_snapshots($1)',

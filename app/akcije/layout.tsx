@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "Akcije i popusti u njemačkim prodavnicama | kodnas.de",
   description:
     "Sve akcije iz njemačkih prodavnica na jednom mjestu: filtriraj po procentu popusta, ušteđi u eurima, kategoriji i prodavnici. Ažurirano svaki dan.",
+  // Bez ovoga /akcije nasljeđuje canonical iz root layouta i Googleu kaže
+  // da je duplikat naslovne — vidi objašnjenje u app/layout.tsx.
+  alternates: { canonical: "/akcije" },
 };
 
 export default function AkcijeLayout({ children }: { children: React.ReactNode }) {

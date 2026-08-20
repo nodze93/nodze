@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Vijesti — kodnas.de",
   description: "Sve njemačke vijesti na našem jeziku, iz minute u minutu.",
+  alternates: { canonical: "/vijesti" },
 };
 
 export const revalidate = 300;

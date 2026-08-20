@@ -448,6 +448,18 @@ export async function POST(req: Request) {
     /* SQL migracija još nije pokrenuta — preskoči */
   }
 
+  // 6) TRAJNO PAMĆENJE CIJENA. Bez ovoga Netto, Rossmann, EDEKA i Penny
+  //    nemaju nikakvu historiju: oni dolaze ISKLJUČIVO ovim ručnim uvozom,
+  //    a `ak_discounts` se svake noći reže na 31 dan. Ovim svaki uvoz
+  //    ostavlja trajan zapis (jedan red po artiklu po danu), pa poslije
+  //    tri uvoza ulaze u „Najniže do sada" i tu ostaju zauvijek.
+  //    SQL: supabase/akcije-najnize-v2.sql
+  try {
+    await db.rpc("ak_zapisi_posmatranja", { p_date: today });
+  } catch {
+    /* SQL migracija još nije pokrenuta — uvoz zbog toga ne smije pasti */
+  }
+
   // `ponuda` = koliko je ponuda stiglo, `upisano` = koliko je REDOVA nastalo
   // (jedna ponuda koja vrijedi u 7 gradova daje 7 redova).
   return NextResponse.json({

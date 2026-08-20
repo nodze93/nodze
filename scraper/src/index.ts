@@ -9,6 +9,7 @@ import {
   pruneOldSnapshots,
   recordScrapeRun,
   replaceSnapshot,
+  zapisiPosmatranja,
   type SnapshotRow,
 } from './db.js';
 import { imageKey, loadImageCache, type CachedImage } from './imageCache.js';
@@ -253,6 +254,20 @@ async function main(): Promise<void> {
     const results = await mapLimit(plzList, config.concurrency, (plz) =>
       processPlz(source, plz, date, args.dryRun, images),
     );
+
+    // TRAJNO PAMCENJE — obavezno PRIJE ciscenja. Snapshot se rezao na 31
+    // dan, pa je bez ovoga „najnize do sada" znacilo samo „najnize u
+    // zadnjih mjesec dana". Ovaj red ostaje zauvijek.
+    if (!args.dryRun) {
+      try {
+        const zapisano = await zapisiPosmatranja(date);
+        log(`Trajno pamcenje: ${zapisano} cijena zapisano za ${date}`);
+      } catch (error) {
+        // Funkcija jos nije pokrenuta u Supabase → scraper NE smije pasti
+        // zbog dodatka. Samo se javi u logu.
+        log(`Trajno pamcenje preskoceno: ${(error as Error).message}`);
+      }
+    }
 
     if (!args.dryRun && args.keepDays > 0) {
       const removed = await pruneOldSnapshots(args.keepDays);

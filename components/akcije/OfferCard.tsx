@@ -25,14 +25,37 @@ interface Props {
    * dok ne stigne svježija tura. Bez ovog propa: NOVO samo za strogo danas.
    */
   turaOd?: string | null;
+  /**
+   * Samo u traci „Najniže do sada": najniža cijena koju smo MI ranije
+   * zabilježili za taj artikal kod tog lanca (`ak_price_observations`).
+   *
+   * NIJE stara cijena s police i NE smije se prikazati kao popust —
+   * zato ide kao mala zelena linija ispod cijene, bez procenta i bez
+   * precrtavanja. Ako cijena nije stvarno pala (danas = raniji minimum),
+   * linija se ne prikazuje uopšte.
+   */
+  ranijeNajnize?: number | null;
 }
 
-export default function OfferCard({ item, hideStore = false, variant = 'grid', turaOd }: Props) {
+export default function OfferCard({
+  item,
+  hideStore = false,
+  variant = 'grid',
+  turaOd,
+  ranijeNajnize = null,
+}: Props) {
   const { has, toggle } = useFavorites();
   const key = favoriteKey(item);
   const favorite = has(key);
   const validTo = formatShortDate(item.valid_to);
   const rail = variant === 'rail';
+
+  // Naša ranija najniža — pokazujemo je SAMO ako je cijena stvarno pala.
+  // Sedmični letak drži isti artikal po istoj cijeni cijelu sedmicu, pa bi
+  // inače pisalo „ranije 2,99 €" pored „2,99 €" i izgledalo pokvareno.
+  const rekordBroj = ranijeNajnize === null ? NaN : Number(ranijeNajnize);
+  const rekord =
+    Number.isFinite(rekordBroj) && rekordBroj > item.new_price ? rekordBroj : null;
 
   // Na stranici jedne prodavnice nema donjeg reda (kao na dizajnu) - kartica
   // je niza, pa u ekran stane 6 artikala.
@@ -95,6 +118,12 @@ export default function OfferCard({ item, hideStore = false, variant = 'grid', t
             {formatPrice(item.new_price)}
           </span>
         </div>
+
+        {rekord !== null ? (
+          <div className="p-rekord" title={`Najniže što smo za ovaj artikal vidjeli kod ${item.store}`}>
+            ↓ ranije {formatPrice(rekord)}
+          </div>
+        ) : null}
 
         {showFooter ? (
           <div className="card-meta">

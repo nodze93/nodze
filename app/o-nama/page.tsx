@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "O nama — kodnas.de",
   description: "kodnas.de — sve njemačke vijesti na našem jeziku i praktični vodiči za našu dijasporu u Njemačkoj.",
+  alternates: { canonical: "/o-nama" },
 };
 
 export default function ONamaPage() {

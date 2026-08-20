@@ -42,9 +42,14 @@ export const metadata: Metadata = {
     "Kindergeld",
     "Krankenkasse",
   ],
-  alternates: {
-    canonical: "/",
-  },
+  // ⚠️ OVDJE NIKAD NE STAVLJATI `alternates: { canonical: ... }`.
+  // Metadata iz root layouta NASLJEĐUJU sve stranice koje je same ne
+  // postave. Dok je ovdje stajalo canonical: "/", svaka takva stranica
+  // (/de, /o-nama, /kontakt, /vijesti, /akcije, /kategorija/*) je Googleu
+  // govorila „prava verzija mene je naslovna" — pa nijedna od njih nije
+  // mogla biti indeksirana. Canonical se postavlja PO STRANICI.
+  // (Nađeno 19.8.2026., kad je Search Console pokazao Indexed = 0.)
+
   // PWA — omogućava "Dodaj na početni ekran" i app-izgled.
   manifest: "/manifest.json",
   appleWebApp: {

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Nav from "@/components/Nav";
 import Ticker from "@/components/Ticker";
 import Hero from "@/components/Hero";
@@ -12,6 +13,12 @@ import NewsletterBox from "@/components/sidebar/NewsletterBox";
 import NajcitanijeBox from "@/components/sidebar/NajcitanijeBox";
 import FaqBox from "@/components/sidebar/FaqBox";
 import Footer from "@/components/Footer";
+
+// Canonical se postavlja PO STRANICI, ne u root layoutu — vidi objašnjenje
+// u app/layout.tsx. Naslovna je jedina koja pokazuje na "/".
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 // Naslovna se osvježava svakih 5 minuta (novi objavljeni članci)
 export const revalidate = 300;

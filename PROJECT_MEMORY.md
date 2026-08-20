@@ -35,6 +35,20 @@ Cilj: pusti da radi sam sa minimalnim mojim učešćem, ali ja moderiram.
 1. Radi na PREVIEW branchu, pa merge u main tek kad potvrdim
 2. Objasni mi jednostavno, korak po korak
 3. Nikad ne otkrivaj javno da "bot piše" ili "prati izvore" (neozbiljno)
+4. **NIKAD ne pozivaj `ak_prune_price_history`** (12.8.2026.). Ta funkcija
+   briše `ak_price_observations` — trajno pamćenje cijena na kojem stoji
+   „Najniže do sada". Trenutno je ne zove niko i tako mora ostati.
+   `ak_prune_old_snapshots(31)` je druga stvar i on smije da radi:
+   on reže samo `ak_discounts` (snapshot sa slikama i nazivima).
+5. **NIKAD `alternates.canonical` u `app/layout.tsx`** (19.8.2026.).
+   Root layout metadata NASLJEĐUJU sve stranice koje je same ne postave.
+   Dok je tamo stajalo `canonical: "/"`, stranice /de, /o-nama, /kontakt,
+   /vijesti, /akcije, /akcije/ponude i /kategorija/* su Googleu govorile
+   „prava verzija mene je naslovna" — pa nijedna nije mogla biti
+   indeksirana. Search Console je pokazivao Indexed = 0.
+   **Svaka nova stranica mora sama postaviti svoj canonical.** Ako je
+   stranica "use client", canonical ide u `layout.tsx` tog foldera
+   (primjeri: app/kontakt/layout.tsx, app/akcije/ponude/layout.tsx).
 
 ## ✍️ PRAVILA PISANJA VODIČA (7.8.2026., njegova formulacija)
 - NIKAD ne ostavljati "podrazumijeva se". Uvijek izričito: šta je BESPLATNO /

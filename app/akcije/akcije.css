@@ -566,6 +566,19 @@
 .ak .p-new.plain {
   color: var(--text);
 }
+/* „Najniže do sada" — naša ranije zabilježena najniža cijena.
+   NIJE stara cijena s police, pa NEMA precrtavanja i nema procenta:
+   to je samo ono što smo mi vidjeli. Zato zelena, mala, ispod cijene. */
+.ak .p-rekord {
+  margin-top: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #1a8a4a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+}
 .ak .card-meta {
   display: flex;
     align-items: center;

@@ -25,7 +25,11 @@ export async function GET(req: Request) {
   try {
     const { data, error } = await db().rpc("ak_najnize_ikad", {
       p_plz: plz,
-      p_dana: 31,
+      // 3650 dana = „otkad pamtimo". Historija se od v2 čita iz
+      // `ak_price_observations`, koja se NIKAD ne briše — a ne iz
+      // `ak_discounts`, koju scraper svake noći reže na 31 dan.
+      // (supabase/akcije-najnize-v2.sql)
+      p_dana: 3650,
       p_min_dana: 3,
       p_limit: 24,
     });

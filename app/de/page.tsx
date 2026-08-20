@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Vijesti iz Njemačke — kodnas.de",
   description: "Najnovije vijesti iz Njemačke relevantne za bosansku dijasporu — radni zakoni, socijalne naknade, politika.",
+  alternates: { canonical: "/de" },
 };
 
 export const revalidate = 300;
