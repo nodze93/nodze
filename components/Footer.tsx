@@ -11,8 +11,8 @@ const kategorije = [
 const vodici = [
   { label: "Radna viza", href: "/vodic/radna-viza-njemacka" },
   { label: "Krankenkasse", href: "/vodic/krankenkasse" },
-  { label: "Elterngeld", href: "/vodic/trudnoca-njemacka" },
-  { label: "Povrat poreza", href: "/vodic/povrat-poreza" },
+  { label: "Elterngeld", href: "/vodic/porodica-u-njemackoj" },
+  { label: "Povrat poreza", href: "/vodic/porezi-njemacka" },
   { label: "Penzija", href: "/kategorija/penzija" },
 ];
 

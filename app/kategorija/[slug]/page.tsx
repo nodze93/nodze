@@ -7,6 +7,7 @@ import { getClanciByKategorija } from "@/lib/data/clanci";
 import { dajPoKategoriji } from "@/lib/data";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { datumZaPrikaz } from "@/lib/datum";
 
 const kategorijeInfo: Record<string, { naziv: string; opis: string }> = {
   viza: { naziv: "Viza i boravak", opis: "Radna viza, Aufenthaltstitel, Anerkennung diploma, promjena statusa" },
@@ -65,7 +66,7 @@ export default async function KategorijaPage({ params }: Props) {
     excerpt: c.excerpt || "",
     sadrzaj: c.sadrzaj || "",
     kategorija: c.kategorija as import("@/lib/types").TagTip,
-    datum: new Date(c.datum_objave || c.created_at).toLocaleDateString("bs-BA", { day: "numeric", month: "short" }),
+    datum: datumZaPrikaz(c.datum_objave || c.created_at),
     minCitanja: c.min_citanja,
     procitano: c.broj_pregleda,
     slika: c.slika,

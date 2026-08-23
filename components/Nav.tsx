@@ -3,25 +3,38 @@
 import Link from "next/link";
 import { useState } from "react";
 
-// Glavne rubrike PRIJE "Vodiči" (vijesti po rubrici)
+// ============================================================
+//  GORNJA TRAKA — preslagana 20.8.2026.
+// ------------------------------------------------------------
+//  Prije je ovdje stajalo: Njemačka, Svijet, Sport, Finansije,
+//  Vodiči, Gastarbajter — dakle SVE vijesti, a Akcija i kalkulatora
+//  nije bilo nigdje. Posjetilac sa laptopa do Akcija nije mogao doći
+//  osim ručnim kucanjem adrese (na telefonu ih donja traka ima).
+//
+//  Sada gore stoji ono što sajt stvarno nudi: Akcije (ažuriraju se
+//  same, svaki dan), Vodiči, Brutto-Netto i Njemačka kao jedina
+//  vijest-rubrika. Svijet, Sport i Finansije su skinuti — to je
+//  sadržaj u kojem ne možemo pobijediti Klix i N1, a Googleu
+//  razvodnjava temu sajta.
+// ============================================================
+
+// Glavne stavke PRIJE "Vodiči"
 const glavnePrije = [
-  { href: "/de", label: "🇩🇪 Njemačka" },
-  { href: "/kategorija/svijet", label: "Svijet" },
-  { href: "/kategorija/sport", label: "Sport" },
-  { href: "/kategorija/finansije", label: "Finansije" },
+  { href: "/akcije", label: "🏷️ Akcije" },
 ];
 
-// Vodiči — SAMO vodiči, bez vijesti (praktične teme)
+// Vodiči — vode na PRAVE vodiče, ne na kategorije vijesti kao ranije
 const vodici = [
-  { href: "/kategorija/viza", label: "Viza i boravak" },
-  { href: "/kategorija/stan", label: "Stan" },
-  { href: "/kategorija/zdravstvo", label: "Zdravstvo" },
-  { href: "/kategorija/porodica", label: "Porodica" },
+  { href: "/vodic/radna-viza-njemacka", label: "Viza i dolazak" },
+  { href: "/vodic/krankenkasse", label: "Zdravstvo" },
+  { href: "/vodic/stan-u-njemackoj", label: "Stan" },
+  { href: "/vodic/porezi-njemacka", label: "Novac i porezi" },
 ];
 
-// Glavne rubrike POSLIJE "Vodiči"
+// Glavne stavke POSLIJE "Vodiči"
 const glavnePoslije = [
-  { href: "/kategorija/gastarbajter", label: "Gastarbajter" },
+  { href: "/brutto-netto", label: "Brutto-Netto" },
+  { href: "/de", label: "🇩🇪 Njemačka" },
 ];
 
 export default function Nav() {

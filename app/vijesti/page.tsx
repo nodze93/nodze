@@ -6,6 +6,7 @@ import ClanakCard from "@/components/ClanakCard";
 import { clanci as staticniClanci } from "@/lib/data/clanci";
 import { dajNajnovije } from "@/lib/data";
 import type { Metadata } from "next";
+import { datumZaPrikaz } from "@/lib/datum";
 
 export const metadata: Metadata = {
   title: "Vijesti — kodnas.de",
@@ -25,7 +26,7 @@ export default async function VijestPage() {
     excerpt: c.excerpt || "",
     sadrzaj: c.sadrzaj || "",
     kategorija: c.kategorija,
-    datum: new Date(c.datum_objave || c.created_at).toLocaleDateString("bs-BA", { day: "numeric", month: "short" }),
+    datum: datumZaPrikaz(c.datum_objave || c.created_at),
     minCitanja: c.min_citanja,
     procitano: c.broj_pregleda,
   }));

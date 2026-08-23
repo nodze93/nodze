@@ -6,6 +6,7 @@
 // vodi na NAŠ članak (/clanak/slug). Podjela: DE/svjetsko lijevo,
 // BiH desno — po izvoru iz kojeg je članak nastao.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { datumZaPrikaz, vrijemeZaPrikaz } from "./datum";
 
 export interface LiveStavka {
   naslov: string;
@@ -23,13 +24,8 @@ function klijent(): SupabaseClient | null {
   return createClient(url, key);
 }
 
-function vrijemeAgo(ts: number): string {
-  const min = Math.max(1, Math.round((Date.now() - ts) / 60000));
-  if (min < 60) return `${min} min`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h}h ${String(min % 60).padStart(2, "0")}min`;
-  return `${Math.floor(h / 24)}d`;
-}
+// Vidi lib/datum.ts — starije od 24h vise ne pise golo "27d" nego mjesec.
+const vrijemeAgo = vrijemeZaPrikaz;
 
 // Bosanski izvori → rubrika "Vijesti iz BiH" (desno).
 const BIH_IZVORI = ["klix", "n1", "slobodna", "avaz", "sportsport"];
@@ -112,7 +108,7 @@ function uKarticu(r: Red): KarticaVijest {
     izvor: ocistiIzvor(r.izvor),
     slika: r.slika,
     minCitanja: r.min_citanja || 4,
-    datum: new Date(ts).toLocaleDateString("bs-BA", { day: "numeric", month: "short" }),
+    datum: datumZaPrikaz(ts),
   };
 }
 

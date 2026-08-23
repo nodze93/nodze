@@ -8,6 +8,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ocistiHtml } from "@/lib/sanitize";
 import DijeliDugme from "@/components/DijeliDugme";
+import { datumZaPrikaz, datumIso } from "@/lib/datum";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -33,6 +34,8 @@ interface PrikazClanak {
   sadrzaj: string;
   kategorija: string;
   datum: string;
+  /** Tačan datum (2026-08-04) — ide u <time dateTime>, ne prikazuje se. */
+  datumIso: string;
   minCitanja: number;
   procitano: number;
   slika?: string | null;
@@ -48,7 +51,8 @@ function izBaze(c: DbClanak): PrikazClanak {
     excerpt: c.excerpt || "",
     sadrzaj: c.sadrzaj,
     kategorija: c.kategorija,
-    datum: new Date(datum).toLocaleDateString("bs-BA", { day: "numeric", month: "long", year: "numeric" }),
+    datum: datumZaPrikaz(datum),
+    datumIso: datumIso(datum),
     minCitanja: c.min_citanja,
     procitano: c.broj_pregleda,
     slika: c.slika,
@@ -215,7 +219,12 @@ export default async function ClanakPage({ params }: Props) {
 
           {/* Ispod slike, u istoj ravnini: datum + vrijeme čitanja lijevo, Podijeli desno */}
           <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-            <span style={{ fontSize: 13, color: "var(--tekst-light)", whiteSpace: "nowrap" }}>📅 {clanak.datum}</span>
+            <time
+              dateTime={clanak.datumIso || undefined}
+              style={{ fontSize: 13, color: "var(--tekst-light)", whiteSpace: "nowrap" }}
+            >
+              📅 {clanak.datum}
+            </time>
             <DijeliDugme slug={clanak.slug} naslov={clanak.naslov} />
           </div>
 

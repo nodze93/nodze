@@ -5,8 +5,8 @@ import { dajNajcitanije } from "@/lib/data";
 const FALLBACK = [
   { naslov: "Radna viza za Njemačku — korak po korak", meta: "Vodič", href: "/vodic/radna-viza-njemacka" },
   { naslov: "Krankenkasse — kako se prijaviti", meta: "Vodič", href: "/vodic/krankenkasse" },
-  { naslov: "Povrat poreza — kako do novca svake godine", meta: "Vodič", href: "/vodic/povrat-poreza" },
-  { naslov: "Pronalazak stana — Schufa i Mietvertrag", meta: "Vodič", href: "/vodic/pronalazak-stana" },
+  { naslov: "Povrat poreza — kako do novca svake godine", meta: "Vodič", href: "/vodic/porezi-njemacka" },
+  { naslov: "Pronalazak stana — Schufa i Mietvertrag", meta: "Vodič", href: "/vodic/stan-u-njemackoj" },
 ];
 
 export default async function NajcitanijeBox() {

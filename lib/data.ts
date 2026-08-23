@@ -8,6 +8,7 @@
 // članke čije zakazano_za još nije prošlo. Ako te kolone još ne
 // postoje (prije SQL migracije), automatski pada na osnovni upit.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { datumZaPrikaz } from "./datum";
 
 export interface DbClanak {
   id: string;
@@ -167,7 +168,7 @@ export function kratkiDatum(c: DbClanak): string {
   const r = Math.floor((danas.getTime() - d.getTime()) / 86400000);
   if (r === 0) return "Danas";
   if (r === 1) return "Jučer";
-  return d.toLocaleDateString("bs-BA", { day: "numeric", month: "short" });
+  return datumZaPrikaz(d);
 }
 
 const HERO_LABELI: Record<string, string> = {
@@ -230,7 +231,7 @@ export function formatirajMeta(c: DbClanak): string {
     const razlika = Math.floor((danas.getTime() - d.getTime()) / 86400000);
     if (razlika === 0) dijelovi.push("Danas");
     else if (razlika === 1) dijelovi.push("Jučer");
-    else dijelovi.push(d.toLocaleDateString("bs-BA", { day: "numeric", month: "short" }));
+    else dijelovi.push(datumZaPrikaz(d));
   }
   dijelovi.push(`${c.min_citanja} min`);
   // Broj čitanja (broj_pregleda) NAMJERNO nije ovdje — vidi ga samo admin.

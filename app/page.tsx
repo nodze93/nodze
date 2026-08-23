@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Nav from "@/components/Nav";
+import AkcijeNaslovna from "@/components/AkcijeNaslovna";
+import BruttoNettoBox from "@/components/BruttoNettoBox";
 import Ticker from "@/components/Ticker";
 import Hero from "@/components/Hero";
 import KategorijBar from "@/components/KategorijBar";
 import LiveVijesti from "@/components/LiveVijesti";
 import MobilnaNaslovna from "@/components/MobilnaNaslovna";
 import NajnovijeSection from "@/components/sections/NajnovijeSection";
-import KategorijaSekcija from "@/components/sections/KategorijaSekcija";
 import NajpopularnijeSection from "@/components/sections/NajpopularnijeSection";
 import VodiciSection from "@/components/sections/VodiciSection";
 import NewsletterBox from "@/components/sidebar/NewsletterBox";
@@ -27,6 +28,13 @@ export default function HomePage() {
   return (
     <>
       <Nav />
+
+      {/* AKCIJE PRVE (20.8.2026.). Jedini dio sajta koji se sam ažurira
+          svaki dan, a do sada ga na naslovnoj nije bilo uopšte. */}
+      <div className="naslovna-akcije">
+        <AkcijeNaslovna />
+      </div>
+
       {/* Ticker "Uživo" — sakriven na telefonu */}
       <div className="hide-mob"><Ticker /></div>
       <div className="hero-kat">
@@ -54,42 +62,21 @@ export default function HomePage() {
       >
         {/* Left column — v19 redoslijed sekcija */}
         <main>
-          {/* Iz svijeta — DESKTOP (na mobilnom je u MobilnaNaslovna kutiji) */}
-          <div className="hide-mob">
-            <KategorijaSekcija
-              naslov="🌍 Iz svijeta"
-              podnaslov="Najvažnije svjetske vijesti — politika, ekonomija i krize koje utiču na nas"
-              kategorija="svijet"
-              prikaziIzvor
-              samoTip="svjetske"
-            />
-          </div>
-          {/* Najnovije — SAMO desktop (na telefonu poslije Sporta idu odmah Vodiči) */}
+          {/* SKINUTO 20.8.2026.: „Iz svijeta", „Viza i ulazak", „Gastarbajter"
+              i „Sport". To su bile bot-pisane vijesti od kojih Google nije
+              indeksirao nijednu, a razvodnjavale su temu sajta. Vijesti iz
+              Njemačke ostaju (LiveVijesti iznad). Sam sadržaj nije obrisan —
+              stranice /kategorija/* i dalje rade. */}
+
+          {/* Vodiči — jedini pravi SEO kapital, sada odmah ispod Akcija */}
+          <VodiciSection />
+
+          <BruttoNettoBox />
+
           <div className="hide-mob">
             <NajnovijeSection />
           </div>
-          <VodiciSection />
-          {/* Viza + Gastarbajter — SAMO desktop (telefon: poslije Vodiča odmah Najpopularnije) */}
-          <div className="hide-mob">
-            <KategorijaSekcija
-              naslov="Viza i ulazak"
-              podnaslov="Chancenkarte, radna viza, Plava karta, porodično spajanje"
-              kategorija="viza"
-            />
-            <KategorijaSekcija
-              naslov="Gastarbajter"
-              podnaslov="Priče iz dijaspore — život, iskustva i korisni savjeti"
-              kategorija="gastarbajter"
-            />
-          </div>
-          {/* Sport — DESKTOP (na mobilnom je u MobilnaNaslovna kutiji, ispod Svijeta) */}
-          <div className="hide-mob">
-            <KategorijaSekcija
-              naslov="⚽ Sport"
-              podnaslov="Bundesliga, svjetski fudbal i veliki mečevi"
-              kategorija="sport"
-            />
-          </div>
+
           <NajpopularnijeSection />
         </main>
 
@@ -110,6 +97,8 @@ export default function HomePage() {
       <Footer />
 
       <style>{`
+        .naslovna-akcije { max-width: 1100px; margin: 0 auto; padding: 20px 24px 0; }
+        @media (max-width: 768px) { .naslovna-akcije { padding: 12px 0 0; } }
         /* Mobilno pokazuje "samo-mob", desktop pokazuje "hide-mob" */
         .samo-mob { display: none; }
         @media (max-width: 768px) {

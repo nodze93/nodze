@@ -4,14 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 
 // v19 raspored — isti kao u headeru
+// Preslagano 20.8.2026.: traka nudi ono što sajt stvarno radi.
+// Svijet, Sport, Finansije i Gastarbajter su skinuti — stranice i dalje
+// postoje i rade, samo ih više ne guramo na naslovnu.
 const kategorije = [
   { label: "SVE", value: "sve", href: "/" },
-  { label: "🇩🇪 Njemačka", value: "de", href: "/de" },
-  { label: "Svijet", value: "svijet", href: "/kategorija/svijet" },
-  { label: "Sport", value: "sport", href: "/kategorija/sport" },
-  { label: "Finansije", value: "finansije", href: "/kategorija/finansije" },
+  { label: "🏷️ Akcije", value: "akcije", href: "/akcije" },
   { label: "Vodiči", value: "vodici", href: "/vodici" },
-  { label: "Gastarbajter", value: "gastarbajter", href: "/kategorija/gastarbajter" },
+  { label: "Brutto-Netto", value: "brutto", href: "/brutto-netto" },
+  { label: "🇩🇪 Njemačka", value: "de", href: "/de" },
 ];
 
 interface Props {

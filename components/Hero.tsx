@@ -32,8 +32,8 @@ const FALLBACK_BOCNI: HeroClanak[] = [
     slika: "https://loremflickr.com/200/200/hospital,healthcare?lock=41",
   },
   {
-    slug: "pronalazak-stana",
-    href: "/vodic/pronalazak-stana",
+    slug: "stan-u-njemackoj",
+    href: "/vodic/stan-u-njemackoj",
     kategorija: "stan",
     label: "Vodič",
     naslov: "Pronalazak stana — Schufa, Mietvertrag i prava stanara",
@@ -43,8 +43,8 @@ const FALLBACK_BOCNI: HeroClanak[] = [
     slika: "https://loremflickr.com/200/200/apartment,building?lock=42",
   },
   {
-    slug: "povrat-poreza",
-    href: "/vodic/povrat-poreza",
+    slug: "porezi-njemacka",
+    href: "/vodic/porezi-njemacka",
     kategorija: "finansije",
     label: "Vodič",
     naslov: "Povrat poreza — kako dobiti natrag novac od države svake godine",
