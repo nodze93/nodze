@@ -80,7 +80,7 @@ export default async function KategorijaPage({ params }: Props) {
     <>
       <Nav />
       <Ticker />
-      <KategorijBar aktivna={slug} />
+      <KategorijBar aktivna={slug} varijanta="vijesti" />
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
         {/* Header */}

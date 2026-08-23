@@ -22,6 +22,12 @@ export async function GET(req: Request) {
   const plz = plzOf(sp);
   if (!plz) return jsonError("PLZ mora biti 5 cifara");
 
+  // Traka na naslovnoj traži 24 (prikaže 12), a stranica /akcije/najnize
+  // traži više jer prikazuje sve. Gornja granica je 200 da niko ne može
+  // upitom povući cijelu bazu.
+  const trazeni = Number(sp.get("limit") ?? 24);
+  const limit = Number.isFinite(trazeni) ? Math.min(200, Math.max(1, Math.trunc(trazeni))) : 24;
+
   try {
     const { data, error } = await db().rpc("ak_najnize_ikad", {
       p_plz: plz,
@@ -31,7 +37,7 @@ export async function GET(req: Request) {
       // (supabase/akcije-najnize-v2.sql)
       p_dana: 3650,
       p_min_dana: 3,
-      p_limit: 24,
+      p_limit: limit,
     });
     if (error) throw error;
 

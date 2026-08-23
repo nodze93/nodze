@@ -22,7 +22,7 @@ export default async function DePage() {
     <>
       <Nav />
       <Ticker />
-      <KategorijBar aktivna="de" />
+      <KategorijBar aktivna="de" varijanta="vijesti" />
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
         <div style={{ fontSize: 12, color: "var(--tekst-muted)", marginBottom: 16 }}>

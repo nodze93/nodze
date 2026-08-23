@@ -60,7 +60,10 @@ export default function NajnizeIkad({ plz }: { plz: string }) {
         <h2>
           <IconTag size={17} style={{ color: '#1a8a4a' }} /> Najniže do sada
         </h2>
-        <Link href="/akcije/ponude?sort=price">
+        {/* Ranije je vodilo na /akcije/ponude?sort=price — dakle na SVE akcije
+            poredane po cijeni, što nije isto što i „najniže do sada".
+            Sada vodi na stranicu koja pokazuje tačno ovo. */}
+        <Link href="/akcije/najnize">
           Pogledaj sve <IconChevron size={13} style={{ verticalAlign: -2 }} />
         </Link>
       </div>

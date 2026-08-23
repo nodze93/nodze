@@ -55,7 +55,9 @@ const TABS = [
   // Vijesti SKROZ DESNO (izričita želja korisnika) — više nisu prvi tab
   // ni početna, ali ostaju dostupne dok se ne ugase.
   {
-    href: "/",
+    // 20.8.2026.: vodilo je na naslovnu, a naslovna sada počinje
+    // Akcijama. Ko stisne „Vijesti" hoće vijesti, pa ide ravno na njih.
+    href: "/vijesti",
     label: "Vijesti",
     match: (p: string) =>
       p === "/" ||

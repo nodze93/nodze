@@ -20,7 +20,11 @@ const KATEGORIJE = [
 ];
 
 // Statične javne stranice. (BiH rubrika uklonjena.)
-const STATICNE_UVIJEK = ["", "/vodici", "/de", "/o-nama", "/kontakt"];
+// 20.8.2026.: dodani /akcije i /akcije/najnize — najažurniji dio sajta,
+// a Googleu ga do sada nismo uopšte prijavljivali.
+const STATICNE_UVIJEK = [
+  "", "/akcije", "/akcije/najnize", "/vodici", "/de", "/o-nama", "/kontakt",
+];
 const STATICNE = VIJESTI_U_SITEMAP ? [...STATICNE_UVIJEK, "/vijesti"] : STATICNE_UVIJEK;
 
 function klijent() {

@@ -3,11 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 
-// v19 raspored — isti kao u headeru
-// Preslagano 20.8.2026.: traka nudi ono što sajt stvarno radi.
-// Svijet, Sport, Finansije i Gastarbajter su skinuti — stranice i dalje
-// postoje i rade, samo ih više ne guramo na naslovnu.
-const kategorije = [
+// Preslagano 20.8.2026. Traka ima DVIJE varijante:
+//
+//   "sajt"    — naslovna i ostatak sajta: Akcije, Vodiči, Brutto-Netto,
+//               Njemačka. To je ono što sajt stvarno radi.
+//   "vijesti" — stranice vijesti (/vijesti, /de, /kategorija/*): SAMO
+//               rubrike vijesti. Kad neko stisne „Vijesti" u donjoj traci
+//               na telefonu, hoće vijesti — a ne traku s akcijama i
+//               proizvodima. Zato tamo Akcija nema uopšte.
+const KATEGORIJE_SAJT = [
   { label: "SVE", value: "sve", href: "/" },
   { label: "🏷️ Akcije", value: "akcije", href: "/akcije" },
   { label: "Vodiči", value: "vodici", href: "/vodici" },
@@ -15,12 +19,23 @@ const kategorije = [
   { label: "🇩🇪 Njemačka", value: "de", href: "/de" },
 ];
 
+const KATEGORIJE_VIJESTI = [
+  { label: "SVE VIJESTI", value: "sve", href: "/vijesti" },
+  { label: "🇩🇪 Njemačka", value: "de", href: "/de" },
+  { label: "Svijet", value: "svijet", href: "/kategorija/svijet" },
+  { label: "Sport", value: "sport", href: "/kategorija/sport" },
+  { label: "Finansije", value: "finansije", href: "/kategorija/finansije" },
+  { label: "Gastarbajter", value: "gastarbajter", href: "/kategorija/gastarbajter" },
+];
+
 interface Props {
   aktivna?: string;
+  varijanta?: "sajt" | "vijesti";
 }
 
-export default function KategorijBar({ aktivna = "sve" }: Props) {
+export default function KategorijBar({ aktivna = "sve", varijanta = "sajt" }: Props) {
   const [aktivan, setAktivan] = useState(aktivna);
+  const kategorije = varijanta === "vijesti" ? KATEGORIJE_VIJESTI : KATEGORIJE_SAJT;
 
   return (
     <div style={{ background: "white", borderBottom: "1px solid var(--border)" }}>
