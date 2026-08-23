@@ -1,6 +1,60 @@
 import Link from "next/link";
 
-const vodici = [
+// ============================================================
+//  DVIJE LISTE — 24.8.2026.
+//  DESKTOP vodi ravno na žive vodiče (stari slugovi imaju 301, pa je
+//  naslovna svoje najvrednije stranice linkovala kroz preusmjerenja).
+//  MOBILNI ostaje NETAKNUT — dogovor: na telefonu se ne dira ništa.
+//  Obje se ispišu, CSS na 768px sakrije onu koja ne treba.
+// ============================================================
+
+const VODICI_DESKTOP = [
+  {
+    ikona: "🛂",
+    naziv: "Radna viza za Njemačku",
+    opis: "Od termina u ambasadi do dolaska — šta stvarno traže",
+    koraci: "Provjereno na sarajewo.diplo.de",
+    href: "/vodic/radna-viza-njemacka",
+  },
+  {
+    ikona: "🏥",
+    naziv: "Krankenkasse",
+    opis: "Šta je besplatno, šta plaćaš sam, koliko tačno",
+    koraci: "Doprinosi, zubar, apoteka, bolnica",
+    href: "/vodic/krankenkasse",
+  },
+  {
+    ikona: "💶",
+    naziv: "Porezi u Njemačkoj",
+    opis: "Poreske klase, Lohnsteuer i povrat koji ti pripada",
+    koraci: "Sa iznosima za 2026.",
+    href: "/vodic/porezi-njemacka",
+  },
+  {
+    ikona: "🔑",
+    naziv: "Stan u Njemačkoj",
+    opis: "Schufa, Mietvertrag, kaucija i prava stanara",
+    koraci: "Od traženja do useljenja",
+    href: "/vodic/stan-u-njemackoj",
+  },
+  {
+    ikona: "👶",
+    naziv: "Porodica u Njemačkoj",
+    opis: "Kindergeld, Elterngeld, vrtić i škola",
+    koraci: "Koliko para i kad se traži",
+    href: "/vodic/porodica-u-njemackoj",
+  },
+  {
+    ikona: "🧳",
+    naziv: "Penzija i povratak",
+    opis: "BiH–DE sporazum, staž i šta gubiš povratkom",
+    koraci: "Prije nego se odlučiš",
+    href: "/vodic/penzija-i-povratak",
+  },
+];
+
+// NE DIRATI — ovo je ono što se vidi na telefonu
+const VODICI_MOBILNI = [
   {
     ikona: "📋",
     naziv: "Radna viza za Njemačku",
@@ -85,9 +139,73 @@ export default function VodiciSection() {
           gridTemplateColumns: "1fr 1fr",
           gap: 8,
         }}
-        className="vodici-grid"
+        className="vodici-grid vodici-desktop"
       >
-        {vodici.map((vodic, i) => (
+        {VODICI_DESKTOP.map((vodic, i) => (
+          <Link
+            key={i}
+            href={vodic.href}
+            style={{
+              background: "var(--white)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              padding: 16,
+              cursor: "pointer",
+              transition: "all 0.15s",
+              display: "flex",
+              gap: 12,
+              alignItems: "flex-start",
+              textDecoration: "none",
+              color: "inherit",
+            }}
+            className="hover:border-zelena hover:bg-zelena-svijetla"
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                background: "var(--zelena-svijetla)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 18,
+                flexShrink: 0,
+              }}
+            >
+              {vodic.ikona}
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>
+                {vodic.naziv}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--tekst-muted)" }}>
+                {vodic.opis}
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: "var(--zelena)",
+                  fontWeight: 600,
+                  marginTop: 4,
+                }}
+              >
+                {vodic.koraci}
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 8,
+        }}
+        className="vodici-grid vodici-mobilni"
+      >
+        {VODICI_MOBILNI.map((vodic, i) => (
           <Link
             key={i}
             href={vodic.href}
@@ -144,10 +262,11 @@ export default function VodiciSection() {
       </div>
 
       <style>{`
+        .vodici-mobilni { display: none !important; }
         @media (max-width: 768px) {
-          .vodici-grid {
-            grid-template-columns: 1fr !important;
-          }
+          .vodici-grid { grid-template-columns: 1fr !important; }
+          .vodici-desktop { display: none !important; }
+          .vodici-mobilni { display: grid !important; }
         }
       `}</style>
     </div>

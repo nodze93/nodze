@@ -3,24 +3,53 @@
 import Link from "next/link";
 import { useState } from "react";
 
-// Glavne rubrike PRIJE "Vodiči" (vijesti po rubrici)
+// ============================================================
+//  DVA MENIJA — 24.8.2026.
+// ------------------------------------------------------------
+//  DESKTOP (gornja traka) nudi ono što sajt stvarno radi: Akcije,
+//  Vodiče, Brutto-Netto i Njemačku.
+//
+//  MOBILNI (hamburger meni) ostaje NETAKNUT, tačno kakav je bio —
+//  Njemačka, Svijet, Sport, Finansije, Vodiči, Gastarbajter.
+//  Izričit dogovor: na telefonu se ne dira ništa.
+//
+//  Zato dvije liste, a ne jedna. Ako mijenjaš desktop, ne diraj
+//  MOBILNI_* i obrnuto.
+// ============================================================
+
+// ── DESKTOP ─────────────────────────────────────────────────
 const glavnePrije = [
+  { href: "/akcije", label: "🏷️ Akcije" },
+];
+
+const vodici = [
+  { href: "/vodic/radna-viza-njemacka", label: "Viza i dolazak" },
+  { href: "/vodic/krankenkasse", label: "Zdravstvo" },
+  { href: "/vodic/stan-u-njemackoj", label: "Stan" },
+  { href: "/vodic/porezi-njemacka", label: "Novac i porezi" },
+];
+
+const glavnePoslije = [
+  { href: "/brutto-netto", label: "Brutto-Netto" },
+  { href: "/de", label: "🇩🇪 Njemačka" },
+];
+
+// ── MOBILNI HAMBURGER (ne dirati) ───────────────────────────
+const MOB_GLAVNE_PRIJE = [
   { href: "/de", label: "🇩🇪 Njemačka" },
   { href: "/kategorija/svijet", label: "Svijet" },
   { href: "/kategorija/sport", label: "Sport" },
   { href: "/kategorija/finansije", label: "Finansije" },
 ];
 
-// Vodiči — SAMO vodiči, bez vijesti (praktične teme)
-const vodici = [
+const MOB_VODICI = [
   { href: "/kategorija/viza", label: "Viza i boravak" },
   { href: "/kategorija/stan", label: "Stan" },
   { href: "/kategorija/zdravstvo", label: "Zdravstvo" },
   { href: "/kategorija/porodica", label: "Porodica" },
 ];
 
-// Glavne rubrike POSLIJE "Vodiči"
-const glavnePoslije = [
+const MOB_GLAVNE_POSLIJE = [
   { href: "/kategorija/gastarbajter", label: "Gastarbajter" },
 ];
 
@@ -222,7 +251,7 @@ export default function Nav() {
             <span>🏠 Naslovna</span>
             <span style={{ color: "var(--zelena)", fontSize: 16 }}>→</span>
           </Link>
-          {glavnePrije.map((k) => (
+          {MOB_GLAVNE_PRIJE.map((k) => (
             <Link
               key={k.href}
               href={k.href}
@@ -246,7 +275,7 @@ export default function Nav() {
           }}>
             📘 Vodiči
           </div>
-          {vodici.map((v) => (
+          {MOB_VODICI.map((v) => (
             <Link
               key={v.href}
               href={v.href}
@@ -274,7 +303,7 @@ export default function Nav() {
             <span style={{ fontSize: 15 }}>→</span>
           </Link>
 
-          {glavnePoslije.map((k) => (
+          {MOB_GLAVNE_POSLIJE.map((k) => (
             <Link
               key={k.href}
               href={k.href}
