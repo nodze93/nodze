@@ -37,7 +37,7 @@ export default async function VijestPage() {
     <>
       <Nav />
       <Ticker />
-      <KategorijBar aktivna="sve" varijanta="vijesti" />
+      <KategorijBar aktivna="sve" />
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, letterSpacing: "-0.5px" }}>

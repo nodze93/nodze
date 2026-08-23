@@ -1,12 +1,12 @@
 import Link from "next/link";
 import {
-  dajLiveDE,
+  dajLiveDE, dajLiveSvijet, dajLiveSport,
+  MOCK_DE, MOCK_SVIJET, MOCK_SPORT,
   type LiveStavka,
 } from "@/lib/live";
 
 // ============================================================
-// MOBILNA NASLOVNA — kutija sa vijestima iz Njemačke
-// (Svijet i Sport skinuti 20.8.2026., vidi komentar dolje)
+// MOBILNA NASLOVNA — 4 jednake kutije (DE, BiH, Svijet, Sport)
 // ============================================================
 // Prikazuje se SAMO na telefonu (klasa "samo-mob" u page.tsx).
 // Sve kutije istog izgleda: slika (klix stil) + izvor + naslov + vrijeme,
@@ -61,20 +61,15 @@ function Kutija({
 }
 
 export default async function MobilnaNaslovna() {
-  const de = await dajLiveDE(9);
+  const [de, svijet, sport] = await Promise.all([
+    dajLiveDE(9), dajLiveSvijet(5), dajLiveSport(5),
+  ]);
 
   return (
     <div className="samo-mob mob-kutije">
-      {/* 20.8.2026.: ostaje SAMO Njemačka. Svijet i Sport su skinuti — to je
-          sadržaj u kojem ne možemo pobijediti Klix i N1.
-
-          I MOCK fallback je izbačen: ranije je, kad baza ništa ne vrati,
-          ovdje izlazilo troje izmišljenih naslova označenih sa „danas".
-          Prazna kutija je manja šteta od izmišljene vijesti — zato se
-          kutija sada jednostavno ne prikaže. */}
-      {de.length > 0 ? (
-        <Kutija naslov="Vijesti iz Njemačke" emoji="🇩🇪" href="/de" stavke={de} limit={9} />
-      ) : null}
+      <Kutija naslov="Vijesti iz Njemačke" emoji="🇩🇪" href="/de" stavke={de.length ? de : MOCK_DE} limit={9} />
+      <Kutija naslov="Iz svijeta" emoji="🌍" href="/kategorija/svijet" stavke={svijet.length ? svijet : MOCK_SVIJET} />
+      <Kutija naslov="Sport" emoji="⚽" href="/kategorija/sport" stavke={sport.length ? sport : MOCK_SPORT} />
 
       <style>{`
         .mob-kutije { flex-direction: column; gap: 10px; padding: 0; background: var(--bg); }
