@@ -91,22 +91,45 @@ export function alarmText(health: AlarmRed[]): AlarmIshod {
 }
 
 async function main(): Promise<void> {
-  const plz = process.argv.slice(2).find((a) => a.startsWith('--plz='))?.slice(6);
+  const args = process.argv.slice(2);
+  const plz = args.find((a) => a.startsWith('--plz='))?.slice(6);
+
+  // ── DVA REŽIMA (24.8.2026.) ────────────────────────────────
+  //  Problem koji rjesava: alarm je vracao izlazni kod 3 i obarao korak,
+  //  a GitHub Actions onda PRESKOCI sve korake iza njega — ukljucujuci
+  //  „Provjeri jesu li slike zive" i „Dopuni slike". Znaci: jedan lanac
+  //  koji osvane prazan kostao je cijeli sajt slika za taj dan, iako su
+  //  ponude uredno upisane.
+  //
+  //  Sada workflow zove ovo dvaput:
+  //    --bez-alarma  → odradi trajni sloj, NIKAD ne pada (ide prije slika)
+  //    --samo-alarm  → samo provjeri zdravlje i padni ako treba (ide ZADNJI)
+  //  Alarm i dalje stize na mejl, samo vise ne odnosi slike sa sobom.
+  const samoAlarm = args.includes('--samo-alarm');
+  const bezAlarma = args.includes('--bez-alarma');
 
   // ČIŠĆENJE RUČNIH UNOSA: scraper svoje redove briše i prepisuje svaki dan,
   // ali ručne (source='manual') NAMJERNO nikad ne dira — pa su se probni
   // uvozi iz aprila/maja gomilali dovijeka. Ovo briše ručne kojima je rok
   // istekao prije više od 30 dana: dovoljno kasno za "vrati mi ga" slučaj,
   // a baza se ipak sama čisti.
-  const pocisceno = await pool.query(
-    "delete from ak_discounts where source = 'manual' and valid_to is not null and valid_to < current_date - 30",
-  );
-  if ((pocisceno.rowCount ?? 0) > 0) {
-    log(`Obrisano ${pocisceno.rowCount} ručnih unosa isteklih prije 30+ dana.`);
+  if (!samoAlarm) {
+    const pocisceno = await pool.query(
+      "delete from ak_discounts where source = 'manual' and valid_to is not null and valid_to < current_date - 30",
+    );
+    if ((pocisceno.rowCount ?? 0) > 0) {
+      log(`Obrisano ${pocisceno.rowCount} ručnih unosa isteklih prije 30+ dana.`);
+    }
+
+    const r = await applyLayer(plz);
+    log(`Slike prelivene: ${r.byEan} po EAN-u, ${r.byKey} po nazivu. Sakriveno: ${r.hidden}.`);
   }
 
-  const r = await applyLayer(plz);
-  log(`Slike prelivene: ${r.byEan} po EAN-u, ${r.byKey} po nazivu. Sakriveno: ${r.hidden}.`);
+  if (bezAlarma) {
+    await closePool();
+    log('Trajni sloj gotov. Provjera zdravlja ide u zasebnom koraku na kraju.');
+    return;
+  }
 
   const health = await scrapeHealth();
   const { tekst, kvar } = alarmText(health);
