@@ -17,10 +17,8 @@ export default function ImpressumPage() {
 
         <h2>Angaben gemäß § 5 DDG</h2>
         <p>
-          Dzena Karg<br />
-          Korbinianstraße 1<br />
-          80807 München<br />
-          Deutschland
+          Privates, nicht kommerzielles Online-Angebot.<br />
+          Die Anbieterangaben erhalten Sie auf Anfrage per E-Mail.
         </p>
 
         <h2>Kontakt</h2>
@@ -30,9 +28,8 @@ export default function ImpressumPage() {
 
         <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
         <p>
-          Dzena Karg<br />
-          Korbinianstraße 1<br />
-          80807 München
+          Der Betreiber dieser Website, erreichbar unter{" "}
+          <a href="mailto:info@kodnas.de">info@kodnas.de</a>.
         </p>
 
         <h2>Haftung für Inhalte</h2>
