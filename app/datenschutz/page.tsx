@@ -23,11 +23,10 @@ export default function DatenschutzPage() {
 
         <h2>1. Verantwortlicher</h2>
         <p>
-          Verantwortlich im Sinne der DSGVO ist:<br />
-          Dzena Karg<br />
-          Korbinianstraße 1<br />
-          80807 München, Deutschland<br />
-          E-Mail: <a href="mailto:info@kodnas.de">info@kodnas.de</a>
+          Verantwortlich im Sinne der DSGVO ist der Betreiber dieser Website.<br />
+          Kontakt: <a href="mailto:info@kodnas.de">info@kodnas.de</a><br />
+          Die vollständigen Anbieterangaben finden Sie im{" "}
+          <a href="/impressum">Impressum</a>.
         </p>
 
         <h2>2. Ihre Rechte als betroffene Person</h2>
