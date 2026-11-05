@@ -58,7 +58,9 @@ const KATEGORIJE: Record<string, string> = {
 };
 
 interface SirovaPlocica {
-  /** tekst taba te sedmice ("Diese Woche27.7. bis 2.8.") — rok je po artiklu */
+  /** ISO sedmica sa same ponude ("2026/45") — primarni izvor roka */
+  sedmica: string;
+  /** tekst taba te sedmice ("Diese Woche27.7. bis 2.8.") — rezerva ako sedmice nema */
   tab: string;
   naziv: string;
   cijena: string;
@@ -71,6 +73,37 @@ interface SirovaPlocica {
  * i parser u datumi.ts to sada zna pročitati (ranije nije → REWE = 0).
  * `danas` postoji samo radi determinističkih testova.
  */
+/**
+ * REWE od novembra 2026. piše sedmicu NA SAMOJ PONUDI: `data-offer-week="2026/45"`.
+ * To je ISO sedmica, pa se rok računa tačno i bez čitanja teksta taba —
+ * važno jer tab sljedeće sedmice piše samo „Ab Samstag", bez datuma.
+ *
+ * ISO pravilo: 4. januar je uvijek u sedmici 1.
+ * Provjereno na njihovoj stranici: 2026/45 → 2.11. do 8.11., tačno kako
+ * i sami pišu u tabu „Diese Woche 2.11. bis 8.11.".
+ */
+export function periodIzSedmice(
+  sedmica: string | null,
+): { validFrom: string | null; validTo: string | null } {
+  const m = (sedmica ?? '').match(/^(\d{4})\/(\d{1,2})$/);
+  if (!m) return { validFrom: null, validTo: null };
+  const godina = Number(m[1]);
+  const broj = Number(m[2]);
+  if (broj < 1 || broj > 53) return { validFrom: null, validTo: null };
+
+  const cetvrti = new Date(Date.UTC(godina, 0, 4));
+  const dan = cetvrti.getUTCDay() || 7; // pon=1 … ned=7
+  const ponedjeljak = new Date(cetvrti);
+  ponedjeljak.setUTCDate(cetvrti.getUTCDate() - (dan - 1) + (broj - 1) * 7);
+  const nedjelja = new Date(ponedjeljak);
+  nedjelja.setUTCDate(ponedjeljak.getUTCDate() + 6);
+
+  return {
+    validFrom: ponedjeljak.toISOString().slice(0, 10),
+    validTo: nedjelja.toISOString().slice(0, 10),
+  };
+}
+
 export function periodIzTaba(
   tekst: string | null,
   danas: Date = new Date(),
@@ -116,53 +149,64 @@ export class ReweSource implements Source {
         // Bez JS-a nema ni cookie-banera ni čekanja — sadržaj je već u HTML-u.
 
         const podaci = (await page.evaluate(() => {
-          // ⚠️ ČITAMO OBJE SEDMICE, ne samo tekuću.
-          // REWE u NEDJELJU (zadnji dan sedmice) isprazni "current" — tab i
-          // dalje piše "27.7. bis 2.8.", ali pločica ima NULA; sve je već
-          // prebačeno u "next" (3.8. bis 9.8.). Bez ovoga nedjeljom dobijemo 0.
-          // Sljedeća sedmica ima validFrom u budućnosti, pa je filter po datumu
-          // drži skrivenu dok ne počne — i tada se sama upali.
+          // ⚠️ STRUKTURA PROMIJENJENA — REWE, novembar 2026.
+          // Ranije su pločice stajale u `div[data-week="current"]` /
+          // `div[data-week="next"]`, a rok se čitao iz teksta taba iznad.
+          // Ti okviri VIŠE NE POSTOJE. Pločice su ostale iste
+          // (`article.cor-offer-renderer-tile`), ali sada svaka sjedi u
+          // `div.sos-offer` koji nosi ISO sedmicu: data-offer-week="2026/45".
+          //
+          // Zato je scraper od 30.10. vraćao NULU i rušio alarm svaki dan:
+          // querySelector('div[data-week="current"]') je bio null, pa se
+          // nijedna pločica nije ni pogledala — bez ijedne greške u logu.
+          //
+          // Obje sedmice i dalje čitamo: sve ponude su u HTML-u, a sljedeća
+          // ima validFrom u budućnosti pa je filter po datumu krije dok ne
+          // počne. Tab sljedeće sedmice piše samo „Ab Samstag", bez datuma —
+          // još jedan razlog da rok računamo iz sedmice, a ne iz teksta.
+          //
           // ⚠️ Ovdje smiju SAMO anonimne funkcije (unutar .map i sl.).
           // Strelica pridružena konstanti bi je tsx/esbuild umotao u pomoćnik
           // __name, kojeg u stranici nema → ReferenceError u browseru.
-          const sedmice = ['current', 'next'];
-          const izlaz: Array<{ tab: string; naziv: string; cijena: string; slika: string }> = [];
+          const izlaz: Array<{ sedmica: string; tab: string; naziv: string; cijena: string; slika: string }> = [];
 
-          for (const w of sedmice) {
-            const tab = document.querySelector(`button[data-week="${w}"]`);
-            const kutija = document.querySelector(`div[data-week="${w}"]`);
-            const plocice = kutija ? Array.from(kutija.querySelectorAll('.cor-offer-renderer-tile')) : [];
-            const tabTekst = (tab?.textContent ?? '').trim();
+          // Tekst taba ostaje samo kao rezerva ako ponuda nema sedmicu.
+          const tabTekst = (document.querySelector('[class*="week-tab"] button, [role="tab"]')?.textContent ?? '').trim();
 
-            izlaz.push(...plocice.map((t) => {
-              // ⚠️ PRVA <img> u pločici je često REWE Bonus logo (24×24), a ne
-              // proizvod — na 10 od 23 pločice. Prava slika ima data-testid.
-              const im = t.querySelector('img[data-testid="offer-image"]');
-              // ⚠️ Bez JS-a slike su lijene: pravi URL je u data-src/srcset,
-              // a `src` uopšte ne postoji (13 od 23 pločice).
-              const kandidati = [
-                im?.getAttribute('data-src'),
-                im?.getAttribute('data-srcset'),
-                im?.getAttribute('srcset'),
-                im?.getAttribute('src'),
-              ];
-              let slika = '';
-              for (const k of kandidati) {
-                if (!k) continue;
-                // srcset je "url 1x, url2 2x" → uzmi prvi URL
-                const url = k.split(',')[0]?.trim().split(/\s+/)[0] ?? '';
-                if (url && /^https?:\/\//.test(url)) {
-                  slika = url;
-                  break;
-                }
-              }
-              return {
-                tab: tabTekst,
-                naziv: (t.querySelector('.cor-offer-information__title')?.textContent ?? '').trim(),
-                cijena: (t.querySelector('.cor-offer-price__tag-price')?.textContent ?? '').trim(),
-                slika,
-              };
-            }));
+          const ponude = Array.from(document.querySelectorAll('div.sos-offer[data-offer-week]'));
+          for (const o of ponude) {
+            const t = o.querySelector('article.cor-offer-renderer-tile');
+            if (!t) continue;
+
+            // ⚠️ Slika: `src` ne postoji (lijeno učitavanje), pravi URL je u
+            // data-src. Uzimamo SAMO iz `.cor-offer-image` — prva <img> u
+            // pločici je REWE Bonus logo, a u istom bloku stoji i prozirni
+            // placeholder SVG; oba se odbacuju po imenu fajla.
+            const im = t.querySelector('.cor-offer-image img');
+            const kandidati = [
+              im?.getAttribute('data-src'),
+              im?.getAttribute('data-srcset'),
+              im?.getAttribute('srcset'),
+              im?.getAttribute('src'),
+            ];
+            let slika = '';
+            for (const k of kandidati) {
+              if (!k) continue;
+              // srcset je "url 1x, url2 2x" → uzmi prvi URL
+              const url = k.split(',')[0]?.trim().split(/\s+/)[0] ?? '';
+              if (!url || !/^https?:\/\//.test(url)) continue;
+              if (/placeholder|loyalty-icon/i.test(url)) continue;
+              slika = url;
+              break;
+            }
+
+            izlaz.push({
+              sedmica: o.getAttribute('data-offer-week') ?? '',
+              tab: tabTekst,
+              naziv: (t.querySelector('.cor-offer-information__title')?.textContent ?? '').trim(),
+              cijena: (t.querySelector('.cor-offer-price__tag-price')?.textContent ?? '').trim(),
+              slika,
+            });
           }
           return izlaz;
         })) as SirovaPlocica[];
@@ -170,9 +214,10 @@ export class ReweSource implements Source {
         if (podaci.length === 0) praznihKategorija += 1;
 
         for (const a of podaci) {
-          // Svaka pločica nosi tekst SVOG taba — tekuća i sljedeća sedmica
-          // imaju različit period, pa se rok računa po artiklu, ne po stranici.
-          const { validFrom, validTo } = periodIzTaba(a.tab);
+          // Rok ide iz ISO sedmice same ponude (data-offer-week), a tekst
+          // taba ostaje samo kao rezerva za slučaj da sedmica nedostaje.
+          const izSedmice = periodIzSedmice(a.sedmica);
+          const { validFrom, validTo } = izSedmice.validTo ? izSedmice : periodIzTaba(a.tab);
           if (!validTo) continue; // bez roka se ponuda ne bi ni prikazala
           if (a.tab) period = a.tab.replace(/\s+/g, ' ');
 
